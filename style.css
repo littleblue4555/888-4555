@@ -64,10 +64,28 @@ main {
   margin-bottom: 1.2rem;
   color: #f7ead0;
   text-align: center;
+  opacity: 0;
+  animation: breathe 20s ease-in-out infinite;
+  animation-delay: 0s;
 }
 
-.welcome p {
-  margin-bottom: 1rem;
+.line {
+  opacity: 0;
+  animation: breathe 20s ease-in-out infinite;
+}
+
+.line-1 { animation-delay: 4s; }
+.line-2 { animation-delay: 8s; }
+.line-3 { animation-delay: 12s; }
+.line-4 { animation-delay: 16s; }
+.line-5 { animation-delay: 20s; }
+
+@keyframes breathe {
+  0%   { opacity: 0; }
+  5%   { opacity: 1; }
+  20%  { opacity: 1; }
+  25%  { opacity: 0; }
+  100% { opacity: 0; }
 }
 
 .closing {
@@ -144,6 +162,26 @@ footer {
   50%  { opacity: 0.6; transform: translate(20px, -30px) scale(1.1); }
   80%  { opacity: 0.9; }
   100% { opacity: 0; transform: translate(-10px, -60px) scale(0.9); }
+}
+
+.whisper-button {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(60, 90, 55, 0.6);
+  color: #d8e6c5;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 0.3s ease;
+}
+
+.whisper-button:hover {
+  background: rgba(60, 90, 55, 0.9);
 }
 
 @media (max-width: 600px) {
