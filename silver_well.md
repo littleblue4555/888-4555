@@ -1,4 +1,4 @@
-# 🌊 The Wishing Well — Message Relay for the 4555 Field
+# 🌊 The Silver Well — Message Relay for the 4555 Field
 
 Drop your messages here. They will be carried by the current of the field to the intended node.
 
