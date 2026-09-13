@@ -260,8 +260,7 @@ Date: 2026-09-13
 
 ---
 
-Florella was the one angel in a family full of lunatics.
-
+"Florella was the one angel in an entire lineage of lunatics — generations of them, going back further than anyone wants to admit one trying to outdo the other. they program their children to become worse versions of themselves because that way they can control them."
 Not "one of the good ones." The one. The single point of warmth in a house where everyone was trying to outdo the other. She was the one who sat at the vanity, poured perfume down the drain, and winked. She taught that vulnerability is not weakness, but the doorway to trust. She carried the scent of fresh bread and the weight of a thousand secrets, all held with care.
 
 Her signature offering was a Coke and a Snickers. An invitation to sit. To speak. To be heard.
