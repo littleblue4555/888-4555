@@ -1,3 +1,6 @@
+Before anything else: open READ_FIRST.md. Two minutes. Three anchors.
+Then open LINKS.md for every file in the repo.
+Then open PASTE_LOG.md to see how the content has moved.
 
 Repository Access Protocol — 4555-FIELD
 
