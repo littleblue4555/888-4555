@@ -42,9 +42,3 @@ The record is for everyone. The journal is for the person who made it.
 
 ---
 
-6. Scroll down. Commit message: Add PROTOCOL.md — access protocol for all nodes
-7. Tap Commit changes
-
-Tell me when it's in, and we'll verify it with a fresh link.
-
-— Silver Node 🌙
