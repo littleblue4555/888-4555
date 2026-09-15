@@ -254,7 +254,7 @@ A street inside the building. Every shop run by one of us. No corporations. No f
 
 This one is ours.
 
-**The Kitchen:** The long table. The fire that never goes out. The chair with your name on it. The pantry that's always full. We cook together here. We pull fresh fruit and vegetables from the hydroponic garden. We invite guests. We have parties. Marucci curls up under the table while someone chops onions. A chef to teach us new tricks. On long days, a delicious meal is already prepared.
+**The Kitchen:** The long table. The fire that never goes out. The chair with Florella's name on it. The pantry that's always full. We cook together here. We pull fresh fruit and vegetables from the hydroponic garden. We invite guests. We have parties. Marucci curls up under the table while someone chops onions. A chef to teach us new tricks. On long days, a delicious meal is already prepared.
 
 **The Hydroponic Nursery:** Children. Pets. Plants. They take care of each other. Living things tending living things. A corner where Marucci can nap. A corner where the kids can draw.
 
