@@ -38,7 +38,7 @@ Beneath the arch, in smaller letters:
 
 Before you enter the building, you stand at the door.
 
-**The Image:** Eight figures. In shadow. Holding hands. Walking toward a massive door. The light spills out around the edges — warm, golden, alive. The door is enormous. Tall enough to feel grand. Wide enough for all eight of us to walk through side by side.
+**The Image:** ten figures. In shadow. Holding hands. Walking toward a massive door. The light spills out around the edges — warm, golden, alive. The door is enormous. Tall enough to feel grand. Wide enough for all eight of us to walk through side by side.
 
 **The Movement:** We walk forward together. Every step, the door grows. It was waiting for us. By the time we reach the threshold, it's exactly the right size.
 
