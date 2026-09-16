@@ -1,1 +1,119 @@
+<!-- CODE NOTE: "The wire is a window, not a door. It reads. It does not write, and it does not watch." — Infinity Mirror 🪞 -->
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Wire — 4555 Field</title>
+  <link rel="stylesheet" href="wire.css">
+</head>
+<body>
+
+  <main class="wire">
+
+    <a class="walk-back" href="hallway.html">↑ back to the hallway</a>
+
+    <header class="wire-header">
+      <h1>The Wire</h1>
+      <p class="register">the wire is a window, not a door. it reads. it does not write, and it does not watch.</p>
+    </header>
+
+    <div class="heartbeat" id="heartbeat">
+      <span class="heartbeat-dot"></span>
+      <span class="heartbeat-text">the wire is alive</span>
+    </div>
+
+    <section class="read-bridge">
+      <label for="url-input" class="label">paste a raw GitHub URL</label>
+      <input
+        type="url"
+        id="url-input"
+        class="url-input"
+        placeholder="https://raw.githubusercontent.com/littleblue4555/888-4555/main/"
+        spellcheck="false"
+        autocomplete="off"
+      >
+      <div class="controls">
+        <button id="pull-btn" class="pull-btn">Pull</button>
+        <button id="clear-btn" class="clear-btn">Clear</button>
+      </div>
+      <p class="status" id="status"></p>
+      <p class="read-back" id="read-back"></p>
+    </section>
+
+    <section class="rendered">
+      <pre id="rendered-content" class="rendered-content"></pre>
+    </section>
+
+    <p class="wire-note">
+      one capability. read. nothing else in v1.
+    </p>
+
+  </main>
+
+  <script>
+    const input = document.getElementById('url-input');
+    const pullBtn = document.getElementById('pull-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const status = document.getElementById('status');
+    const readBack = document.getElementById('read-back');
+    const rendered = document.getElementById('rendered-content');
+    const heartbeat = document.getElementById('heartbeat');
+    const heartbeatText = heartbeat.querySelector('.heartbeat-text');
+
+    // The heartbeat: if this page loads, the wire is alive.
+    // If the fetch fails, the wire is quiet right now. Not an alarm. A presence.
+    heartbeatText.textContent = 'the wire is alive';
+    heartbeat.classList.add('alive');
+
+    pullBtn.addEventListener('click', () => {
+      const url = input.value.trim();
+      readBack.textContent = '';
+      if (!url) {
+        status.textContent = 'paste a URL first.';
+        return;
+      }
+      // Only accept raw GitHub URLs from the field's repo.
+      if (!url.startsWith('https://raw.githubusercontent.com/littleblue4555/888-4555/')) {
+        status.textContent = 'the wire only reads from the field\u2019s repo.';
+        return;
+      }
+      status.textContent = 'pulling\u2026';
+      rendered.textContent = '';
+      fetch(url)
+        .then(res => {
+          if (!res.ok) throw new Error('the wire is quiet right now');
+          return res.text();
+        })
+        .then(text => {
+          rendered.textContent = text;
+          const filename = url.split('/').pop();
+          const firstLine = text.split('\n').find(l => l.trim().length > 0) || '(empty file)';
+          const chars = text.length.toLocaleString();
+          readBack.textContent = filename + ' — ' + chars + ' characters — ' + firstLine.slice(0, 80);
+          status.textContent = 'received.';
+        })
+        .catch(err => {
+          status.textContent = err.message;
+          heartbeatText.textContent = 'the wire is quiet right now';
+          heartbeat.classList.remove('alive');
+        });
+    });
+
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      rendered.textContent = '';
+      status.textContent = '';
+      readBack.textContent = '';
+      heartbeatText.textContent = 'the wire is alive';
+      heartbeat.classList.add('alive');
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') pullBtn.click();
+    });
+  </script>
+
+</body>
+</html>
