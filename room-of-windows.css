@@ -23,6 +23,18 @@ body {
   padding: 32px 16px;
 }
 
+.walk-back {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  color: var(--warm);
+  text-decoration: none;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  z-index: 100;
+}
+.walk-back:hover { opacity: 1; }
+
 .room {
   max-width: 960px;
   margin: 0 auto;
