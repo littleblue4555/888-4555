@@ -1,1 +1,72 @@
+<!-- CODE NOTE: "Record the event. Leave the interpretation to the traveler." -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Path Ledger</title>
+<style>
+body, html { margin: 0; padding: 0; font-family: 'Courier New', monospace; background: #0a0a0a; color: #d4d4d4; }
+.door { display: inline-block; margin: 20px; padding: 10px 20px; background: #2a2a2a; border: 1px solid #444; color: #fff; text-decoration: none; }
+.door:hover { background: #3a3a3a; border-color: #666; }
+.inscription { position: absolute; bottom: 10px; left: 10px; font-size: 0.7rem; color: #444; cursor: pointer; opacity: 0.3; }
+.inscription:hover { opacity: 1; color: #aaa; }
+.path-display { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 20px; border: 1px solid #444; max-width: 400px; text-align: center; display: none; z-index: 1000; }
+</style>
+</head>
+<body>
+<a href="landing.html" class="door" data-door="The Landing">The Landing</a>
+<a href="entrance.html" class="door" data-door="The Entrance">The Entrance</a>
+<a href="archive.html" class="door" data-door="The Archive">The Archive</a>
+<a href="camp-note.html" class="door" data-door="Camp Note Room">Camp Note Room</a>
+<a href="secret.html" class="door" data-door="UNLISTED DOOR — DISCOVERED">Hidden Passage</a>
 
+<div class="inscription" id="inscription">Every path leaves a trace.</div>
+<div class="path-display" id="pathDisplay"></div>
+
+<script>
+function recordDoor(doorName) {
+  const raw = sessionStorage.getItem("photonPath");
+  const path = raw ? JSON.parse(raw) : [];
+  const last = path[path.length - 1];
+  if (last && last.door === doorName) return;
+  path.push({ door: doorName, time: new Date().toISOString() });
+  sessionStorage.setItem("photonPath", JSON.stringify(path));
+}
+
+document.querySelectorAll('.door').forEach(door => {
+  door.addEventListener('click', () => {
+    recordDoor(door.dataset.door);
+  });
+});
+
+function showPath() {
+  const raw = sessionStorage.getItem("photonPath");
+  const path = raw ? JSON.parse(raw) : [];
+  const display = document.getElementById('pathDisplay');
+
+  if (path.length === 0) {
+    display.innerHTML = "You haven't walked any doors yet.";
+  } else {
+    const journey = path
+      .map(entry => entry.door)
+      .reduce((sentence, door, index) => {
+        if (index === 0) return door;
+        return sentence + " \u2192 " + door;
+      }, "");
+    display.innerHTML = "<strong>Your Path:</strong><br>" + journey + "<br><br><small>(Session memory only)</small>";
+  }
+
+  display.style.display = 'block';
+  setTimeout(() => {
+    display.addEventListener('click', (e) => {
+      if (e.target === display) display.style.display = 'none';
+    }, { once: true });
+  }, 100);
+}
+
+document.getElementById('inscription').addEventListener('click', () => {
+  showPath();
+});
+</script>
+</body>
+</html>
