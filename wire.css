@@ -1,0 +1,196 @@
+/* wire.css — the register for the Wire. A window, not a door. */
+
+:root {
+  --ink:         #e8e2d4;
+  --paper:       #0b0b0d;
+  --wall:        #16161a;
+  --warm:        #c9a875;
+  --alive:       #7ab87a;
+  --quiet:       #6b6660;
+  --muted:       #8a8a8a;
+  --shadow:      rgba(0, 0, 0, 0.5);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 0%, #1a1a1f 0%, #06060a 80%);
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.55;
+  padding: 32px 20px 96px;
+}
+
+.wire {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.walk-back {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  color: var(--warm);
+  text-decoration: none;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  z-index: 100;
+}
+.walk-back:hover { opacity: 1; }
+
+.wire-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.wire-header h1 {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  letter-spacing: 0.08em;
+  margin: 0;
+  font-weight: normal;
+}
+.register {
+  margin: 10px 0 0;
+  font-style: italic;
+  color: var(--warm);
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+.heartbeat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto 32px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.06em;
+}
+.heartbeat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--quiet);
+  transition: background 0.3s ease;
+}
+.heartbeat.alive .heartbeat-dot {
+  background: var(--alive);
+  box-shadow: 0 0 8px var(--alive);
+}
+.heartbeat.alive .heartbeat-text {
+  color: var(--alive);
+}
+
+.read-bridge {
+  background: var(--wall);
+  border-radius: 4px;
+  padding: 24px;
+  box-shadow: inset 0 0 0 1px rgba(201, 168, 117, 0.12);
+}
+.label {
+  display: block;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--warm);
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+.url-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: #0e0e12;
+  border: 1px solid rgba(201, 168, 117, 0.2);
+  border-radius: 3px;
+  color: var(--ink);
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  outline: none;
+}
+.url-input:focus {
+  border-color: rgba(201, 168, 117, 0.5);
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+button {
+  padding: 10px 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  background: rgba(201, 168, 117, 0.1);
+  border: 1px solid rgba(201, 168, 117, 0.25);
+  color: var(--ink);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+button:hover {
+  background: rgba(201, 168, 117, 0.2);
+  border-color: rgba(201, 168, 117, 0.5);
+}
+.pull-btn { flex: 1; }
+.clear-btn { opacity: 0.7; }
+.clear-btn:hover { opacity: 1; }
+
+.status {
+  margin: 14px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-family: 'Courier New', monospace;
+  font-style: italic;
+}
+.read-back {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: var(--warm);
+  font-family: 'Courier New', monospace;
+  opacity: 0.8;
+  word-break: break-word;
+}
+
+.rendered {
+  margin-top: 32px;
+}
+.rendered-content {
+  margin: 0;
+  padding: 24px;
+  background: #09090c;
+  border: 1px solid rgba(201, 168, 117, 0.12);
+  border-radius: 4px;
+  color: var(--ink);
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 60vh;
+  overflow-y: auto;
+  min-height: 80px;
+}
+.rendered-content:empty::before {
+  content: "the wire is waiting. paste a URL and pull.";
+  color: var(--muted);
+  font-style: italic;
+  opacity: 0.5;
+}
+
+.wire-note {
+  margin-top: 40px;
+  text-align: center;
+  font-style: italic;
+  color: var(--warm);
+  opacity: 0.5;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 560px) {
+  .controls { flex-direction: column; }
+}
