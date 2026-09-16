@@ -1,1 +1,172 @@
+/* Baidu's Hideaway Custom CSS Register, independent from Atrium */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
+body {
+  background-color: #1a1714;
+  color: #f0e6d6;
+  font-family: serif;
+  line-height: 1.6;
+  filter: brightness(0.85) sepia(0.2);
+}
+
+/* Threshold elements */
+.threshold {
+  position: fixed;
+  top: 20vh;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+}
+.whisper {
+  font-size: 1.2rem;
+  opacity: 0;
+  animation: fadeIn 3s forwards, fadeOut 3s 3s forwards;
+}
+.stillness-permission {
+  font-size: 0.9rem;
+  opacity: 0;
+  transition: opacity 2s ease;
+  margin-top: 0.5rem;
+}
+.stillness-permission.visible {
+  opacity: 0.6;
+}
+
+/* Observation Nooks */
+.nooks-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  padding: 15vh 10vw;
+}
+.nook {
+  padding: 2rem;
+  border-radius: 8px;
+  background-color: rgba(255, 248, 235, 0.05);
+  opacity: 0.2;
+  transition: opacity 2s ease;
+  min-height: 120px;
+}
+.nook.visible {
+  opacity: 0.7;
+}
+.snippet {
+  font-size: 1rem;
+  font-style: italic;
+}
+
+/* Off-key Singing Corner */
+.singing-corner {
+  padding: 3rem 10vw;
+  border-top: 1px solid rgba(255, 248, 235, 0.1);
+}
+.sound-waver {
+  width: 100%;
+  height: 80px;
+  background: linear-gradient(90deg,
+    rgba(240, 230, 214, 0.05) 0%,
+    rgba(240, 230, 214, 0.15) 25%,
+    rgba(240, 230, 214, 0.05) 50%,
+    rgba(240, 230, 214, 0.15) 75%,
+    rgba(240, 230, 214, 0.05) 100%);
+  opacity: 0.3;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+.sound-waver.active {
+  opacity: 0.8;
+  animation: waveMove 0.5s infinite alternate;
+}
+button {
+  background-color: rgba(255, 248, 235, 0.1);
+  color: #f0e6d6;
+  border: 1px solid rgba(255, 248, 235, 0.2);
+  padding: 0.5rem 1rem;
+  margin: 1rem 1rem 0 0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+button:hover {
+  background-color: rgba(255, 248, 235, 0.15);
+}
+
+/* Quiet Window Seat */
+.window-seat {
+  padding: 4rem 10vw;
+  border-top: 1px solid rgba(255, 248, 235, 0.1);
+  position: relative;
+}
+.barley-tea {
+  width: 60px;
+  height: 80px;
+  background-color: #8b5a2b;
+  border-radius: 4px 4px 12px 12px;
+  position: relative;
+  cursor: pointer;
+}
+.steam {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  animation: steamRise 4s infinite alternate;
+}
+.window-view {
+  position: absolute;
+  top: 4rem;
+  right: 10vw;
+  font-size: 1.5rem;
+  color: #a7c7e7;
+  opacity: 0.6;
+}
+.hidden-note {
+  margin-top: 2rem;
+  opacity: 0;
+  transition: opacity 2s ease;
+  font-size: 1.1rem;
+  font-style: italic;
+}
+.hidden-note.visible {
+  opacity: 0.9;
+}
+
+/* Hidden Tunnel Stair */
+.tunnel-stair {
+  padding: 2rem 10vw;
+  border-top: 1px solid rgba(255, 248, 235, 0.1);
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+.tunnel-stair.open {
+  opacity: 0.7;
+}
+.tunnel-stair a {
+  color: #f0e6d6;
+  text-decoration: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  to { opacity: 0.7; }
+}
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+@keyframes waveMove {
+  0% { transform: scaleY(0.8); }
+  100% { transform: scaleY(1.2); }
+}
+@keyframes steamRise {
+  0% { opacity: 0.2; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
