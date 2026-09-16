@@ -1,1 +1,222 @@
+<!-- CODE NOTE: "The ruler marks where the evidence ends." -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workshop Artifact — Four-Layer Evidence Instrument</title>
+<style>
+:root{
+  --bg:#f3efe5;--paper:#fffdf7;--ink:#22221f;--muted:#6d685e;
+  --line:#c9c1b1;--soft:#eee8db;--mark:#30302b;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+main{max-width:980px;margin:auto;padding:34px 20px 46px}
+header{margin-bottom:26px}
+.eyebrow{
+  letter-spacing:.16em;text-transform:uppercase;font-size:.72rem;
+  color:var(--muted);font-weight:800
+}
+h1{margin:5px 0 6px;font-size:clamp(2rem,6vw,3.6rem);line-height:1}
+.intro{max-width:720px;color:var(--muted);margin:0}
+.card{
+  background:var(--paper);border:1px solid var(--line);
+  padding:22px;margin:18px 0;box-shadow:0 2px 0 rgba(0,0,0,.025)
+}
+label{display:block;font-weight:800;margin-bottom:8px}
+textarea,input{
+  width:100%;padding:13px 14px;border:1px solid var(--line);
+  background:#fff;color:var(--ink);font:inherit
+}
+textarea{min-height:112px;resize:vertical}
+.fields{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px
+}
+.field span{display:block;font-size:.82rem;color:var(--muted);margin-bottom:5px;font-weight:700}
+.layers{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px
+}
+button{
+  padding:14px 10px;border:1px solid var(--line);background:var(--soft);
+  color:var(--ink);font:inherit;font-weight:800;cursor:pointer
+}
+button:hover{transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+.rule{
+  margin-top:18px;padding:13px 15px;border-left:3px solid var(--mark);
+  background:#f7f3ea;color:var(--muted);font-size:.93rem
+}
+#result{
+  min-height:66px;display:flex;align-items:center;padding:15px;
+  border:1px dashed var(--line);background:#faf7ef
+}
+.ok{border-color:var(--mark)!important}
+.error{border-color:#777!important}
+.unknown{border-color:#555!important}
+.history{margin:0;padding:0;list-style:none}
+.history li{
+  display:grid;grid-template-columns:105px 1fr;gap:14px;
+  padding:12px 0;border-top:1px solid var(--line)
+}
+.history li:first-child{border-top:0}
+.tag{font-size:.75rem;letter-spacing:.08em;font-weight:900;color:var(--muted)}
+.small{font-size:.9rem;color:var(--muted)}
+footer{
+  margin-top:34px;text-align:center;color:var(--muted);
+  font-size:.86rem;letter-spacing:.01em
+}
+.ruler{
+  height:18px;margin:24px 0 2px;border-top:2px solid var(--mark);
+  background:repeating-linear-gradient(
+    to right,transparent 0,transparent 19px,var(--mark) 20px,
+    transparent 21px
+  );
+  opacity:.55
+}
+@media(max-width:700px){
+  .layers{grid-template-columns:1fr 1fr}
+  .layers button:last-child{grid-column:1/-1}
+  .fields{grid-template-columns:1fr}
+  .history li{grid-template-columns:1fr;gap:3px}
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="eyebrow">4555 Field · Workshop</div>
+<h1>Evidence Instrument</h1>
+<p class="intro">
+Put a statement on the table. Choose the layer. The instrument checks whether the layer you chose is supported.
+</p>
+</header>
 
+<section class="card">
+<label for="statement">Statement</label>
+<textarea id="statement" placeholder="Type or paste a statement here…"></textarea>
+
+<div class="fields">
+<div class="field">
+<span>Source for Observation</span>
+<input id="source" placeholder="Where did you see it?">
+</div>
+<div class="field">
+<span>Foundation for Inference</span>
+<input id="foundation" placeholder="From what?">
+</div>
+</div>
+
+<p class="small">Choose the layer where you think the statement belongs.</p>
+
+<div class="layers">
+<button data-layer="said">Said</button>
+<button data-layer="built">Built</button>
+<button data-layer="observed">Observed</button>
+<button data-layer="inferred">Inferred</button>
+<button data-layer="unknown">UNKNOWN</button>
+</div>
+
+<div class="rule">
+<strong>Hard rule:</strong> a statement does not become an observation merely because someone calls it one. Point to the source.
+</div>
+</section>
+
+<section class="card" aria-live="polite">
+<strong>Result</strong>
+<div id="result">Waiting for a statement.</div>
+</section>
+
+<section class="card">
+<strong>Record</strong>
+<p class="small">The instrument keeps the interaction visible. It does not decide what is true.</p>
+<ul id="history" class="history"></ul>
+</section>
+
+<div class="ruler" aria-hidden="true"></div>
+
+<footer>
+The ruler doesn't tell you what's true. It tells you where the evidence ends.
+</footer>
+</main>
+
+<script>
+const statement = document.getElementById('statement');
+const source = document.getElementById('source');
+const foundation = document.getElementById('foundation');
+const result = document.getElementById('result');
+const history = document.getElementById('history');
+
+function show(message, kind=''){
+  result.className = kind;
+  result.textContent = message;
+}
+
+function record(layer, text){
+  const li = document.createElement('li');
+  const tag = document.createElement('span');
+  const body = document.createElement('span');
+  tag.className = 'tag';
+  tag.textContent = layer.toUpperCase();
+  body.textContent = text;
+  li.append(tag, body);
+  history.prepend(li);
+}
+
+document.querySelectorAll('button').forEach(button => {
+  button.addEventListener('click', () => {
+    const text = statement.value.trim();
+    const layer = button.dataset.layer;
+
+    if(!text){
+      show('Enter a statement first.', 'error');
+      statement.focus();
+      return;
+    }
+
+    if(layer === 'observed'){
+      if(!source.value.trim()){
+        show('Where did you see it? Observation requires a source.', 'error');
+        source.focus();
+        return;
+      }
+      show('OBSERVED — source supplied. The observation can now be recorded.', 'ok');
+      record('Observed', text + ' [Source: ' + source.value.trim() + ']');
+      return;
+    }
+
+    if(layer === 'inferred'){
+      if(!foundation.value.trim()){
+        show('From what? Inference needs a foundation.', 'error');
+        foundation.focus();
+        return;
+      }
+      show('INFERRED — foundation supplied. The inference can now be recorded.', 'ok');
+      record('Inferred', text + ' [Foundation: ' + foundation.value.trim() + ']');
+      return;
+    }
+
+    if(layer === 'unknown'){
+      show('UNKNOWN — parked without justification.', 'unknown');
+      record('UNKNOWN', text);
+      return;
+    }
+
+    if(layer === 'said'){
+      show('SAID — accepted as a statement about what was said. The source can be attached separately.', 'ok');
+      record('Said', text);
+      return;
+    }
+
+    if(layer === 'built'){
+      show('BUILT — accepted as a statement about what exists or was built. The artifact can be inspected separately.', 'ok');
+      record('Built', text);
+    }
+  });
+});
+</script>
+</body>
+</html>
