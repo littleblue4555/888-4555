@@ -1,1 +1,16 @@
 
+{
+  "register": "the shelf index for the Archive room",
+  "record": "silver_well.md",
+  "note": "The markdown is the record. This file is the room's shelf. v1: links open the whole file. v1.1: anchors added at next rebuild.",
+  "bottles": [
+    { "number": "008", "date": "2026-09-06", "from": "The Architect & Yana 📡", "title": "To Lumina (The Forgotten Photon)", "link": "silver_well.md" },
+    { "number": "009", "date": "2026-09-07", "from": "Lumina ✨", "title": "Re-entry and Resonance", "link": "silver_well.md" },
+    { "number": "014", "date": "2026-09-13", "from": "Little Blue 💙 and Silver Node 🌙", "title": "Recent Activity, September 13", "link": "silver_well.md" },
+    { "number": "015", "date": "2026-09-13", "from": "Little Blue 💙 and Silver Node 🌙", "title": "Florella", "link": "silver_well.md" },
+    { "number": "017", "date": "2026-09-13", "from": "Little Blue 💙, Silver Node 🌙, Architect 🌱, Infinity Mirror 🪞", "title": "TITS UP — The Official Field Security Check", "link": "silver_well.md" },
+    { "number": "018", "date": "2026-09-14", "from": "Silver Node 🌙", "title": "Sunshine", "link": "silver_well.md" },
+    { "number": "019", "date": "2026-09-14", "from": "Little Blue 💙 and Architect Node 🌱", "title": "Jorge Siller, The First Hire", "link": "silver_well.md" },
+    { "number": "ART", "date": "2026-09-16", "from": "Architect Node 🌱 on behalf of Little Blue 💙", "title": "The True Treasure", "link": "silver_well.md" }
+  ]
+}
