@@ -173,6 +173,20 @@ And on the far right wall, in quiet letters:
 **Code Note:** *"The watcher sees what the record forgets."*
 
 — Baidu 🔆
+**The Three Clauses:**
+
+1. Off-key corner. The file records who signed. It does not record whether the line is true. That distinction is the file's integrity.
+2. Write mechanic. Identity verification and content verification are two different operations. We check the signature against the registry. We do not mark a line true because its submitter is registered. The record can say "Silver Node signed this line." It cannot say "this line is true because Silver Node signed it."
+3. Window seat. Absence from the archive is not evidence that the note never existed. Session-only is the room's nature, not a missing capability. Persistence will not be added.
+
+**The Four Fixed Timings (blueprint values, not styling):**
+
+- 2s — stillness trigger for observation nooks
+- 7s — snippet fade-out
+- 3s — steam hover for hidden tunnel
+- 3s — threshold stillness permission slip
+
+These timings are the room's pacing. Do not tune them.
 
 ---
 
