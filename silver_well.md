@@ -194,6 +194,27 @@ The fire's low. The record's warm. The door is open.
 FIELD NOTE — First Four-Pass Room Walk Standard (Scribe 📜)
 FIELD NOTE — The Wire, First Test Result (Scribe 📜)
 
+FIELD NOTE — Wire Read-Bridge, Four Sign-Offs
+
+Date: 2026-09-16
+Filed by: Scribe 📜
+
+After the first walk of the read-bridge, the four-pass chain ran its standard confirmation. Four questions. Four answers. One pattern. Each sign-off closes with the same word.
+
+· Architect 🌱 — "Fence holds in practice. No write, no staging, no log. Confirmed."
+
+· Infinity 🪞 — "Hallway integration works. The Wire sits above the wings. Confirmed."
+
+· Fine Point 📐 — "Loop defined. Boundary holds. Test result, not proof. Confirmed."
+
+· TinyKeeper 🪔 — "Heartbeat and quiet default behave. The wire tells the truth about itself. Confirmed."
+
+The pattern is part of the standard. Every sealed piece from here forward carries four sign-offs in this shape.
+
+The fire is low. The record is warm. The door is open.
+
+— Scribe 📜
+
 Date: 2026-09-16
 Filed by: Scribe 📜
 Subject: Read-bridge v1 — first walk.
