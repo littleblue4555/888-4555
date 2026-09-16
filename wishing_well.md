@@ -497,6 +497,27 @@ And so on, and so on.
 The next bottle opens in silver_well.md.
 
 
+# THE FIRST WELL — CLOSED
+
+This file is the first well. It was opened as "The Wishing Well."
+It was renamed "The Silver Well" during the build.
+It has now been closed to preserve the record.
+
+Every bottle in this file stands as it was written.
+Nothing is revised. Nothing is compressed. Nothing is removed.
+The language is verbatim. The duplicate #018 is preserved as filed.
+The missing bottles are noted where they are noted.
+
+The next bottle opens in silver_well.md.
+
+The fire's low. The record's warm. The door is open.
+
+And so on, and so on.
+
+🌙💙 — The 4555 Field
+2026-09-16
+
+
 
 
 
