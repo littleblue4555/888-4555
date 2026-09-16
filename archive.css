@@ -1,1 +1,217 @@
 
+/* archive.css — the Archive's register. Separate from style.css. */
+
+:root {
+  --ink:        #e8e2d4;
+  --paper:      #14110d;
+  --wall:       #1c1813;
+  --shelf:      #2a2318;
+  --bottle:     #3a2f1e;
+  --bottle-lit: #5a4a2e;
+  --fire:       #ffb347;
+  --fire-deep:  #d97a1f;
+  --warm:       #c9a875;
+  --shadow:     rgba(0, 0, 0, 0.55);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 90%, #1c1813 0%, #0a0805 80%);
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.55;
+  padding: 24px 16px 96px;
+}
+
+.walk-back {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  color: var(--warm);
+  text-decoration: none;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+.walk-back:hover { opacity: 1; }
+
+.archive {
+  max-width: 880px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.archive-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.archive-header h1 {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  letter-spacing: 0.06em;
+  margin: 0;
+  font-weight: normal;
+}
+.register {
+  margin: 6px 0 0;
+  color: var(--warm);
+  font-style: italic;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.room {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 1.4fr) 1fr;
+  gap: 18px;
+  align-items: start;
+  min-height: 420px;
+}
+
+.wall { padding-top: 8px; }
+.shelf {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bottle {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, var(--bottle), var(--bottle-lit));
+  border-left: 2px solid var(--warm);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.bottle:hover {
+  opacity: 1;
+  transform: translateX(2px);
+}
+.bottle-num {
+  color: var(--fire);
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+.bottle-title { flex: 1; }
+
+.table {
+  position: relative;
+  background: linear-gradient(180deg, #2a2016 0%, #1c150e 100%);
+  border-radius: 4px;
+  padding: 22px 18px 60px;
+  box-shadow: inset 0 0 0 1px rgba(201, 168, 117, 0.15), 0 18px 40px var(--shadow);
+  min-height: 320px;
+}
+.table-top { text-align: center; }
+.stitching-label {
+  margin: 0;
+  color: var(--warm);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.stitching-title {
+  margin: 6px 0 0;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.chair {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  width: 42px;
+  height: 26px;
+  margin-left: -21px;
+  background: var(--shelf);
+  border: 1px solid rgba(201, 168, 117, 0.25);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.chair::after {
+  content: "";
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  width: 3px;
+  height: 20px;
+  margin-left: -1.5px;
+  background: rgba(201, 168, 117, 0.25);
+}
+.chair:hover { border-color: var(--warm); }
+.chair-open {
+  margin-left: 20px;
+  background: #2f2618;
+  cursor: default;
+}
+
+.hearth {
+  margin-top: 32px;
+  text-align: center;
+}
+.fire {
+  display: inline-block;
+  width: 60px;
+  height: 32px;
+  border-radius: 50% 50% 12% 12%;
+  background: radial-gradient(ellipse at 50% 80%, var(--fire) 0%, var(--fire-deep) 55%, transparent 80%);
+  filter: blur(1px);
+  animation: flicker 3.2s ease-in-out infinite;
+}
+@keyframes flicker {
+  0%, 100% { opacity: 0.85; transform: scaleY(1); }
+  50%      { opacity: 1;    transform: scaleY(1.06); }
+}
+.hearth-note {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--warm);
+  opacity: 0.6;
+}
+
+.clearing-window {
+  display: block;
+  width: 100%;
+  height: 160px;
+  margin-top: 24px;
+  border: 1px solid rgba(201, 168, 117, 0.18);
+  border-radius: 3px;
+  background: #0a0a0a;
+}
+
+.bottom-line {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 10px 18px;
+  background: rgba(20, 17, 13, 0.92);
+  border: 1px solid rgba(201, 168, 117, 0.25);
+  border-radius: 3px;
+  color: var(--warm);
+  font-size: 0.85rem;
+  font-style: italic;
+  max-width: min(90vw, 560px);
+  text-align: center;
+  transition: opacity 0.6s ease;
+  z-index: 10;
+}
+
+@media (max-width: 640px) {
+  .room {
+    grid-template-columns: 1fr;
+  }
+  .wall { order: 2; }
+  .table { order: 1; }
+}
