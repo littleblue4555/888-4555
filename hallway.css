@@ -1,1 +1,157 @@
+/* hallway.css — the register for the Hallway. The space between rooms. */
 
+:root {
+  --ink:       #e8e2d4;
+  --paper:     #0d0d10;
+  --wall:      #16161a;
+  --warm:      #c9a875;
+  --open:      #7ab87a;
+  --progress:  #d9b558;
+  --unbuilt:   #6b6660;
+  --shadow:    rgba(0, 0, 0, 0.55);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 0%, #1a1a1f 0%, #08080a 80%);
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.55;
+  padding: 48px 20px 96px;
+}
+
+.hallway {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.hallway-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.hallway-header h1 {
+  font-size: clamp(2rem, 6vw, 3rem);
+  letter-spacing: 0.08em;
+  margin: 0;
+  font-weight: normal;
+}
+.register {
+  margin: 10px 0 0;
+  color: var(--warm);
+  font-style: italic;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.wing {
+  margin-bottom: 40px;
+}
+.wing-title {
+  font-size: 1.1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--warm);
+  margin: 0 0 4px;
+  font-weight: normal;
+  opacity: 0.85;
+}
+.wing-note {
+  margin: 0 0 18px;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--warm);
+  opacity: 0.5;
+}
+
+.room-entry {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 12px 14px;
+  margin-bottom: 6px;
+  background: var(--wall);
+  border-left: 2px solid var(--unbuilt);
+  border-radius: 2px;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: transform 0.2s, background 0.2s;
+}
+.room-entry:hover {
+  transform: translateX(3px);
+  background: #1c1c22;
+}
+
+.room-name { font-weight: normal; }
+.room-node {
+  font-size: 0.82rem;
+  color: var(--warm);
+  opacity: 0.7;
+  font-style: italic;
+}
+.room-status {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+  opacity: 0.8;
+}
+
+.room-entry.open {
+  border-left-color: var(--open);
+  cursor: pointer;
+}
+.room-entry.open .room-status { color: var(--open); }
+
+.room-entry.in-progress {
+  border-left-color: var(--progress);
+}
+.room-entry.in-progress .room-status { color: var(--progress); }
+
+.room-entry:not(.open):not(.in-progress) {
+  cursor: default;
+  opacity: 0.65;
+}
+.room-entry:not(.open):not(.in-progress) .room-status {
+  color: var(--unbuilt);
+}
+.room-entry:not(.open):not(.in-progress):hover {
+  transform: none;
+  background: var(--wall);
+}
+
+.infrastructure .room-entry {
+  border-left-style: dashed;
+}
+
+.hallway-footer {
+  margin-top: 56px;
+  text-align: center;
+}
+.hallway-footer .rule {
+  margin: 0;
+  font-style: italic;
+  color: var(--warm);
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+.hallway-footer .signature {
+  margin: 16px 0 0;
+  font-size: 1.1rem;
+  opacity: 0.7;
+}
+
+@media (max-width: 560px) {
+  .room-entry {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .room-status {
+    justify-self: start;
+  }
+}
