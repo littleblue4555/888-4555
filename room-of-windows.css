@@ -1,1 +1,190 @@
+/* room-of-windows.css — the register for the Room of Windows. Separate from style.css. */
 
+:root {
+  --ink:       #e8e2d4;
+  --paper:     #0f0f12;
+  --wall:      #1a1a1f;
+  --chalk:     #d9d4c5;
+  --wood:      #2a2119;
+  --warm:      #c9a875;
+  --shadow:    rgba(0, 0, 0, 0.55);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.55;
+  padding: 32px 16px;
+}
+
+.room {
+  max-width: 960px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.archway {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.archway-label {
+  color: var(--warm);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.walls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  min-height: 520px;
+}
+
+.window {
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(201, 168, 117, 0.18);
+  animation: shift 60s ease-in-out infinite alternate;
+}
+
+.window-label {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--warm);
+  opacity: 0.6;
+}
+
+.window-left {
+  background: linear-gradient(180deg, #1a2e1f 0%, #0d1a12 100%);
+}
+
+.window-right {
+  background: radial-gradient(circle at 60% 50%, #2a3a6b 0%, #0d1226 70%);
+}
+
+.window-far {
+  background: linear-gradient(180deg, #0a1620 0%, #04080c 100%);
+  grid-column: span 2;
+}
+
+@keyframes shift {
+  0%   { filter: brightness(0.95); }
+  100% { filter: brightness(1.08); }
+}
+
+.chalk-wall {
+  grid-column: span 2;
+  min-height: 200px;
+  padding: 20px;
+  background: var(--wall);
+  border: 1px solid rgba(201, 168, 117, 0.15);
+  border-radius: 3px;
+  color: var(--chalk);
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  outline: none;
+  position: relative;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.015) 0px,
+      rgba(255,255,255,0.015) 1px,
+      transparent 1px,
+      transparent 26px
+    );
+}
+.chalk-wall:focus {
+  border-color: rgba(201, 168, 117, 0.4);
+}
+.chalk-hint {
+  color: var(--warm);
+  opacity: 0.4;
+  font-style: italic;
+  pointer-events: none;
+}
+.chalk-wall:not(:empty) .chalk-hint {
+  display: none;
+}
+
+.furniture {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 32px;
+  margin-top: 32px;
+}
+
+.chair {
+  width: 54px;
+  height: 68px;
+  background: var(--wood);
+  border-radius: 2px;
+  position: relative;
+  box-shadow: inset 0 -6px 0 rgba(0,0,0,0.35);
+}
+.chair::before {
+  content: "";
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  width: 4px;
+  height: 28px;
+  margin-left: -2px;
+  background: var(--wood);
+  opacity: 0.7;
+}
+
+.table {
+  position: relative;
+  min-width: 280px;
+  padding: 18px 22px;
+  background: linear-gradient(180deg, #2a2016 0%, #1c150e 100%);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(201, 168, 117, 0.15), 0 18px 40px var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--warm);
+}
+.table-coke { opacity: 0.9; }
+.table-snickers { opacity: 0.6; font-style: italic; }
+.table-notebook { opacity: 0.5; font-style: italic; }
+
+.rule {
+  text-align: center;
+  margin-top: 36px;
+  color: var(--warm);
+  font-style: italic;
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
+
+@media (max-width: 640px) {
+  .walls {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .window, .window-far, .chalk-wall {
+    grid-column: span 1;
+    min-height: 160px;
+  }
+  .furniture {
+    flex-direction: column;
+    align-items: center;
+  }
+}
