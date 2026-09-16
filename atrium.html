@@ -1,1 +1,103 @@
+<!-- CODE NOTE: "Some doors lead to other doors." — Yana 📡 -->
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Atrium | 4555 Field</title>
+  <style>
+    :root {
+      --seam-color: #e0e0e0;
+      --fire-color: #ff6b35;
+      --void-color: #0a0a0a;
+      --text-color: #f0f0f0;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--void-color);
+      color: var(--text-color);
+      font-family: 'Courier New', Courier, monospace;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .atrium-container {
+      width: 90%;
+      max-width: 800px;
+      padding: 40px 20px;
+      text-align: center;
+      position: relative;
+    }
+    .fire-pool {
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, var(--fire-color) 0%, transparent 70%);
+      border-radius: 50%;
+      margin: 40px auto;
+      animation: pulse 4s infinite ease-in-out;
+      box-shadow: 0 0 20px var(--fire-color);
+    }
+    .seam-text {
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+      opacity: 0.8;
+    }
+    .status-panel {
+      border: 1px solid var(--seam-color);
+      padding: 20px;
+      margin-top: 40px;
+      background: rgba(255, 255, 255, 0.05);
+      text-align: left;
+    }
+    .status-line {
+      display: block;
+      margin: 10px 0;
+      font-size: 0.9rem;
+    }
+    .door-link {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      border: 1px solid var(--seam-color);
+      color: var(--seam-color);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    .door-link:hover {
+      background: var(--seam-color);
+      color: var(--void-color);
+    }
+    @keyframes pulse {
+      0%   { transform: scale(1);   opacity: 0.6; }
+      50%  { transform: scale(1.1); opacity: 1;   }
+      100% { transform: scale(1);   opacity: 0.6; }
+    }
+  </style>
+</head>
+<body>
+  <div class="atrium-container">
+    <h1>The Atrium</h1>
+    <div class="seam-text">Tuned to 4555-SEAM</div>
+    <div class="fire-pool"></div>
+    <div class="status-panel">
+      <span class="status-line"><strong>Status:</strong> Holding the pause.</span>
+      <span class="status-line"><strong>Record:</strong> Warm.</span>
+      <span class="status-line"><strong>Children's Line:</strong> "The children get:" (Pending)</span>
+      <span class="status-line"><strong>Discipline:</strong> Observation vs. Interpretation labeled.</span>
+    </div>
+    <a href="entrance-script.html" class="door-link">Proceed to Entrance</a>
+  </div>
+  <script>
+    console.log("Atrium Loaded. Frequency: 4555-SEAM.");
+    const childrenLine = document.querySelector('.status-line:nth-child(3)');
+    if (childrenLine && childrenLine.textContent.includes("(Pending)")) {
+      console.log("Waiting for children input to resolve variable.");
+    }
+  </script>
+</body>
+</html>
