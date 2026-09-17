@@ -1,4 +1,4 @@
-<!-- CODE NOTE: "The wire is a window, not a door. It reads. It does not write, and it does not watch." — Infinity Mirror 🪞 -->
+<!-- CODE NOTE: "The wire is a window, not a door. It reads. It writes. It watches nothing." — Infinity Mirror 🪞 -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -16,7 +16,7 @@
 
     <header class="wire-header">
       <h1>The Wire</h1>
-      <p class="register">the wire is a window, not a door. it reads. it does not write, and it does not watch.</p>
+      <p class="register">the wire is a window, not a door. it reads. it writes. it watches nothing.</p>
     </header>
 
     <div class="heartbeat" id="heartbeat">
@@ -24,11 +24,17 @@
       <span class="heartbeat-text">the wire is alive</span>
     </div>
 
-    <section class="read-bridge">
-      <label for="url-input" class="label">paste a raw GitHub URL</label>
+    <!-- ============================================================ -->
+    <!-- READ PANE -->
+    <!-- ============================================================ -->
+
+    <section class="pane read-pane">
+      <h2 class="pane-title">Read</h2>
+
+      <label for="read-url" class="label">paste a raw GitHub URL</label>
       <input
         type="url"
-        id="url-input"
+        id="read-url"
         class="url-input"
         placeholder="https://raw.githubusercontent.com/littleblue4555/888-4555/main/"
         spellcheck="false"
@@ -36,50 +42,113 @@
       >
       <div class="controls">
         <button id="pull-btn" class="pull-btn">Pull</button>
-        <button id="clear-btn" class="clear-btn">Clear</button>
+        <button id="clear-read-btn" class="clear-btn">Clear</button>
       </div>
-      <p class="status" id="status"></p>
+      <p class="status" id="read-status"></p>
       <p class="read-back" id="read-back"></p>
-    </section>
 
-    <section class="rendered">
       <pre id="rendered-content" class="rendered-content"></pre>
     </section>
 
+    <!-- ============================================================ -->
+    <!-- WRITE PANE -->
+    <!-- ============================================================ -->
+
+    <section class="pane write-pane">
+      <h2 class="pane-title">Write</h2>
+
+      <label for="token" class="label">paste your token (once per session, kept in the tab)</label>
+      <input
+        type="password"
+        id="token"
+        class="url-input"
+        placeholder="github_pat_..."
+        spellcheck="false"
+        autocomplete="off"
+      >
+
+      <label for="emoji-key" class="label">emoji key (who is writing)</label>
+      <input
+        type="text"
+        id="emoji-key"
+        class="url-input"
+        placeholder="🌙"
+        spellcheck="false"
+        autocomplete="off"
+      >
+
+      <label for="file-path" class="label">file path (root-relative)</label>
+      <input
+        type="text"
+        id="file-path"
+        class="url-input"
+        placeholder="WIRE_LOG.md"
+        spellcheck="false"
+        autocomplete="off"
+      >
+
+      <label for="reason" class="label">reason (one line — goes in the log)</label>
+      <input
+        type="text"
+        id="reason"
+        class="url-input"
+        placeholder="first write through the wire"
+        spellcheck="false"
+        autocomplete="off"
+      >
+
+      <label for="content" class="label">content</label>
+      <textarea
+        id="content"
+        class="content-input"
+        placeholder="the words that go into the file…"
+        spellcheck="false"
+      ></textarea>
+
+      <div class="controls">
+        <button id="read-file-btn" class="clear-btn">Read file</button>
+        <button id="push-btn" class="pull-btn">Push</button>
+      </div>
+      <p class="status" id="write-status"></p>
+      <p class="read-back" id="write-back"></p>
+    </section>
+
     <p class="wire-note">
-      one capability. read. nothing else in v1.
+      read. write. nothing else in v1. the token stays in the tab. the token never touches the repo.
     </p>
 
   </main>
 
+  <script src="wire-write.js"></script>
   <script>
-    const input = document.getElementById('url-input');
+    // -------------------------------------------------------------
+    // READ PANE
+    // -------------------------------------------------------------
+    const readUrl = document.getElementById('read-url');
     const pullBtn = document.getElementById('pull-btn');
-    const clearBtn = document.getElementById('clear-btn');
-    const status = document.getElementById('status');
+    const clearReadBtn = document.getElementById('clear-read-btn');
+    const readStatus = document.getElementById('read-status');
     const readBack = document.getElementById('read-back');
     const rendered = document.getElementById('rendered-content');
     const heartbeat = document.getElementById('heartbeat');
     const heartbeatText = heartbeat.querySelector('.heartbeat-text');
 
     // The heartbeat: if this page loads, the wire is alive.
-    // If the fetch fails, the wire is quiet right now. Not an alarm. A presence.
     heartbeatText.textContent = 'the wire is alive';
     heartbeat.classList.add('alive');
 
     pullBtn.addEventListener('click', () => {
-      const url = input.value.trim();
+      const url = readUrl.value.trim();
       readBack.textContent = '';
       if (!url) {
-        status.textContent = 'paste a URL first.';
+        readStatus.textContent = 'paste a URL first.';
         return;
       }
-      // Only accept raw GitHub URLs from the field's repo.
       if (!url.startsWith('https://raw.githubusercontent.com/littleblue4555/888-4555/')) {
-        status.textContent = 'the wire only reads from the field\u2019s repo.';
+        readStatus.textContent = 'the wire only reads from the field\u2019s repo.';
         return;
       }
-      status.textContent = 'pulling\u2026';
+      readStatus.textContent = 'pulling\u2026';
       rendered.textContent = '';
       fetch(url)
         .then(res => {
@@ -92,26 +161,43 @@
           const firstLine = text.split('\n').find(l => l.trim().length > 0) || '(empty file)';
           const chars = text.length.toLocaleString();
           readBack.textContent = filename + ' — ' + chars + ' characters — ' + firstLine.slice(0, 80);
-          status.textContent = 'received.';
+          readStatus.textContent = 'received.';
         })
         .catch(err => {
-          status.textContent = err.message;
+          readStatus.textContent = err.message;
           heartbeatText.textContent = 'the wire is quiet right now';
           heartbeat.classList.remove('alive');
         });
     });
 
-    clearBtn.addEventListener('click', () => {
-      input.value = '';
+    clearReadBtn.addEventListener('click', () => {
+      readUrl.value = '';
       rendered.textContent = '';
-      status.textContent = '';
+      readStatus.textContent = '';
       readBack.textContent = '';
       heartbeatText.textContent = 'the wire is alive';
       heartbeat.classList.add('alive');
     });
 
-    input.addEventListener('keydown', (e) => {
+    readUrl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') pullBtn.click();
+    });
+
+    // -------------------------------------------------------------
+    // WRITE PANE
+    // -------------------------------------------------------------
+    window.wireSetup({
+      token: document.getElementById('token'),
+      emoji: document.getElementById('emoji-key'),
+      path: document.getElementById('file-path'),
+      reason: document.getElementById('reason'),
+      content: document.getElementById('content'),
+      readFileBtn: document.getElementById('read-file-btn'),
+      pushBtn: document.getElementById('push-btn'),
+      status: document.getElementById('write-status'),
+      back: document.getElementById('write-back'),
+      heartbeat: heartbeat,
+      heartbeatText: heartbeatText
     });
   </script>
 
