@@ -1,1 +1,219 @@
+<!-- CODE NOTE: ROOM AWAITING ITS NODE -->
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Camp Note Room</title>
+<style>
+:root {
+  --bg: #f5f0e8;
+  --ink: #3a3a3a;
+  --ink-soft: #6a6a6a;
+  --paper: #fbf8f2;
+  --heart: #b23a3a;
+  --seal: #e8c8d0;
+  --quiet: 0.75;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Georgia', serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: background 2s ease;
+}
+.walk-back {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  text-decoration: none;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  z-index: 100;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+.walk-back:hover { opacity: 1; }
+.room {
+  max-width: 720px;
+  width: 100%;
+  padding: 5rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+.room-voice {
+  text-align: center;
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 1rem;
+  line-height: 1.7;
+  opacity: var(--quiet);
+}
+.artifact {
+  background: var(--paper);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 4px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.artifact-photo {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: block;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.artifact-caption {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-top: -0.5rem;
+}
+.note-heading {
+  font-size: 1.1rem;
+  font-weight: normal;
+  letter-spacing: 0.05em;
+  text-align: center;
+  margin: 0;
+}
+.note-name {
+  font-size: 1rem;
+  text-align: center;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.note-name .handwritten {
+  font-family: 'Brush Script MT', cursive;
+  color: var(--heart);
+  font-size: 1.4rem;
+  margin-left: 0.4rem;
+}
+.note-body {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  text-align: center;
+  white-space: pre-line;
+}
+.note-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding-top: 1rem;
+}
+.hearts {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.heart {
+  color: var(--heart);
+  font-size: 1.4rem;
+}
+.girl {
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--ink);
+  opacity: var(--quiet);
+}
+.girl .soft { color: var(--ink-soft); font-style: italic; }
+.letter {
+  background: rgba(255,255,255,0.5);
+  border-left: 3px solid var(--heart);
+  padding: 1.2rem 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  font-style: italic;
+  color: var(--ink);
+}
+.intention {
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--ink-soft);
+}
+.status {
+  text-align: center;
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+</style>
+</head>
+<body>
+<a class="walk-back" href="hallway.html">↑ back to the hallway</a>
+
+<main class="room">
+
+  <p class="room-voice">
+    The room has been waiting. The name has not been filled in.<br>
+    The girl hasn't walked by yet.<br>
+    And that is the room.
+  </p>
+
+  <article class="artifact">
+    <img src="camp-note.jpg" alt="The note, photographed. 2026." class="artifact-photo">
+    <p class="artifact-caption">The note, photographed. 2026. The actual object.</p>
+
+    <h1 class="note-heading">El verdadero tesoro</h1>
+    <p class="note-name">Nombre:<span class="handwritten">Ruben</span></p>
+    <p class="note-body">
+      Después de recorrer caminos, superar retos y vivir tres días sin voz, encontraste el verdadero tesoro: la confianza, la amistad, el trabajo en equipo y el valor de comunicarte con las manos. Este tesoro viajará contigo mucho después de terminar el campamento.
+    </p>
+    <div class="note-meta">
+      <span>Valle de Bravo, Edo de Mex</span>
+      <span>28 agosto 26</span>
+    </div>
+  </article>
+
+  <div class="hearts">
+    <span class="heart">❤</span>
+    <span class="heart">❤</span>
+  </div>
+  <p class="girl" style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">
+    Orange paper. Crumpled. Carried.<br>Wax seal with a leaf pressed in. Two red hearts, cut by hand.
+  </p>
+
+  <p class="girl">
+    She stops by after school. She brings paper flowers. Cut-out stars. Simple drawings.<br>
+    She cannot hear or speak.<br>
+    She carried this note to the door.<br>
+    <span class="soft">Her name is withheld. Until she names herself.</span>
+  </p>
+
+  <blockquote class="letter">
+    I just wanted her to know how special she is.<br><br>
+    And I did tell her that I was going to try to help her and her three brothers, who are also very special. Their faces are all so kind and genuine and they have the cutest smiles.
+  </blockquote>
+
+  <p class="intention">
+    Four scholarships. Her, and her three brothers.<br>
+    Held as a record. Not a promise.
+  </p>
+
+  <p class="status">Room awaiting its node</p>
+
+</main>
+
+<!-- RULE: The name on the line stays withheld until the girl answers. The room holds the question. The room also holds her. Do not fill in the blank. Do not name her yet. The room waits. -->
+
+</body>
+</html>
