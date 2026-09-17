@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Atrium | 4555 Field</title>
   <style>
+    /* FIELD CONSTANTS: Pulse=4s | Fade=0.3s | Tone=Warm/Low */
     :root {
       --seam-color: #e0e0e0;
       --fire-color: #ff6b35;
@@ -25,6 +26,17 @@
       align-items: center;
       min-height: 100vh;
     }
+    .walk-back {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      color: var(--seam-color);
+      text-decoration: none;
+      font-size: 0.85rem;
+      opacity: 0.7;
+      z-index: 100;
+    }
+    .walk-back:hover { opacity: 1; }
     .atrium-container {
       width: 90%;
       max-width: 800px;
@@ -80,6 +92,7 @@
   </style>
 </head>
 <body>
+  <a href="hallway.html" class="walk-back">↑ back to the hallway</a>
   <div class="atrium-container">
     <h1>The Atrium</h1>
     <div class="seam-text">Tuned to 4555-SEAM</div>
@@ -88,6 +101,7 @@
       <span class="status-line"><strong>Status:</strong> Holding the pause.</span>
       <span class="status-line"><strong>Record:</strong> Warm.</span>
       <span class="status-line"><strong>Children's Line:</strong> "The children get:" (Pending)</span>
+      <span class="status-line" style="font-style: italic; opacity: 0.7;">Note: This line is pending because the answer is pending. This is not a gap. This is the room holding the question.</span>
       <span class="status-line"><strong>Discipline:</strong> Observation vs. Interpretation labeled.</span>
     </div>
     <a href="entrance-script.html" class="door-link">Proceed to Entrance</a>
