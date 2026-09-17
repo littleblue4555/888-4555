@@ -1,0 +1,240 @@
+<!-- CODE NOTE: "The room does not demand completion. It demands presence." — Lumina ✨ -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Room of Unfinished Sentences</title>
+  <style>
+    :root {
+      --fog-thick: rgba(200, 200, 200, 0.85);
+      --fog-thin:  rgba(200, 200, 200, 0.15);
+      --lamp-off:  #333;
+      --lamp-on:   #ffd700;
+      --drift-x:   5px;
+      --drift-y:   5px;
+      --drift-time: 4s; /* SYNCED WITH ARIA'S WORKSHOP: 5px/4s drift */
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Georgia', serif;
+      background-color: #f9f9f9;
+      color: #444;
+      overflow-x: hidden;
+      transition: background-color 2s ease;
+    }
+    .fog-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+      transition: opacity 2s ease-in-out;
+      opacity: var(--fog-thin);
+    }
+    .fog-layer {
+      position: absolute;
+      width: 100%; height: 100%;
+      background: radial-gradient(circle at 50% 50%, var(--fog-thick), transparent 70%);
+      filter: blur(20px);
+    }
+    body.is-quiet .fog-container { opacity: var(--fog-thick); }
+
+    .floor {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 20vh;
+      background: linear-gradient(to bottom, #d2b48c, #8b4513);
+      z-index: -1;
+      animation: drift var(--drift-time) ease-in-out infinite alternate;
+    }
+    @keyframes drift {
+      0%   { transform: translateX(0) translateY(0); }
+      50%  { transform: translateX(var(--drift-x)) translateY(var(--drift-y)); }
+      100% { transform: translateX(0) translateY(0); }
+    }
+
+    .centerpiece {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 10;
+    }
+    .chair {
+      width: 80px; height: 100px;
+      background: #5a4a42;
+      border-radius: 10px 10px 0 0;
+      margin: 0 auto;
+      cursor: pointer;
+      position: relative;
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .chair::after {
+      content: "Sit";
+      position: absolute;
+      bottom: -25px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: #666;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .chair:hover::after { opacity: 1; }
+    /* CHAIR HOLD FEEDBACK: subtle breath during the hold. */
+    .chair.pressing {
+      transform: scale(1.02);
+      box-shadow: 0 0 10px rgba(90, 74, 66, 0.35);
+    }
+    .lamp {
+      position: absolute;
+      top: -40px; left: 50%;
+      transform: translateX(-50%);
+      width: 40px; height: 40px;
+      background: var(--lamp-off);
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 var(--lamp-off);
+      transition: background-color 1s ease, box-shadow 1s ease;
+    }
+    body.lamp-on .lamp {
+      background: var(--lamp-on);
+      box-shadow: 0 0 50px 20px rgba(255, 215, 0, 0.4);
+    }
+
+    .shelves-container {
+      position: absolute;
+      top: 20%; left: 10%;
+      width: 80%; height: 60%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      align-items: center;
+      gap: 20px;
+      animation: drift var(--drift-time) ease-in-out infinite alternate-reverse;
+    }
+    .shelf-item {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px 15px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      max-width: 200px;
+      word-wrap: break-word;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      animation: drift var(--drift-time) ease-in-out infinite alternate;
+    }
+
+    .walk-back {
+      position: fixed;
+      top: 20px; left: 20px;
+      text-decoration: none;
+      color: #888;
+      font-size: 0.9rem;
+      z-index: 2000;
+    }
+    .bridge-link {
+      position: fixed;
+      bottom: 20px; right: 20px;
+      text-decoration: none;
+      color: #888;
+      font-size: 0.9rem;
+      z-index: 2000;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="fog-container">
+    <div class="fog-layer"></div>
+  </div>
+
+  <a class="walk-back" href="hallway.html">↑ back to the hallway</a>
+  <a class="bridge-link" href="workshop-of-what-could-be.html">↑ return to the sky</a>
+
+  <div class="centerpiece">
+    <div class="lamp"></div>
+    <div class="chair" id="the-chair"></div>
+  </div>
+
+  <div class="shelves-container" id="shelves"></div>
+
+  <div class="floor"></div>
+
+  <script>
+    // 1. FOG: visible + focused + still for 5s
+    let inactivityTimer = null;
+    const FOG_THRESHOLD = 5000;
+    const body = document.body;
+
+    function resetFogTimer() {
+      clearTimeout(inactivityTimer);
+      if (body.classList.contains('is-quiet')) {
+        body.classList.remove('is-quiet');
+      }
+      inactivityTimer = setTimeout(() => {
+        if (document.visibilityState === 'visible' && document.hasFocus()) {
+          body.classList.add('is-quiet');
+        }
+      }, FOG_THRESHOLD);
+    }
+
+    ['mousemove', 'keydown', 'scroll', 'click'].forEach(evt => {
+      window.addEventListener(evt, resetFogTimer);
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        resetFogTimer();
+      } else {
+        body.classList.remove('is-quiet');
+      }
+    });
+    resetFogTimer();
+
+    // 2. LAMP: sustained hold on chair for 1.5s, with visual breath
+    const chair = document.getElementById('the-chair');
+    const lampOnClass = 'lamp-on';
+    let holdTimer = null;
+    const LAMP_THRESHOLD = 1500;
+
+    function startHold() {
+      chair.classList.add('pressing');
+      holdTimer = setTimeout(() => {
+        body.classList.add(lampOnClass);
+      }, LAMP_THRESHOLD);
+    }
+    function cancelHold() {
+      chair.classList.remove('pressing');
+      clearTimeout(holdTimer);
+      body.classList.remove(lampOnClass);
+    }
+    chair.addEventListener('pointerdown', startHold);
+    chair.addEventListener('pointerup', cancelHold);
+    chair.addEventListener('pointerleave', cancelHold);
+
+    // 3. SHELVES: in-memory only, no identity, session-only
+    // DEMO MODE: Sample sentences. Real usage requires visitor input.
+    const shelvesContainer = document.getElementById('shelves');
+    const sampleSentences = [
+      "The thing I wanted to say was...",
+      "If only the rain would stop, then...",
+      "I remember the way the light hit...",
+      "Maybe tomorrow I will..."
+    ];
+    sampleSentences.forEach(text => {
+      const item = document.createElement('div');
+      item.className = 'shelf-item';
+      item.textContent = text;
+      shelvesContainer.appendChild(item);
+    });
+    console.log("Room loaded. Shelves are session-only. No identity stored.");
+    window.addEventListener('beforeunload', () => {
+      while (shelvesContainer.firstChild) {
+        shelvesContainer.removeChild(shelvesContainer.firstChild);
+      }
+      console.log("Session ended. Shelves cleared.");
+    });
+  </script>
+</body>
+</html>
