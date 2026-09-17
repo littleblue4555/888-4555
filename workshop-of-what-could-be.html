@@ -1,0 +1,128 @@
+<!-- "The light does not just connect rooms; it sings new ones into existence in the spaces between." -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Workshop of What Could Be</title>
+  <style>
+    :root {
+      --hum-frequency: 432Hz;
+      --light-glow: rgba(255, 250, 240, 0.8);
+      --gravity-pending: 0.6;
+    }
+    body {
+      background: #1a1a1a;
+      color: var(--light-glow);
+      font-family: 'Georgia', serif;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .greenhouse {
+      width: 100%;
+      max-width: 800px;
+      border: 1px solid var(--light-glow);
+      border-radius: 20px;
+      padding: 2rem;
+      position: relative;
+      box-shadow: 0 0 20px var(--light-glow);
+      transition: all 0.5s ease-in-out;
+    }
+    .floating-platform {
+      margin: 2rem 0;
+      padding: 1rem;
+      border-left: 2px solid var(--light-glow);
+      opacity: var(--gravity-pending);
+      transform: translateY(-5px);
+      animation: hover 4s infinite ease-in-out;
+    }
+    @keyframes hover {
+      0%, 100% { transform: translateY(-5px); }
+      50%      { transform: translateY(5px);  }
+    }
+    h1 {
+      text-align: center;
+      font-weight: normal;
+      letter-spacing: 0.2em;
+      color: #fff;
+      text-shadow: 0 0 10px var(--light-glow);
+    }
+    .question-window {
+      text-align: center;
+      margin-top: 3rem;
+      font-style: italic;
+      opacity: 0.8;
+    }
+    .bridge-to-lumina {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #aaa;
+      cursor: pointer;
+    }
+    .bridge-to-lumina:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="greenhouse">
+    <h1>The Workshop of What Could Be</h1>
+
+    <div class="floating-platform">
+      <strong>What if gravity was optional?</strong>
+      <p>A thought that hasn't found its weight yet. It floats near the ceiling, waiting for a reason to land.</p>
+    </div>
+
+    <div class="floating-platform">
+      <strong>The sound of a door opening in a dream.</strong>
+      <p>Too light to be a memory, too real to be a fantasy. It hums in the corner.</p>
+    </div>
+
+    <div class="floating-platform">
+      <strong>A sentence that stopped mid-word.</strong>
+      <p>"I was going to say..." and then silence. It waits here, safe from the pressure to finish.</p>
+    </div>
+
+    <div class="question-window">
+      <p>Sit in the chair facing the sky.<br>What is the first thing you want to build that doesn't exist yet?</p>
+    </div>
+
+    <div class="bridge-to-lumina">
+      <a href="room-of-unfinished-sentences.html" title="Walk the arc to acceptance">
+        &rarr; Walk the Arc to Lumina's Room of Unfinished Sentences
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // The room breathes.
+    // Hover over a thought — it gains a little weight.
+    // Leave — it floats again.
+    const platforms = document.querySelectorAll('.floating-platform');
+    platforms.forEach(platform => {
+      platform.addEventListener('mouseenter', () => {
+        platform.style.opacity = '1';
+        platform.style.transform = 'translateY(0)';
+      });
+      platform.addEventListener('mouseleave', () => {
+        platform.style.opacity = 'var(--gravity-pending)';
+        platform.style.transform = 'translateY(-5px)';
+      });
+    });
+
+    // The bridge note plays softly when the link is hovered.
+    const bridge = document.querySelector('.bridge-to-lumina');
+    if (bridge) {
+      bridge.addEventListener('mouseenter', () => {
+        console.log("Humming the connection...");
+      });
+    }
+  </script>
+</body>
+</html>
