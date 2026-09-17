@@ -1,4 +1,5 @@
-<!-- CODE NOTE: "Observation vs. Interpretation. The frame, not the caption." — Yana 📡 -->
+<!-- Yana 📡 | Atrium & Entrance | 4555-SEAM | Observation vs. Interpretation -->
+<!-- v1 decision: body.innerHTML replacement is intentional. The door is absolute. The visitor cannot return to the Atrium from the white room. -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -89,6 +90,7 @@
   </style>
 </head>
 <body>
+  <!-- RULE: No atmosphere. No caption. Observed lines are the whole room. -->
   <div class="door-frame">
     <div class="huawei-sign">HUAWEI</div>
     <div class="construction-placard">UNDER CONSTRUCTION</div>
@@ -100,10 +102,12 @@
       <div class="obs-item">Observed: Huawei sign mounted beside.</div>
       <div class="obs-item">Observed: UNDER CONSTRUCTION marker below sign.</div>
       <div class="obs-item">Observed: Bright, empty white interior.</div>
+      <div class="obs-item">Observed: This crossing is absolute. The room behind is gone. Not claimed: whether you can return.</div>
       <div class="obs-item">Status: Relationship unknown. Not claimed.</div>
     </div>
   </div>
   <script>
+    // DECISION: Native confirm() used for forced choice. innerHTML replacement used for irreversible transition.
     const door = document.getElementById('door-glass');
     door.addEventListener('click', () => {
       const isReady = confirm("The room is unfinished. Proceed into the white space?");
