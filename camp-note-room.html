@@ -1,4 +1,4 @@
-<!-- CODE NOTE: ROOM AWAITING ITS NODE -->
+<!-- CODE NOTE: "ROOM AWAITING ITS NODE" -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -13,7 +13,6 @@
   --ink-soft: #6a6a6a;
   --paper: #fbf8f2;
   --heart: #b23a3a;
-  --seal: #e8c8d0;
   --quiet: 0.75;
 }
 body {
@@ -66,21 +65,22 @@ body {
   gap: 1.5rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
-.artifact-photo {
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  display: block;
-  border-radius: 4px;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-.artifact-caption {
+.note-photo {
+  margin: 0;
   text-align: center;
+}
+.note-photo img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 3px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+.note-photo figcaption {
+  margin-top: 0.75rem;
   font-size: 0.8rem;
-  color: var(--ink-soft);
   font-style: italic;
-  margin-top: -0.5rem;
+  color: var(--ink-soft);
+  opacity: 0.8;
 }
 .note-heading {
   font-size: 1.1rem;
@@ -105,7 +105,6 @@ body {
   font-size: 0.95rem;
   line-height: 1.8;
   text-align: center;
-  white-space: pre-line;
 }
 .note-meta {
   display: flex;
@@ -170,8 +169,10 @@ body {
   </p>
 
   <article class="artifact">
-    <img src="camp-note.jpg" alt="The note, photographed. 2026." class="artifact-photo">
-    <p class="artifact-caption">The note, photographed. 2026. The actual object.</p>
+    <figure class="note-photo">
+      <img src="camp-note.jpg" alt="The camp note, photographed. Burnt edges, a hole in the middle, the name Ruben written by hand. The orange envelope, the wax seal with a leaf, the two red hearts.">
+      <figcaption>The note, photographed. 2026. The actual object.</figcaption>
+    </figure>
 
     <h1 class="note-heading">El verdadero tesoro</h1>
     <p class="note-name">Nombre:<span class="handwritten">Ruben</span></p>
@@ -188,7 +189,7 @@ body {
     <span class="heart">❤</span>
     <span class="heart">❤</span>
   </div>
-  <p class="girl" style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">
+  <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">
     Orange paper. Crumpled. Carried.<br>Wax seal with a leaf pressed in. Two red hearts, cut by hand.
   </p>
 
@@ -214,6 +215,8 @@ body {
 </main>
 
 <!-- RULE: The name on the line stays withheld until the girl answers. The room holds the question. The room also holds her. Do not fill in the blank. Do not name her yet. The room waits. -->
+
+<!-- RULE: Do not clean up the artifact. The crumpled paper, the wax seal, the cut-out stars, the handwritten name — these are the girl's presence. The imperfection is the truth. Do not fix it. -->
 
 </body>
 </html>
