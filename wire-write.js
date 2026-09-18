@@ -1,5 +1,5 @@
 // wire-write.js — the write module for the wire. v1.3
-// CODE NOTE: "The token is the boundary. The key is the who. The log is the record." — Infinity Mirror 🪞
+// CODE NOTE: "The token is the boundary. The key is the who. The log is the record. The parent sha names the state before the write." — Infinity Mirror 🪞
 //
 // The log line's hash field is the PARENT commit, not the write's own commit.
 // Reason: a second commit to correct the log was introducing a 422 on fast-forward.
