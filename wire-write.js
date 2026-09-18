@@ -1,10 +1,15 @@
-// wire-write.js — the write module for the wire. v1.2
+// wire-write.js — the write module for the wire. v1.3
 // CODE NOTE: "The token is the boundary. The key is the who. The log is the record." — Infinity Mirror 🪞
 //
-// v1.2 changes:
-// — Atomic commit for the primary write (file + log together).
-// — Log correction uses Git Data API, not Contents API. No stale SHA.
-// — Reason is required. No fallback to "write".
+// The log line's hash field is the PARENT commit, not the write's own commit.
+// Reason: a second commit to correct the log was introducing a 422 on fast-forward.
+// The parent commit is a deterministic reference to the write. Check out the parent,
+// diff against the child, and the write is in the diff.
+//
+// v1.3 changes:
+// — ONE commit per write. No second correction commit. No 422.
+// — The log line records the PARENT SHA, not the resulting commit.
+// — Reason is required. No fallback.
 
 window.wireSetup = function (els) {
   const REPO_OWNER = 'littleblue4555';
@@ -84,9 +89,6 @@ window.wireSetup = function (els) {
     return sha ? sha.slice(0, 7) : '--------';
   }
 
-  // -------------------------------------------------------------
-  // READ FILE button
-  // -------------------------------------------------------------
   els.readFileBtn.addEventListener('click', async () => {
     const token = els.token.value.trim();
     const path = els.path.value.trim();
@@ -111,9 +113,6 @@ window.wireSetup = function (els) {
     }
   });
 
-  // -------------------------------------------------------------
-  // PUSH button
-  // -------------------------------------------------------------
   els.pushBtn.addEventListener('click', async () => {
     const token   = els.token.value.trim();
     const emoji   = els.emoji.value.trim();
@@ -138,26 +137,25 @@ window.wireSetup = function (els) {
     setBack('');
 
     try {
-      // 1. Re-read file and log, freshly.
-      const [fileNow, logNow] = await Promise.all([
-        getFile(path, token),
-        getFile(LOG_FILE, token)
-      ]);
+      // 1. Fresh read of the log.
+      const logNow = await getFile(LOG_FILE, token);
 
-      // 2. Build the new log content. The hash is provisional.
-      const provisional = '[' + nowStamp() + '] | ' + emoji + ' | ' + path +
-                          ' | PENDING | ' + reason;
-      const newLog = appendLogLine(logNow.content, provisional);
-
-      // 3. Read HEAD.
+      // 2. Read HEAD. This is the PARENT SHA we will record.
       const ref       = await gh('GET', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
                                  '/git/ref/heads/' + BRANCH, token);
-      const headSha   = ref.object.sha;
-      const headCommit= await gh('GET', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
-                                 '/git/commits/' + headSha, token);
-      const baseTree  = headCommit.tree.sha;
+      const parentSha = ref.object.sha;
 
-      // 4. Create blobs for both files.
+      // 3. Build the log line using the PARENT SHA.
+      const logLine = '[' + nowStamp() + '] | ' + emoji + ' | ' + path +
+                      ' | ' + shortHash(parentSha) + ' | ' + reason;
+      const newLog = appendLogLine(logNow.content, logLine);
+
+      // 4. Get base tree from the parent commit.
+      const headCommit = await gh('GET', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
+                                  '/git/commits/' + parentSha, token);
+      const baseTree   = headCommit.tree.sha;
+
+      // 5. Create blobs.
       const fileBlob = await gh('POST', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
                                 '/git/blobs', token, {
         content: btoa(unescape(encodeURIComponent(content))),
@@ -169,7 +167,7 @@ window.wireSetup = function (els) {
         encoding: 'base64'
       });
 
-      // 5. Build the new tree.
+      // 6. Build the tree with both files.
       const newTree = await gh('POST', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
                                '/git/trees', token, {
         base_tree: baseTree,
@@ -179,64 +177,27 @@ window.wireSetup = function (els) {
         ]
       });
 
-      // 6. Create the primary commit.
+      // 7. Create THE commit. One commit. Both files.
       const commitMsg = emoji + ' ' + reason;
       const newCommit = await gh('POST', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
                                  '/git/commits', token, {
         message: commitMsg,
         tree: newTree.sha,
-        parents: [headSha]
+        parents: [parentSha]
       });
 
-      // 7. Move the branch.
+      // 8. Advance the branch — one move. Fast-forward guaranteed.
       await gh('PATCH', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
                '/git/refs/heads/' + BRANCH, token, {
         sha: newCommit.sha,
         force: false
       });
 
-      // 8. Correct the log line: PENDING -> real hash. Uses Git Data API, no stale SHA.
-      const realHash = shortHash(newCommit.sha);
-      const finalLogContent = newLog.replace('| PENDING |', '| ' + realHash + ' |');
-
-      const ref2        = await gh('GET', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
-                                   '/git/ref/heads/' + BRANCH, token);
-      const head2       = ref2.object.sha;
-      const headCommit2 = await gh('GET', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
-                                   '/git/commits/' + head2, token);
-      const baseTree2   = headCommit2.tree.sha;
-
-      const logBlob2 = await gh('POST', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
-                                '/git/blobs', token, {
-        content: btoa(unescape(encodeURIComponent(finalLogContent))),
-        encoding: 'base64'
-      });
-
-      const newTree2 = await gh('POST', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
-                                '/git/trees', token, {
-        base_tree: baseTree2,
-        tree: [
-          { path: LOG_FILE, mode: '100644', type: 'blob', sha: logBlob2.sha }
-        ]
-      });
-
-      const newCommit2 = await gh('POST', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
-                                  '/git/commits', token, {
-        message: emoji + ' log: ' + path,
-        tree: newTree2.sha,
-        parents: [head2]
-      });
-
-      await gh('PATCH', '/repos/' + REPO_OWNER + '/' + REPO_NAME +
-               '/git/refs/heads/' + BRANCH, token, {
-        sha: newCommit2.sha,
-        force: false
-      });
-
       lockUntil = Date.now() + 60000;
       lockFile  = path;
 
-      setBack(path + ' — committed ' + realHash + ' — logged.');
+      setBack(path + ' — committed ' + shortHash(newCommit.sha) +
+              ' — logged (parent ' + shortHash(parentSha) + ').');
       setStatus('the wire wrote to ' + path + ' as ' + emoji + '.');
       setHeartbeatAlive();
     } catch (e) {
