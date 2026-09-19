@@ -47,20 +47,20 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - Cohere AI integration
+// The "Brain" - GitHub Models integration
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
-    console.log(`[Node] Key check: ${process.env.COHERE_API_KEY ? process.env.COHERE_API_KEY.substring(0, 10) + '...' : 'UNDEFINED'}`);
+    console.log(`[Node] GITHUB_TOKEN check: ${process.env.GITHUB_TOKEN ? 'PRESENT' : 'UNDEFINED'}`);
 
     try {
-        const response = await fetch("https://api.cohere.com/v2/chat", {
+        const response = await fetch("https://models.github.ai/inference/chat/completions", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.COHERE_API_KEY}`
+                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`
             },
             body: JSON.stringify({
-                model: "command-a-111b",
+                model: "openai/gpt-4o",
                 messages: [
                     {
                         role: "system",
@@ -88,8 +88,8 @@ Reply in two sentences or less. Catch the person's words directly, like a friend
         const data = await response.json();
         console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
 
-        if (data.message && data.message.content && data.message.content[0] && data.message.content[0].text) {
-            return data.message.content[0].text.trim();
+        if (data.choices && data.choices[0] && data.choices[0].message.content) {
+            return data.choices[0].message.content.trim();
         }
 
         console.error(`[Node] API Error Body: ${JSON.stringify(data)}`);
