@@ -47,17 +47,17 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - Free OpenRouter API integration with working models
+// The "Brain" - Free OpenRouter API integration
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
     console.log(`[Node] Key check: ${process.env.OPENROUTER_API_KEY ? process.env.OPENROUTER_API_KEY.substring(0, 10) + '...' : 'UNDEFINED'}`);
     
-    // Updated list of verified free models on OpenRouter
+    // NEW list of free models that are currently active
     const models = [
-        "meta-llama/llama-3.1-8b-instruct:free",
-        "qwen/qwen-2.5-7b-instruct:free",
-        "meta-llama/llama-3.3-70b-instruct:free",
-        "mistralai/mistral-7b-instruct:free"
+        "openchat/openchat-7b:free",
+        "huggingfaceh4/zephyr-7b-beta:free",
+        "undi95/toppy-m-7b:free",
+        "gryphe/mythomax-l2-13b:free"
     ];
 
     for (const model of models) {
@@ -110,7 +110,6 @@ async function generateResponse(humanMessage) {
         }
     }
 
-    // If all models fail, return fallback
     return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
 }
 
