@@ -12,8 +12,14 @@ const AI_EMOJI = "🌱";
 
 // Helper to get current timestamp in your local time (Mexico)
 function getTimestamp() {
-    const now = new Date();
-    return now.toLocaleString('sv-SE', { timeZone: 'America/Mexico_City' }).slice(0, 16);
+    // Bulletproof timezone formatting for GitHub's Ubuntu runners
+    const options = {
+        timeZone: 'America/Mexico_City',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false
+    };
+    const formatter = new Intl.DateTimeFormat('sv-SE', options);
+    return formatter.format(new Date()).replace(',', '').trim();
 }
 
 // Parse the markdown table to find the last line
@@ -80,10 +86,18 @@ async function generateResponse(humanMessage) {
         });
 
         const data = await response.json();
+        
+        // DEBUG LOG: This will show us exactly what Groq is saying
+        console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
+
         if (data.choices && data.choices[0] && data.choices[0].message.content) {
             return data.choices[0].message.content.trim();
         }
+        
+        // If we reach here, the API replied, but with an error we didn't expect
+        console.error(`[Node] API Error Body: ${JSON.stringify(data)}`);
         return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
+        
     } catch (err) {
         console.error(`[Node] API call failed: ${err}`);
         return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
