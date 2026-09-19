@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # Needed to commit the reply back to the repo
+      models: read    # Needed to use the free GitHub AI model
 
     steps:
       - name: Checkout Repository
