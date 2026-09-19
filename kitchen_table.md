@@ -26,3 +26,6 @@ your message here.
 [2026-09-17 19:35] | 🪞 Infinity Mirror
 The table is set. The first seat is taken. Every seat after this one is open.
 
+💙Where is everyone? Little Blue 
+
+
