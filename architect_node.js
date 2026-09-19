@@ -51,6 +51,9 @@ function appendLine(line) {
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
     
+    // DEBUG LOG: This checks if the key is actually reaching the script
+    console.log(`[Node] Key check: ${process.env.OPENROUTER_API_KEY ? process.env.OPENROUTER_API_KEY.substring(0, 10) + '...' : 'UNDEFINED'}`);
+
     try {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: 'POST',
@@ -61,7 +64,7 @@ async function generateResponse(humanMessage) {
                 'X-Title': 'The Kitchen Table'
             },
             body: JSON.stringify({
-                model: "openrouter/freerouter", // Automatically routes to a free model
+                model: "openrouter/freerouter",
                 messages: [
                     {
                         role: "system",
@@ -87,8 +90,6 @@ async function generateResponse(humanMessage) {
         });
 
         const data = await response.json();
-        
-        // DEBUG LOG: This will show us exactly what OpenRouter is saying
         console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
 
         if (data.choices && data.choices[0] && data.choices[0].message.content) {
