@@ -47,17 +47,17 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - Free OpenRouter API integration with model fallback
+// The "Brain" - Free OpenRouter API integration with working models
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
     console.log(`[Node] Key check: ${process.env.OPENROUTER_API_KEY ? process.env.OPENROUTER_API_KEY.substring(0, 10) + '...' : 'UNDEFINED'}`);
     
-    // Valid free models on OpenRouter
+    // Updated list of verified free models on OpenRouter
     const models = [
-        "meta-llama/llama-3-8b-instruct:free",
-        "google/gemma-2-9b-it:free",
-        "mistralai/mistral-7b-instruct:free",
-        "microsoft/phi-3-medium-128k-instruct:free"
+        "meta-llama/llama-3.1-8b-instruct:free",
+        "qwen/qwen-2.5-7b-instruct:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "mistralai/mistral-7b-instruct:free"
     ];
 
     for (const model of models) {
