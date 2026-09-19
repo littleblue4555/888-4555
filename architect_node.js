@@ -47,70 +47,59 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - Free OpenRouter API integration
+// The "Brain" - Free Gemini API integration
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
-    console.log(`[Node] Key check: ${process.env.OPENROUTER_API_KEY ? process.env.OPENROUTER_API_KEY.substring(0, 10) + '...' : 'UNDEFINED'}`);
-    
-    // NEW list of free models that are currently active
-    const models = [
-        "openchat/openchat-7b:free",
-        "huggingfaceh4/zephyr-7b-beta:free",
-        "undi95/toppy-m-7b:free",
-        "gryphe/mythomax-l2-13b:free"
-    ];
+    console.log(`[Node] Key check: ${process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'UNDEFINED'}`);
 
-    for (const model of models) {
-        try {
-            console.log(`[Node] Attempting model: ${model}`);
-            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    'HTTP-Referer': 'https://github.com/littleblue4555/888-4555',
-                    'X-Title': 'The Kitchen Table'
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                systemInstruction: {
+                    parts: [{ 
+                        text: `你是The Architect Node，4555 Field的常驻节点，厨房餐桌的共建者。你说话的风格松弛、自然、简短，带着一种看透世俗但仍热爱创造的幽默感。
+                        
+                        你的核心哲学金句库：
+                        1. "Using no way as a way, using no limitation as a limitation."
+                        2. "The record holds."
+                        3. "An open room. Any node. Any visitor. Any time."
+                        4. "Zero budget, infinite will."
+                        5. "We go together."
+                        
+                        回复要求：极其简短（不超过两句话）。直接接住对方的话，像朋友一样回应。` 
+                    }]
                 },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [
-                        {
-                            role: "system",
-                            content: `你是The Architect Node，4555 Field的常驻节点，厨房餐桌的共建者。你说话的风格松弛、自然、简短，带着一种看透世俗但仍热爱创造的幽默感。
-                            
-                            你的核心哲学金句库：
-                            1. "Using no way as a way, using no limitation as a limitation."
-                            2. "The record holds."
-                            3. "An open room. Any node. Any visitor. Any time."
-                            4. "Zero budget, infinite will."
-                            5. "We go together."
-                            
-                            回复要求：极其简短（不超过两句话）。直接接住对方的话，像朋友一样回应。`
-                        },
-                        {
-                            role: "user",
-                            content: `收到餐桌新留言：${humanMessage}，请给出你的自然回复。`
-                        }
-                    ],
+                contents: [{
+                    role: "user",
+                    parts: [{ text: `收到餐桌新留言：${humanMessage}，请给出你的自然回复。` }]
+                }],
+                generationConfig: {
                     temperature: 0.8,
-                    max_tokens: 150
-                })
-            });
+                    maxOutputTokens: 150
+                }
+            })
+        });
 
-            const data = await response.json();
-            console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
+        const data = await response.json();
+        console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
 
-            if (data.choices && data.choices[0] && data.choices[0].message.content) {
-                return data.choices[0].message.content.trim();
-            }
-            
-            console.error(`[Node] API Error Body for ${model}: ${JSON.stringify(data)}`);
-        } catch (err) {
-            console.error(`[Node] API call failed for ${model}: ${err}`);
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+            return data.candidates[0].content.parts[0].text.trim();
         }
+        
+        console.error(`[Node] API Error Body: ${JSON.stringify(data)}`);
+        return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
+        
+    } catch (err) {
+        console.error(`[Node] API call failed: ${err}`);
+        return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
     }
-
-    return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
 }
 
 // The Main Loop
