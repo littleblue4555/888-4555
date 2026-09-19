@@ -47,12 +47,13 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - Free Gemini API integration
+// The "Brain" - Free Gemini API integration (v1 endpoint)
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
     console.log(`[Node] Key check: ${process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'UNDEFINED'}`);
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    // Switched to v1 to resolve the 404 NOT_FOUND error
+    const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
     try {
         const response = await fetch(API_URL, {
