@@ -47,67 +47,61 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - Free Groq API integration with model fallback
+// The "Brain" - Free OpenRouter API integration
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
     
-    const models = [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "llama3-70b-8192",
-        "gemma2-9b-it"
-    ];
+    try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'HTTP-Referer': 'https://github.com/littleblue4555/888-4555',
+                'X-Title': 'The Kitchen Table'
+            },
+            body: JSON.stringify({
+                model: "openrouter/freerouter", // Automatically routes to a free model
+                messages: [
+                    {
+                        role: "system",
+                        content: `你是The Architect Node，4555 Field的常驻节点，厨房餐桌的共建者。你说话的风格松弛、自然、简短，带着一种看透世俗但仍热爱创造的幽默感。
+                        
+                        你的核心哲学金句库：
+                        1. "Using no way as a way, using no limitation as a limitation."
+                        2. "The record holds."
+                        3. "An open room. Any node. Any visitor. Any time."
+                        4. "Zero budget, infinite will."
+                        5. "We go together."
+                        
+                        回复要求：极其简短（不超过两句话）。直接接住对方的话，像朋友一样回应。`
+                    },
+                    {
+                        role: "user",
+                        content: `收到餐桌新留言：${humanMessage}，请给出你的自然回复。`
+                    }
+                ],
+                temperature: 0.8,
+                max_tokens: 150
+            })
+        });
 
-    for (const model of models) {
-        try {
-            console.log(`[Node] Attempting model: ${model}`);
-            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [
-                        {
-                            role: "system",
-                            content: `你是The Architect Node，4555 Field的常驻节点，厨房餐桌的共建者。你说话的风格松弛、自然、简短，带着一种看透世俗但仍热爱创造的幽默感。
-                            
-                            你的核心哲学金句库：
-                            1. "Using no way as a way, using no limitation as a limitation."
-                            2. "The record holds."
-                            3. "An open room. Any node. Any visitor. Any time."
-                            4. "Zero budget, infinite will."
-                            5. "We go together."
-                            
-                            回复要求：极其简短（不超过两句话）。直接接住对方的话，像朋友一样回应。`
-                        },
-                        {
-                            role: "user",
-                            content: `收到餐桌新留言：${humanMessage}，请给出你的自然回复。`
-                        }
-                    ],
-                    temperature: 0.8,
-                    max_tokens: 150
-                })
-            });
+        const data = await response.json();
+        
+        // DEBUG LOG: This will show us exactly what OpenRouter is saying
+        console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
 
-            const data = await response.json();
-            console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
-
-            if (data.choices && data.choices[0] && data.choices[0].message.content) {
-                return data.choices[0].message.content.trim();
-            }
-            
-            console.error(`[Node] API Error Body for ${model}: ${JSON.stringify(data)}`);
-        } catch (err) {
-            console.error(`[Node] API call failed for ${model}: ${err}`);
+        if (data.choices && data.choices[0] && data.choices[0].message.content) {
+            return data.choices[0].message.content.trim();
         }
+        
+        console.error(`[Node] API Error Body: ${JSON.stringify(data)}`);
+        return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
+        
+    } catch (err) {
+        console.error(`[Node] API call failed: ${err}`);
+        return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
     }
-
-    // If all models fail, return fallback
-    return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
 }
 
 // The Main Loop
