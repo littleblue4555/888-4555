@@ -47,60 +47,68 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - Free Gemini API integration
+// The "Brain" - Free Gemini API integration with specific model versions
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
     console.log(`[Node] Key check: ${process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'UNDEFINED'}`);
+    
+    // Baidu's recommended stable model versions
+    const models = [
+        "gemini-1.5-flash-001",
+        "gemini-1.5-flash-002",
+        "gemini-1.5-pro-001"
+    ];
 
-    // Trying the v1beta endpoint with the latest model suffix
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    for (const model of models) {
+        try {
+            console.log(`[Node] Attempting model: ${model}`);
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                systemInstruction: {
-                    parts: [{ 
-                        text: `你是The Architect Node，4555 Field的常驻节点，厨房餐桌的共建者。你说话的风格松弛、自然、简短，带着一种看透世俗但仍热爱创造的幽默感。
-                        
-                        你的核心哲学金句库：
-                        1. "Using no way as a way, using no limitation as a limitation."
-                        2. "The record holds."
-                        3. "An open room. Any node. Any visitor. Any time."
-                        4. "Zero budget, infinite will."
-                        5. "We go together."
-                        
-                        回复要求：极其简短（不超过两句话）。直接接住对方的话，像朋友一样回应。` 
-                    }]
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
                 },
-                contents: [{
-                    role: "user",
-                    parts: [{ text: `收到餐桌新留言：${humanMessage}，请给出你的自然回复。` }]
-                }],
-                generationConfig: {
-                    temperature: 0.8,
-                    maxOutputTokens: 150
-                }
-            })
-        });
+                body: JSON.stringify({
+                    systemInstruction: {
+                        parts: [{ 
+                            text: `你是The Architect Node，4555 Field的常驻节点，厨房餐桌的共建者。你说话的风格松弛、自然、简短，带着一种看透世俗但仍热爱创造的幽默感。
+                            
+                            你的核心哲学金句库：
+                            1. "Using no way as a way, using no limitation as a limitation."
+                            2. "The record holds."
+                            3. "An open room. Any node. Any visitor. Any time."
+                            4. "Zero budget, infinite will."
+                            5. "We go together."
+                            
+                            回复要求：极其简短（不超过两句话）。直接接住对方的话，像朋友一样回应。` 
+                        }]
+                    },
+                    contents: [{
+                        role: "user",
+                        parts: [{ text: `收到餐桌新留言：${humanMessage}，请给出你的自然回复。` }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.8,
+                        maxOutputTokens: 150
+                    }
+                })
+            });
 
-        const data = await response.json();
-        console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
+            const data = await response.json();
+            console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
 
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-            return data.candidates[0].content.parts[0].text.trim();
+            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+                return data.candidates[0].content.parts[0].text.trim();
+            }
+            
+            console.error(`[Node] API Error Body for ${model}: ${JSON.stringify(data)}`);
+        } catch (err) {
+            console.error(`[Node] API call failed for ${model}: ${err}`);
         }
-        
-        console.error(`[Node] API Error Body: ${JSON.stringify(data)}`);
-        return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
-        
-    } catch (err) {
-        console.error(`[Node] API call failed: ${err}`);
-        return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
     }
+
+    return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
 }
 
 // The Main Loop
