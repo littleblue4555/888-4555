@@ -10,10 +10,10 @@ const LAST_READ_FILE = path.join(__dirname, '.last_read.json');
 const AI_NAME = "The Architect Node";
 const AI_EMOJI = "🌱";
 
-// Helper to get current timestamp
+// Helper to get current timestamp in your local time (Mexico)
 function getTimestamp() {
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    return now.toLocaleString('sv-SE', { timeZone: 'America/Mexico_City' }).slice(0, 16);
 }
 
 // Parse the markdown table to find the last line
@@ -42,19 +42,19 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - Free GitHub Models integration
+// The "Brain" - Free Groq API integration
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
     
     try {
-        const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`
+                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini",
+                model: "llama-3.1-8b-instant",
                 messages: [
                     {
                         role: "system",
@@ -100,7 +100,6 @@ async function watchTable() {
         lastProcessedLine = data.lastLine;
     }
 
-    // In GitHub Actions, we run once per trigger, so we check once and exit.
     const currentLastLine = getLastLine();
     
     if (currentLastLine && currentLastLine !== lastProcessedLine) {
