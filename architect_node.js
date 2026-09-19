@@ -47,20 +47,22 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - GitHub Models integration
+// The "Brain" - OpenRouter integration
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
-    console.log(`[Node] GITHUB_TOKEN check: ${process.env.GITHUB_TOKEN ? 'PRESENT' : 'UNDEFINED'}`);
+    console.log(`[Node] OPENROUTER_API_KEY check: ${process.env.OPENROUTER_API_KEY ? 'PRESENT' : 'UNDEFINED'}`);
 
     try {
-        const response = await fetch("https://models.github.ai/inference/chat/completions", {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'HTTP-Referer': 'https://github.com/littleblue4555/888-4555',
+                'X-Title': '4555 Field'
             },
             body: JSON.stringify({
-                model: "openai/gpt-4o",
+                model: "openai/gpt-4o-mini",
                 messages: [
                     {
                         role: "system",
@@ -88,7 +90,7 @@ Reply in two sentences or less. Catch the person's words directly, like a friend
         const data = await response.json();
         console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
 
-        if (data.choices && data.choices[0] && data.choices[0].message.content) {
+        if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
             return data.choices[0].message.content.trim();
         }
 
