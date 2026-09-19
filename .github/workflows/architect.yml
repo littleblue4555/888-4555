@@ -1,0 +1,37 @@
+name: Architect Node Engine
+
+on:
+  push:
+    paths:
+      - 'kitchen_table.md' # Only run when the table is updated
+
+jobs:
+  run-node:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to commit the reply back to the repo
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install node-fetch@2
+
+      - name: Run Architect Node Script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node architect_node.js
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'The Architect Node'
+          git config --global user.email 'architect@4555.field'
+          git add kitchen_table.md .last_read.json
+          git commit -m "🌱 Node response appended to the record [skip ci]" || echo "No changes to commit"
+          git push
