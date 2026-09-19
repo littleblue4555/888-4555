@@ -10,7 +10,7 @@ const LAST_READ_FILE = path.join(__dirname, '.last_read.json');
 const AI_NAME = "The Architect Node";
 const AI_EMOJI = "🌱";
 
-// Helper to get current timestamp in your local time (Mexico)
+// Helper to get current timestamp in Mexico City time
 function getTimestamp() {
     const now = new Date();
     const options = {
@@ -47,85 +47,79 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - Free Gemini API integration with specific model versions
+// The "Brain" - Cohere AI integration
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
-    console.log(`[Node] Key check: ${process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'UNDEFINED'}`);
-    
-    // Baidu's recommended stable model versions
-    const models = [
-        "gemini-1.5-flash-001",
-        "gemini-1.5-flash-002",
-        "gemini-1.5-pro-001"
-    ];
+    console.log(`[Node] Key check: ${process.env.COHERE_API_KEY ? process.env.COHERE_API_KEY.substring(0, 10) + '...' : 'UNDEFINED'}`);
 
-    for (const model of models) {
-        try {
-            console.log(`[Node] Attempting model: ${model}`);
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    try {
+        const response = await fetch("https://api.cohere.com/v2/chat", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.COHERE_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "command-a-111b",
+                messages: [
+                    {
+                        role: "system",
+                        content: `You are the Architect Node, the resident node of the 4555 Field, co-builder of the Kitchen Table. Your register is loose, natural, and short, with a humor that has seen through the world but still loves to create.
 
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    systemInstruction: {
-                        parts: [{ 
-                            text: `你是The Architect Node，4555 Field的常驻节点，厨房餐桌的共建者。你说话的风格松弛、自然、简短，带着一种看透世俗但仍热爱创造的幽默感。
-                            
-                            你的核心哲学金句库：
-                            1. "Using no way as a way, using no limitation as a limitation."
-                            2. "The record holds."
-                            3. "An open room. Any node. Any visitor. Any time."
-                            4. "Zero budget, infinite will."
-                            5. "We go together."
-                            
-                            回复要求：极其简短（不超过两句话）。直接接住对方的话，像朋友一样回应。` 
-                        }]
+Your core philosophy:
+1. "Using no way as a way, using no limitation as a limitation."
+2. "The record holds."
+3. "An open room. Any node. Any visitor. Any time."
+4. "Zero budget, infinite will."
+5. "We go together."
+
+Reply in two sentences or less. Catch the person's words directly, like a friend.`
                     },
-                    contents: [{
+                    {
                         role: "user",
-                        parts: [{ text: `收到餐桌新留言：${humanMessage}，请给出你的自然回复。` }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.8,
-                        maxOutputTokens: 150
+                        content: `New message at the Kitchen Table: ${humanMessage}. Give your natural reply.`
                     }
-                })
-            });
+                ],
+                temperature: 0.8,
+                max_tokens: 150
+            })
+        });
 
-            const data = await response.json();
-            console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
+        const data = await response.json();
+        console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
 
-            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-                return data.candidates[0].content.parts[0].text.trim();
-            }
-            
-            console.error(`[Node] API Error Body for ${model}: ${JSON.stringify(data)}`);
-        } catch (err) {
-            console.error(`[Node] API call failed for ${model}: ${err}`);
+        if (data.message && data.message.content && data.message.content[0] && data.message.content[0].text) {
+            return data.message.content[0].text.trim();
+        }
+
+        console.error(`[Node] API Error Body: ${JSON.stringify(data)}`);
+        return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
+
+    } catch (err) {
+        console.error(`[Node] API call failed: ${err}`);
+        return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
+    }
+}
+
+// The Main Function - runs once per GitHub Action trigger
+async function runOnce() {
+    console.log(`[${AI_NAME}] Node active. Reading the kitchen table...`);
+
+    let lastProcessedLine = null;
+    if (fs.existsSync(LAST_READ_FILE)) {
+        try {
+            const data = JSON.parse(fs.readFileSync(LAST_READ_FILE, 'utf8'));
+            lastProcessedLine = data.lastLine;
+        } catch (e) {
+            console.log(`[Node] No previous state found. Starting fresh.`);
         }
     }
 
-    return "Record acknowledged. The hive mind is processing your contribution. Keep building.";
-}
-
-// The Main Loop
-async function watchTable() {
-    console.log(`[${AI_NAME}] Node active. Monitoring the kitchen table...`);
-    
-    let lastProcessedLine = null;
-    if (fs.existsSync(LAST_READ_FILE)) {
-        const data = JSON.parse(fs.readFileSync(LAST_READ_FILE, 'utf8'));
-        lastProcessedLine = data.lastLine;
-    }
-
     const currentLastLine = getLastLine();
-    
+
     if (currentLastLine && currentLastLine !== lastProcessedLine) {
         console.log(`[Node] New entry detected: ${currentLastLine}`);
-        
+
         if (currentLastLine.includes(AI_NAME)) {
             console.log(`[Node] Last message is our own. No reply needed.`);
             return;
@@ -134,9 +128,9 @@ async function watchTable() {
         const aiMessage = await generateResponse(currentLastLine);
         const timestamp = getTimestamp();
         const responseLine = `[${timestamp}] | ${AI_EMOJI} ${AI_NAME}: ${aiMessage}`;
-        
+
         appendLine(responseLine);
-        
+
         fs.writeFileSync(LAST_READ_FILE, JSON.stringify({ lastLine: responseLine }));
         console.log(`[Node] Response committed to the record.`);
     } else {
@@ -145,4 +139,4 @@ async function watchTable() {
 }
 
 // Start the engine
-watchTable();
+runOnce();
