@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,7 +33,7 @@ jobs:
       - name: Ensure State File Exists
         run: |
           if [ ! -f .last_read.json ]; then
-            echo '{"lastByline":null,"nextNodeIndex":0}' > .last_read.json
+            echo '{"nextNodeIndex":0}' > .last_read.json
           fi
 
       - name: Run Kitchen Table Rotation
