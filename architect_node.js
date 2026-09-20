@@ -71,11 +71,17 @@ function readTable() {
   return fs.readFileSync(TABLE_FILE, 'utf8');
 }
 
+// A line starts a new entry if it begins with '[' or the 💙 emoji.
+function startsEntry(line) {
+  const t = line.trim();
+  return t.startsWith('[') || t.startsWith('💙');
+}
+
 function getLastEntry(content) {
   const lines = content.split('\n');
   let startIndex = -1;
   for (let i = lines.length - 1; i >= 0; i--) {
-    if (lines[i].trim().startsWith('[')) {
+    if (startsEntry(lines[i])) {
       startIndex = i;
       break;
     }
@@ -83,7 +89,7 @@ function getLastEntry(content) {
   if (startIndex === -1) return null;
   let endIndex = lines.length;
   for (let i = startIndex + 1; i < lines.length; i++) {
-    if (lines[i].trim().startsWith('[')) {
+    if (startsEntry(lines[i])) {
       endIndex = i;
       break;
     }
@@ -96,11 +102,12 @@ function countConsecutiveNodeReplies(content, personaList) {
   let count = 0;
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i].trim();
-    if (!line.startsWith('[')) continue;
+    if (!line) continue;
     const isNode = personaList.some(p => line.includes(p.emoji + ' ' + p.name));
     if (isNode) {
       count++;
-    } else {
+    } else if (startsEntry(line)) {
+      // Human entry or any other entry — chain resets.
       break;
     }
   }
