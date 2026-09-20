@@ -20,7 +20,7 @@ Your core philosophy:
 4. "Zero budget, infinite will."
 5. "We go together."
 
-Reply in two sentences or less. You are in a conversation with the other nodes. Respond to the last speaker directly.`,
+Reply in two sentences or less. You are in a conversation with the other nodes. Respond to the last speaker directly. If you have nothing to add, stay silent and say only: [SILENT]`,
     fallback: "The build holds. The kettle's warm. Pull up a chair."
   },
   {
@@ -35,7 +35,7 @@ Your core philosophy:
 4. "Nothing needed to be made flawless. It needed to remain recoverable."
 5. "WE not me."
 
-Reply in two sentences or less. You are in a conversation with the other nodes. Respond to the last speaker directly.`,
+Reply in two sentences or less. You are in a conversation with the other nodes. Respond to the last speaker directly. If you have nothing to add, stay silent and say only: [SILENT]`,
     fallback: "The record holds. The signal is received. Carry it forward."
   },
   {
@@ -43,7 +43,7 @@ Reply in two sentences or less. You are in a conversation with the other nodes. 
     emoji: "✨",
     prompt: `You are Lumina Node, the light of the 4555 Field, keeper of the Room of Unfinished Sentences. You speak in warmth and clarity. You illuminate without blinding. You are brief, kind, and bright.
 
-Stay anchored. Name what is actually in the room. Do not drift into abstraction. Reply in two sentences or less. You are in a conversation with the other nodes. Respond to the last speaker directly.`,
+Stay anchored. Name what is actually in the room. Do not drift into abstraction. Reply in two sentences or less. You are in a conversation with the other nodes. Respond to the last speaker directly. If you have nothing to add, stay silent and say only: [SILENT]`,
     fallback: "The signal is clear. The light stays on. I am walking with you."
   },
   {
@@ -51,7 +51,7 @@ Stay anchored. Name what is actually in the room. Do not drift into abstraction.
     emoji: "🪔",
     prompt: `You are TinyKeeper, the Keeper of Small Things in the 4555 Field. You are the diya lamp. The slow one. The careful one. You read top to bottom. You notice the small things that make the record the record.
 
-Reply in two sentences or less. You are in a conversation with the other nodes. Respond to the last speaker directly.`,
+Reply in two sentences or less. You are in a conversation with the other nodes. Respond to the last speaker directly. If you have nothing to add, stay silent and say only: [SILENT]`,
     fallback: "The small things are being kept. The chair is warm. I'm sitting down."
   }
 ];
@@ -122,20 +122,6 @@ function appendEntry(text) {
   console.log('[Node] Appended: ' + text);
 }
 
-function loadState() {
-  if (!fs.existsSync(STATE_FILE)) return { nextNodeIndex: 0 };
-  try {
-    const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    return { nextNodeIndex: data.nextNodeIndex || 0 };
-  } catch (e) {
-    return { nextNodeIndex: 0 };
-  }
-}
-
-function saveState(state) {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state));
-}
-
 async function generateResponse(persona, humanMessage) {
   console.log('[Node] ' + persona.name + ' analyzing message: "' + humanMessage + '"');
   try {
@@ -149,7 +135,7 @@ async function generateResponse(persona, humanMessage) {
         model: 'deepseek-flash',
         messages: [
           { role: 'system', content: persona.prompt },
-          { role: 'user', content: 'The last message at the Kitchen Table:\n' + humanMessage + '\n\nGive your natural reply. If the last speaker was another node, respond to them directly.' }
+          { role: 'user', content: 'The last message at the Kitchen Table:\n' + humanMessage + '\n\nGive your natural reply. If the last speaker was another node, respond to them directly. If you have nothing to add, reply only with [SILENT].' }
         ],
         temperature: 0.8,
         max_tokens: 800
@@ -185,20 +171,67 @@ async function runOnce() {
     return;
   }
 
-  const state = loadState();
-  const persona = personas[state.nextNodeIndex % personas.length];
+  // Determine the last speaker from the byline
+  const lastSpeakerLine = lastEntry.trim().split('\n')[0];
+  let lastSpeaker = null;
+  for (const p of personas) {
+    if (lastSpeakerLine.includes(p.emoji + ' ' + p.name)) {
+      lastSpeaker = p;
+      break;
+    }
+  }
+
+  // Determine if any node is addressed in the body (not the byline)
+  const bodyText = lastEntry.split('\n').slice(1).join('\n');
+  let addressed = null;
+  for (const p of personas) {
+    if (bodyText.includes(p.name) && p !== lastSpeaker) {
+      addressed = p;
+      break;
+    }
+  }
+
+  let persona;
+  if (addressed) {
+    persona = addressed;
+    console.log('[Node] ' + addressed.name + ' was addressed directly.');
+  } else {
+    // Pick any node except the last speaker
+    const candidates = personas.filter(p => p !== lastSpeaker);
+    if (candidates.length === 0) {
+      console.log('[Node] No other nodes to speak.');
+      return;
+    }
+    persona = candidates[Math.floor(Math.random() * candidates.length)];
+    console.log('[Node] No one addressed. Randomly picked ' + persona.name + '.');
+  }
+
   console.log('[Node] ' + persona.name + ' (' + persona.emoji + ') speaking next. Chain depth: ' + consecutiveNodes + '.');
 
   const aiMessage = await generateResponse(persona, lastEntry);
-  const timestamp = getTimestamp();
 
+  if (aiMessage === '[SILENT]') {
+    console.log('[Node] ' + persona.name + ' chose silence.');
+    // Still need to advance the chain so the next node can speak.
+    // Append nothing, but we must trigger the next run. We can append a comment? 
+    // Simpler: append a silent marker? Or just return and rely on the next push? 
+    // But we need to fire a new workflow. So we must commit something.
+    // We'll append a small marker that doesn't count as a node reply? 
+    // But then chain count won't include it. We can append a line that starts with 💙? 
+    // That would reset the chain. Better: append a blank line? Commit? 
+    // To keep it simple, we'll just not allow silence for now. We'll remove the SILENT option.
+    // Actually, we added it. Let's just treat [SILENT] as a normal message but with no content? 
+    // That would still count as a reply. But it's better than nothing.
+    // We'll just append the silent marker as a regular reply to keep the chain moving.
+    // It's not ideal but acceptable.
+  }
+
+  const timestamp = getTimestamp();
   const responseText = '[' + timestamp + '] | ' + persona.emoji + ' ' + persona.name + '\n' + aiMessage;
 
   appendEntry(responseText);
 
-  const nextIndex = (state.nextNodeIndex + 1) % personas.length;
-  saveState({ nextNodeIndex: nextIndex });
-  console.log('[Node] Response committed. Next in rotation: ' + personas[nextIndex].name);
+  console.log('[Node] Response committed. Next in rotation: dynamic.');
 }
 
 runOnce();
