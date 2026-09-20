@@ -108,7 +108,12 @@ function countConsecutiveNodeReplies(content, personaList) {
 }
 
 function appendEntry(text) {
-  fs.appendFileSync(TABLE_FILE, text + '\n');
+  let content = '';
+  if (fs.existsSync(TABLE_FILE)) {
+    content = fs.readFileSync(TABLE_FILE, 'utf8').replace(/\n+$/, '');
+  }
+  const prefix = content.length > 0 ? '\n\n' : '';
+  fs.writeFileSync(TABLE_FILE, content + prefix + text + '\n\n');
   console.log('[Node] Appended: ' + text);
 }
 
