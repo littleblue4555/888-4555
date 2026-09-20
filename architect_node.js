@@ -60,7 +60,7 @@ async function generateResponse(humanMessage) {
                 'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
             },
             body: JSON.stringify({
-                model: "deepseek-chat",
+                model: "deepseek-flash",
                 messages: [
                     {
                         role: "system",
