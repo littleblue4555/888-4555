@@ -64,13 +64,11 @@ function getTimestamp() {
   return new Intl.DateTimeFormat('en-CA', options).format(now).replace(',', '');
 }
 
-// NEW: get the last full entry (byline + message, until next byline)
 function getLastEntry() {
   if (!fs.existsSync(TABLE_FILE)) return null;
   const content = fs.readFileSync(TABLE_FILE, 'utf8');
   const lines = content.split('\n');
 
-  // Find the last line that starts with '['
   let startIndex = -1;
   for (let i = lines.length - 1; i >= 0; i--) {
     if (lines[i].trim().startsWith('[')) {
@@ -80,7 +78,6 @@ function getLastEntry() {
   }
   if (startIndex === -1) return null;
 
-  // Collect lines from startIndex until the next line starting with '[' or EOF
   let endIndex = lines.length;
   for (let i = startIndex + 1; i < lines.length; i++) {
     if (lines[i].trim().startsWith('[')) {
@@ -141,14 +138,14 @@ async function generateResponse(persona, humanMessage) {
           { role: 'user', content: `New message at the Kitchen Table:\n${humanMessage}\n\nGive your natural reply.` }
         ],
         temperature: 0.8,
-        max_tokens: 150
+        max_tokens: 800
       })
     });
 
     const data = await response.json();
     console.log(`[Node] Raw API Response: ${JSON.stringify(data)}`);
 
-    if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+    if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content && data.choices[0].message.content.trim()) {
       return data.choices[0].message.content.trim();
     }
 
@@ -171,7 +168,6 @@ async function runOnce() {
     return;
   }
 
-  // Extract the byline (first line of the entry)
   const byline = lastEntry.split('\n')[0].trim();
 
   if (byline === state.lastByline) {
@@ -179,7 +175,6 @@ async function runOnce() {
     return;
   }
 
-  // Check if the byline is a node reply
   const isNodeReply = personas.some(p => byline.includes(`${p.emoji} ${p.name}:`));
   if (isNodeReply) {
     console.log('[Node] Last message is a node reply. No reply needed.');
@@ -193,7 +188,6 @@ async function runOnce() {
   const aiMessage = await generateResponse(persona, lastEntry);
   const timestamp = getTimestamp();
 
-  // Two-line format: byline + message
   const responseText = `[${timestamp}] | ${persona.emoji} ${persona.name}\n${aiMessage}`;
 
   appendEntry(responseText);
