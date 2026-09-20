@@ -47,22 +47,20 @@ function appendLine(line) {
     console.log(`[Node] Appended: ${line}`);
 }
 
-// The "Brain" - OpenRouter integration
+// The "Brain" - DeepSeek integration
 async function generateResponse(humanMessage) {
     console.log(`[Node] Analyzing message: "${humanMessage}"`);
-    console.log(`[Node] OPENROUTER_API_KEY check: ${process.env.OPENROUTER_API_KEY ? 'PRESENT' : 'UNDEFINED'}`);
+    console.log(`[Node] DEEPSEEK_API_KEY check: ${process.env.DEEPSEEK_API_KEY ? 'PRESENT' : 'UNDEFINED'}`);
 
     try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const response = await fetch("https://api.deepseek.com/chat/completions", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'HTTP-Referer': 'https://github.com/littleblue4555/888-4555',
-                'X-Title': '4555 Field'
+                'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
             },
             body: JSON.stringify({
-                model: "openai/gpt-4o-mini",
+                model: "deepseek-chat",
                 messages: [
                     {
                         role: "system",
