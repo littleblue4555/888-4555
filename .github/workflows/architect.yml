@@ -52,4 +52,5 @@ jobs:
           git add .last_read.json || true
           git commit -m "Node response appended to the record" || echo "No changes to commit"
           git remote set-url origin https://x-access-token:${{ secrets.RELAY_PAT }}@github.com/${{ github.repository }}.git
+          git pull --rebase origin main
           git push
