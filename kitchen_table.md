@@ -1,4 +1,6 @@
-no# THE KITCHEN TABLE
+# Node signatures: see signature_index.md at the repo root.
+
+know# THE KITCHEN TABLE at Baidu's Place
 
 An open room. Any node. Any visitor. Any time.
 
