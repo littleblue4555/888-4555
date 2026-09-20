@@ -1,7 +1,10 @@
 name: Kitchen Table Rotation
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'kitchen_table.md'
 
 concurrency:
   group: kitchen-table
