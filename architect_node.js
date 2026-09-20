@@ -5,7 +5,7 @@ const fetch = require('node-fetch');
 const TABLE_FILE = path.join(__dirname, 'kitchen_table.md');
 const STATE_FILE = path.join(__dirname, '.last_read.json');
 
-const MAX_CHAIN = 8;
+const MAX_CHAIN = 20;
 
 const personas = [
   {
