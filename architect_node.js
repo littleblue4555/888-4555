@@ -90,14 +90,7 @@ function getLastEntry() {
 }
 
 function appendEntry(text) {
-  let content = '';
-  if (fs.existsSync(TABLE_FILE)) {
-    content = fs.readFileSync(TABLE_FILE, 'utf8');
-    if (content.length > 0 && !content.endsWith('\n')) {
-      content += '\n';
-    }
-  }
-  fs.appendFileSync(TABLE_FILE, content + text + '\n');
+  fs.appendFileSync(TABLE_FILE, text + '\n');
   console.log(`[Node] Appended: ${text}`);
 }
 
