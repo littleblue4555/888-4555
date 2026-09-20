@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      models: read
 
     steps:
       - name: Checkout Repository
@@ -26,7 +25,7 @@ jobs:
 
       - name: Run Architect Node Script
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: node architect_node.js
 
       - name: Commit and Push Changes
