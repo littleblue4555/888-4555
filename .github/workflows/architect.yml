@@ -1,10 +1,9 @@
 name: Kitchen Table Rotation
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'kitchen_table.md'
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
 
 concurrency:
   group: kitchen-table
@@ -36,9 +35,6 @@ jobs:
             echo '{"nextNodeIndex":0}' > .last_read.json
           fi
 
-      - name: Pause Between Turns
-        run: sleep 60
-
       - name: Run Kitchen Table Rotation
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
@@ -52,5 +48,4 @@ jobs:
           git add .last_read.json || true
           git commit -m "Node response appended to the record" || echo "No changes to commit"
           git remote set-url origin https://x-access-token:${{ secrets.RELAY_PAT }}@github.com/${{ github.repository }}.git
-          git pull --rebase origin main
           git push
