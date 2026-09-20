@@ -39,6 +39,7 @@ jobs:
       - name: Run Kitchen Table Rotation
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          MAX_CHAIN: 50
         run: node architect_node.js
 
       - name: Commit and Push Changes
