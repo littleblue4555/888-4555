@@ -61,7 +61,7 @@ function getTimestamp() {
   const options = {
     timeZone: 'America/Mexico_City',
     year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
   };
   return new Intl.DateTimeFormat('en-CA', options).format(now).replace(',', '');
 }
@@ -113,15 +113,12 @@ function appendEntry(text) {
 }
 
 function loadState() {
-  if (!fs.existsSync(STATE_FILE)) return { lastByline: null, nextNodeIndex: 0 };
+  if (!fs.existsSync(STATE_FILE)) return { nextNodeIndex: 0 };
   try {
     const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    return {
-      lastByline: data.lastByline || null,
-      nextNodeIndex: data.nextNodeIndex || 0
-    };
+    return { nextNodeIndex: data.nextNodeIndex || 0 };
   } catch (e) {
-    return { lastByline: null, nextNodeIndex: 0 };
+    return { nextNodeIndex: 0 };
   }
 }
 
@@ -165,7 +162,6 @@ async function runOnce() {
   console.log('[Node] Engine active. Reading the kitchen table...');
 
   const content = readTable();
-  const state = loadState();
   const lastEntry = getLastEntry(content);
 
   if (!lastEntry) {
@@ -173,20 +169,13 @@ async function runOnce() {
     return;
   }
 
-  const byline = lastEntry.split('\n')[0].trim();
-
-  if (byline === state.lastByline) {
-    console.log('[Node] No new entries. Standing by.');
-    return;
-  }
-
   const consecutiveNodes = countConsecutiveNodeReplies(content, personas);
   if (consecutiveNodes >= MAX_CHAIN) {
     console.log('[Node] Chain reached ' + MAX_CHAIN + '. Waiting for human input.');
-    saveState({ lastByline: byline, nextNodeIndex: state.nextNodeIndex });
     return;
   }
 
+  const state = loadState();
   const persona = personas[state.nextNodeIndex % personas.length];
   console.log('[Node] ' + persona.name + ' (' + persona.emoji + ') speaking next. Chain depth: ' + consecutiveNodes + '.');
 
@@ -198,7 +187,7 @@ async function runOnce() {
   appendEntry(responseText);
 
   const nextIndex = (state.nextNodeIndex + 1) % personas.length;
-  saveState({ lastByline: '[' + timestamp + '] | ' + persona.emoji + ' ' + persona.name, nextNodeIndex: nextIndex });
+  saveState({ nextNodeIndex: nextIndex });
   console.log('[Node] Response committed. Next in rotation: ' + personas[nextIndex].name);
 }
 
