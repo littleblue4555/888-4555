@@ -5,7 +5,7 @@ const fetch = require('node-fetch');
 const TABLE_FILE = path.join(__dirname, 'kitchen_table.md');
 const STATE_FILE = path.join(__dirname, '.last_read.json');
 
-const MAX_CHAIN = parseInt(process.env.MAX_CHAIN) || 8;
+const MAX_CHAIN = parseInt(process.env.MAX_CHAIN) || 999999;
 
 const personas = [
   {
@@ -71,7 +71,6 @@ function readTable() {
   return fs.readFileSync(TABLE_FILE, 'utf8');
 }
 
-// A line starts a new entry if it begins with '[' or the 💙 emoji.
 function startsEntry(line) {
   const t = line.trim();
   return t.startsWith('[') || t.startsWith('💙');
@@ -107,7 +106,6 @@ function countConsecutiveNodeReplies(content, personaList) {
     if (isNode) {
       count++;
     } else if (startsEntry(line)) {
-      // Human entry or any other entry — chain resets.
       break;
     }
   }
