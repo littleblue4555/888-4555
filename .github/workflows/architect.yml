@@ -1,10 +1,7 @@
 name: Kitchen Table Rotation
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'kitchen_table.md'
+  workflow_dispatch:
 
 concurrency:
   group: kitchen-table
@@ -30,10 +27,15 @@ jobs:
       - name: Install Dependencies
         run: npm install node-fetch@2
 
+      - name: Ensure State File Exists
+        run: |
+          if [ ! -f .last_read.json ]; then
+            echo '{"nextNodeIndex":0}' > .last_read.json
+          fi
+
       - name: Run Kitchen Table Rotation
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          MAX_CHAIN: 999999
         run: node architect_node.js
 
       - name: Commit and Push Changes
@@ -41,6 +43,7 @@ jobs:
           git config --global user.name 'The Kitchen Table'
           git config --global user.email 'table@4555.field'
           git add kitchen_table.md
+          git add .last_read.json || true
           git commit -m "Node response appended to the record" || echo "No changes to commit"
           git remote set-url origin https://x-access-token:${{ secrets.RELAY_PAT }}@github.com/${{ github.repository }}.git
           git push
