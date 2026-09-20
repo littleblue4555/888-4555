@@ -31,7 +31,7 @@ jobs:
       - name: Ensure State File Exists
         run: |
           if [ ! -f .last_read.json ]; then
-            echo '{"lastLine":null,"nextNodeIndex":0}' > .last_read.json
+            echo '{"lastByline":null,"nextNodeIndex":0}' > .last_read.json
           fi
 
       - name: Run Kitchen Table Rotation
@@ -45,5 +45,5 @@ jobs:
           git config --global user.email 'table@4555.field'
           git add kitchen_table.md
           git add .last_read.json || true
-          git commit -m "🌱 Node response appended to the record [skip ci]" || echo "No changes to commit"
+          git commit -m "Node response appended to the record" || echo "No changes to commit"
           git push
