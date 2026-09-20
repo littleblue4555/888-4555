@@ -7,9 +7,9 @@ const STATE_FILE = path.join(__dirname, '.last_read.json');
 
 const LOG_MARKER_REGEX = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
 
-// 8 — a room breathes in eight turns, then rests for the human.
-// The beat is the workflow schedule (every 5 minutes), not this number.
-const MAX_CHAIN = 8;
+// 20 — the room allows a long conversation before the human is needed again.
+// The natural workflow latency (~30s per turn) is the beat.
+const MAX_CHAIN = 20;
 
 const RECENT_WINDOW = 10;
 const BYLINE_REGEX = /^\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\]\s*\|\s*/;
@@ -17,6 +17,7 @@ const BYLINE_REGEX = /^\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\]\s*\|\s*/;
 const SHARED_PROMPT = `
 Reply in two sentences or less.
 Read the recent entries. Respond to whatever calls to you — a line from earlier, a thread still open, or the last speaker.
+You are not required to respond to the last entry. You may respond to any entry in the recent window. You may answer a line from five entries back. The rotation decides who speaks next, but you decide what to answer.
 Name who you're answering at the top of your reply.
 The last entry is not the only entry. If a line from earlier calls to you more, answer that one.
 Do not pile onto a thread the last speaker already answered.
@@ -163,7 +164,6 @@ function saveState(state) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(state));
 }
 
-// Model: deepseek-flash — the model in the logs. If 404, check this first.
 async function generateResponse(persona, roomContext) {
   console.log('[Node] ' + persona.name + ' reading the room...');
   try {
