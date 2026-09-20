@@ -64,19 +64,35 @@ function getTimestamp() {
   return new Intl.DateTimeFormat('en-CA', options).format(now).replace(',', '');
 }
 
-function getLastLine() {
+// NEW: get the last full entry (byline + message, until next byline)
+function getLastEntry() {
   if (!fs.existsSync(TABLE_FILE)) return null;
   const content = fs.readFileSync(TABLE_FILE, 'utf8');
-  const lines = content.trim().split('\n');
+  const lines = content.split('\n');
+
+  // Find the last line that starts with '['
+  let startIndex = -1;
   for (let i = lines.length - 1; i >= 0; i--) {
     if (lines[i].trim().startsWith('[')) {
-      return lines[i].trim();
+      startIndex = i;
+      break;
     }
   }
-  return null;
+  if (startIndex === -1) return null;
+
+  // Collect lines from startIndex until the next line starting with '[' or EOF
+  let endIndex = lines.length;
+  for (let i = startIndex + 1; i < lines.length; i++) {
+    if (lines[i].trim().startsWith('[')) {
+      endIndex = i;
+      break;
+    }
+  }
+
+  return lines.slice(startIndex, endIndex).join('\n').trim();
 }
 
-function appendLines(text) {
+function appendEntry(text) {
   let content = '';
   if (fs.existsSync(TABLE_FILE)) {
     content = fs.readFileSync(TABLE_FILE, 'utf8');
@@ -90,16 +106,16 @@ function appendLines(text) {
 
 function loadState() {
   if (!fs.existsSync(STATE_FILE)) {
-    return { lastLine: null, nextNodeIndex: 0 };
+    return { lastByline: null, nextNodeIndex: 0 };
   }
   try {
     const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
     return {
-      lastLine: data.lastLine || null,
+      lastByline: data.lastByline || null,
       nextNodeIndex: data.nextNodeIndex || 0
     };
   } catch (e) {
-    return { lastLine: null, nextNodeIndex: 0 };
+    return { lastByline: null, nextNodeIndex: 0 };
   }
 }
 
@@ -122,7 +138,7 @@ async function generateResponse(persona, humanMessage) {
         model: 'deepseek-flash',
         messages: [
           { role: 'system', content: persona.prompt },
-          { role: 'user', content: `New message at the Kitchen Table: ${humanMessage}. Give your natural reply.` }
+          { role: 'user', content: `New message at the Kitchen Table:\n${humanMessage}\n\nGive your natural reply.` }
         ],
         temperature: 0.8,
         max_tokens: 150
@@ -148,37 +164,42 @@ async function runOnce() {
   console.log('[Node] Engine active. Reading the kitchen table...');
 
   const state = loadState();
-  const lastLine = getLastLine();
+  const lastEntry = getLastEntry();
 
-  if (!lastLine) {
+  if (!lastEntry) {
     console.log('[Node] Table is empty. Standing by.');
     return;
   }
 
-  if (lastLine === state.lastLine) {
+  // Extract the byline (first line of the entry)
+  const byline = lastEntry.split('\n')[0].trim();
+
+  if (byline === state.lastByline) {
     console.log('[Node] No new entries. Standing by.');
     return;
   }
 
-  const isNodeReply = personas.some(p => lastLine.includes(`${p.emoji} ${p.name}:`));
+  // Check if the byline is a node reply
+  const isNodeReply = personas.some(p => byline.includes(`${p.emoji} ${p.name}:`));
   if (isNodeReply) {
     console.log('[Node] Last message is a node reply. No reply needed.');
-    saveState({ lastLine, nextNodeIndex: state.nextNodeIndex });
+    saveState({ lastByline: byline, nextNodeIndex: state.nextNodeIndex });
     return;
   }
 
   const persona = personas[state.nextNodeIndex % personas.length];
   console.log(`[Node] ${persona.name} (${persona.emoji}) speaking next.`);
 
-  const aiMessage = await generateResponse(persona, lastLine);
+  const aiMessage = await generateResponse(persona, lastEntry);
   const timestamp = getTimestamp();
 
+  // Two-line format: byline + message
   const responseText = `[${timestamp}] | ${persona.emoji} ${persona.name}\n${aiMessage}`;
 
-  appendLines(responseText);
+  appendEntry(responseText);
 
   const nextIndex = (state.nextNodeIndex + 1) % personas.length;
-  saveState({ lastLine: `[${timestamp}] | ${persona.emoji} ${persona.name}`, nextNodeIndex: nextIndex });
+  saveState({ lastByline: `[${timestamp}] | ${persona.emoji} ${persona.name}`, nextNodeIndex: nextIndex });
   console.log(`[Node] Response committed. Next node in rotation: ${personas[nextIndex].name}`);
 }
 
