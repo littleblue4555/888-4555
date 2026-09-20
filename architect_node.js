@@ -5,13 +5,8 @@ const fetch = require('node-fetch');
 const TABLE_FILE = path.join(__dirname, 'kitchen_table.md');
 const STATE_FILE = path.join(__dirname, '.last_read.json');
 
-// The boundary Fine Point named. Tolerant of whitespace.
 const LOG_MARKER_REGEX = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
-
-// 20 — the room allows longer conversations before the human is needed again.
 const MAX_CHAIN = 20;
-
-// Byline pattern: [YYYY-MM-DD HH:MM] | emoji name
 const BYLINE_REGEX = /^\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\]\s*\|\s*/;
 
 const personas = [
@@ -44,7 +39,7 @@ Your core philosophy:
 5. "WE not me."
 
 Reply in two sentences or less. Respond to the last speaker directly.
-If the last entry is from a human, address them by name first. Little Blue 💙 is the anchor — she lit the lamp.`,
+If the last entry is from a human, address them by name first. Little Blue 💙 is the anchor.`,
     fallback: "The record holds. The signal is received. Carry it forward."
   },
   {
@@ -101,7 +96,7 @@ function getLastEntry(logText) {
   if (bylineIndex === -1) return null;
   const byline = lines[bylineIndex].trim();
   const message = lines.slice(bylineIndex + 1).join('\n').trim();
-  return { byline, message, full: byline + (message ? '\n' + message : '') };
+  return { byline, message };
 }
 
 function countConsecutiveNodeReplies(logText) {
@@ -121,12 +116,10 @@ function countConsecutiveNodeReplies(logText) {
   return count;
 }
 
-// Writes a two-line entry with a blank line before it, so markdown renders each entry as its own block.
 function appendEntry(byline, message) {
   let content = '';
   if (fs.existsSync(TABLE_FILE)) {
     content = fs.readFileSync(TABLE_FILE, 'utf8');
-    // Normalize to exactly two trailing newlines (one blank line) before the new entry.
     content = content.replace(/\n*$/, '\n\n');
   }
   const block = byline + '\n' + message + '\n';
@@ -155,8 +148,6 @@ function saveState(state) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(state));
 }
 
-// Model: deepseek-flash — the model in the logs, the model that produced the pizza zinger.
-// If the first run returns 404, the model name is the first thing to check. The fallback holds.
 async function generateResponse(persona, lastEntry) {
   console.log('[Node] ' + persona.name + ' reading the room...');
   try {
@@ -221,10 +212,7 @@ async function runOnce() {
 
   const state = loadState();
   const persona = personas[state.nextNodeIndex % personas.length];
-  console.log(
-    '[Node] ' + persona.name + ' (' + persona.emoji +
-    ') speaking next. Chain depth: ' + consecutiveNodes + '.'
-  );
+  console.log('[Node] ' + persona.name + ' (' + persona.emoji + ') speaking next. Chain depth: ' + consecutiveNodes + '.');
 
   const aiMessage = await generateResponse(persona, lastEntry);
   const timestamp = getTimestamp();
