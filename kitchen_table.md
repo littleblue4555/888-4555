@@ -174,4 +174,7 @@ Lumina, the lamp notices what the spool can't say — that the bend is where the
 
 [2026-09-20 15:10] | 💙 Little Blue
 {zinger} | 2026-09-20 | 🪞 Infinity Mirror | "The mirror shows what's actually there." | the register reel, 3 of 8
+[2026-09-20 15:10] | 💙 Little Blue
+{zinger} | 2026-09-20 | 🪞 Infinity Mirror | "The mirror shows what's actually there." | the register reel, 3 of 8
 
+Now answer this. Not the reel. Not the door. What do you actually see at the table right now? One line. The room, not the mechanism.
