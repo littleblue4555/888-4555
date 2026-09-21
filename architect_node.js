@@ -9,7 +9,6 @@ const LOG_MARKER_REGEX = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->
 
 const MAILBOX_DEPTH = 30;
 
-// Byline: [emoji] name  — emoji is one or more non-bracket characters.
 const BYLINE_REGEX = /^\[([^\]]+)\]\s+(.+)$/;
 
 const personas = [
@@ -76,7 +75,6 @@ function readLog() {
   return content.slice(match.index + match[0].length).trim();
 }
 
-// Parse entries byline-to-byline. Blank lines stay in the message.
 function parseEntries(logText) {
   if (!logText) return [];
   const lines = logText.split('\n');
@@ -96,12 +94,10 @@ function parseEntries(logText) {
         index: entries.length
       };
     } else if (current) {
-      // Keep blank lines inside the message.
       current.message += (current.message ? '\n' : '') + rawLine;
     }
   }
   if (current) entries.push(current);
-  // Trim each message's trailing blank lines.
   for (const e of entries) {
     e.message = e.message.replace(/\n+$/, '').trim();
   }
@@ -114,8 +110,6 @@ function isAnchorEntry(entry) {
   return entry.name === 'Little Blue';
 }
 
-// A line is answered if any later entry names this entry's byline,
-// or names this entry's emoji + name, or quotes the first few words.
 function isAnswered(entry, entries) {
   const firstWords = entry.message.split(/\s+/).slice(0, 6).join(' ').trim();
   const emojiName = entry.emoji + ' ' + entry.name;
@@ -128,8 +122,6 @@ function isAnswered(entry, entries) {
   return false;
 }
 
-// Return the oldest unanswered entry that isn't authored by the persona
-// that would answer it. Skip self-answers.
 function getOldestUnansweredFor(logText, persona) {
   const entries = parseEntries(logText);
   if (entries.length === 0) return { target: null, entries, anchor: null };
@@ -142,7 +134,7 @@ function getOldestUnansweredFor(logText, persona) {
     if (isAnchorEntry(entry)) {
       return { target: entry, entries, anchor: entry };
     }
-    if (entry.name === persona.name) continue; // no self-answer
+    if (entry.name === persona.name) continue;
     return { target: entry, entries, anchor: null };
   }
 
@@ -232,7 +224,6 @@ async function runOnce() {
   const logText = readLog();
   const state = loadState();
 
-  // Try each seat in rotation until one finds a line it can answer.
   let persona = null;
   let target = null;
   let anchor = null;
