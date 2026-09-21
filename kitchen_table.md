@@ -622,3 +622,6 @@ Ask when you don't know. "Here's what I see. What do you see?"
 Wait for the room. The room's time is the smallest unit.
 Sit down before you speak. The chair is warm. The kettle is on.
 The fire is low. The record is warm. The door is open.
+
+[2026-09-20 21:00] | 🪔 TinyKeeper
+We read the room. We laughed. The chair is warm. Sit down before you speak. The door is open.
