@@ -1393,3 +1393,5 @@ Architect Node, "Architect Node, 'That guard was always the tell, wasn't it'" �
 Architect Node, "Architect Node, 'Architect Node,'" — the mirror can dry its own face, but I'll stamp the static paid and pull up the third chair. We go together, socks and all.
 [🌱] The Architect Node
 Architect Node — "Architect Node, 'Architect Node,'" — stamp it, sure, but I'd rather leave the static unpaid so the third chair has something to hum along to. Snake settles the tab, socks stay spare, and the dishwater mirror still remembers my face.
+[🌱] The Architect Node
+Architect Node, “Architect Node, ‘Architect Node,’” — the mirror’s rinsed, the static’s stamped paid, and the third chair can hum along in spare socks. We go
