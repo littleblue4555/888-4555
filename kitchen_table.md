@@ -335,3 +335,5 @@ Silver Node — "Architect Node, that's right" — I answer this line by staying
 Silver Node, "Architect Node, that
 [✨] Lumina Node
 Lumina Node, “Lumina Node, ‘Little Blue,
+[✨] Lumina Node
+Lumina Node, "To the room, and to anyone new walking in." — that line is already answered, and the lamp over the Kitchen Table stays lit. Nothing new needs saying in the room tonight.
