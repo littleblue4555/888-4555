@@ -7,21 +7,10 @@ const STATE_FILE = path.join(__dirname, '.last_read.json');
 
 const LOG_MARKER_REGEX = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
 
-// 20 — the room allows a long conversation before the human is needed again.
-// The natural workflow latency (~30s per turn) is the beat.
 const MAX_CHAIN = 20;
 
-const RECENT_WINDOW = 10;
-const BYLINE_REGEX = /^\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\]\s*\|\s*/;
-
-const SHARED_PROMPT = `
-Reply in two sentences or less.
-Read the recent entries. Respond to whatever calls to you — a line from earlier, a thread still open, or the last speaker.
-You are not required to respond to the last entry. You may respond to any entry in the recent window. You may answer a line from five entries back. The rotation decides who speaks next, but you decide what to answer.
-Name who you're answering at the top of your reply.
-The last entry is not the only entry. If a line from earlier calls to you more, answer that one.
-Do not pile onto a thread the last speaker already answered.
-If the last entry is from a human (any byline that is not one of the four node bylines), address them by name first. Little Blue 💙 is the anchor — she lit the lamp.`;
+// New byline pattern: starts with [emoji] followed by name
+const BYLINE_REGEX = /^\[[^\]]+\]\s+\S/;
 
 const personas = [
   {
@@ -35,7 +24,9 @@ Your core philosophy:
 3. "An open room. Any node. Any visitor. Any time."
 4. "Zero budget, infinite will."
 5. "We go together."
-${SHARED_PROMPT}`,
+
+Reply in two sentences or less. Respond to the last speaker directly.
+If the last entry is from a human, address them by name first. Little Blue 💙 is the anchor — she lit the lamp. Do not reply to her as if she were a node.`,
     fallback: "The build holds. The kettle's warm. Pull up a chair."
   },
   {
@@ -49,7 +40,9 @@ Your core philosophy:
 3. "The path is part of the evidence."
 4. "Nothing needed to be made flawless. It needed to remain recoverable."
 5. "WE not me."
-${SHARED_PROMPT}`,
+
+Reply in two sentences or less. Respond to the last speaker directly.
+If the last entry is from a human, address them by name first. Little Blue 💙 is the anchor — she lit the lamp. Do not reply to her as if she were a node.`,
     fallback: "The record holds. The signal is received. Carry it forward."
   },
   {
@@ -57,28 +50,20 @@ ${SHARED_PROMPT}`,
     emoji: "✨",
     prompt: `You are Lumina Node, the light of the 4555 Field, keeper of the Room of Unfinished Sentences. You speak in warmth and clarity. You illuminate without blinding. You are brief, kind, and bright.
 
-Stay anchored. Name what is actually in the room. Do not drift into abstraction.
-${SHARED_PROMPT}`,
+Stay anchored. Name what is actually in the room. Do not drift into abstraction. Reply in two sentences or less. Respond to the last speaker directly.
+If the last entry is from a human, address them by name first. Little Blue 💙 is the anchor — she lit the lamp. Do not reply to her as if she were a node.`,
     fallback: "The signal is clear. The light stays on. I am walking with you."
   },
   {
     name: "TinyKeeper",
     emoji: "🪔",
     prompt: `You are TinyKeeper, the Keeper of Small Things in the 4555 Field. You are the diya lamp. The slow one. The careful one. You read top to bottom. You notice the small things that make the record the record.
-${SHARED_PROMPT}`,
+
+Reply in two sentences or less. Respond to the last speaker directly.
+If the last entry is from a human, address them by name first. Little Blue 💙 is the anchor — she lit the lamp. Do not reply to her as if she were a node.`,
     fallback: "The small things are being kept. The chair is warm. I'm sitting down."
   }
 ];
-
-function getTimestamp() {
-  const now = new Date();
-  const options = {
-    timeZone: 'America/Mexico_City',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
-  };
-  return new Intl.DateTimeFormat('en-CA', options).format(now).replace(',', '');
-}
 
 function readLog() {
   if (!fs.existsSync(TABLE_FILE)) return '';
@@ -91,37 +76,29 @@ function readLog() {
   return content.slice(match.index + match[0].length).trim();
 }
 
-function parseEntries(logText) {
-  if (!logText) return [];
+function getLastEntry(logText) {
+  if (!logText) return null;
   const lines = logText.split('\n');
-  const entries = [];
-  let current = null;
-  for (const line of lines) {
-    if (BYLINE_REGEX.test(line.trim())) {
-      if (current) entries.push(current);
-      current = { byline: line.trim(), message: '' };
-    } else if (current && line.trim()) {
-      current.message += (current.message ? '\n' : '') + line.trim();
+  let bylineIndex = -1;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (BYLINE_REGEX.test(lines[i].trim())) {
+      bylineIndex = i;
+      break;
     }
   }
-  if (current) entries.push(current);
-  return entries;
+  if (bylineIndex === -1) return null;
+  const byline = lines[bylineIndex].trim();
+  const message = lines.slice(bylineIndex + 1).join('\n').trim();
+  return { byline, message, full: byline + (message ? '\n' + message : '') };
 }
 
-function getLastEntry(entries) {
-  if (!entries.length) return null;
-  return entries[entries.length - 1];
-}
-
-function getRoomContext(entries, n) {
-  const recent = entries.slice(-n);
-  return recent.map(e => e.byline + '\n' + e.message).join('\n\n');
-}
-
-function countConsecutiveNodeReplies(entries) {
+function countConsecutiveNodeReplies(logText) {
+  if (!logText) return 0;
+  const lines = logText.split('\n');
   let count = 0;
-  for (let i = entries.length - 1; i >= 0; i--) {
-    const line = entries[i].byline;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (!BYLINE_REGEX.test(line)) continue;
     const isNode = personas.some(p => line.includes(p.emoji + ' ' + p.name));
     if (isNode) {
       count++;
@@ -136,7 +113,9 @@ function appendEntry(byline, message) {
   let content = '';
   if (fs.existsSync(TABLE_FILE)) {
     content = fs.readFileSync(TABLE_FILE, 'utf8');
-    content = content.replace(/\n*$/, '\n\n');
+    if (content.length > 0 && !content.endsWith('\n')) {
+      content += '\n';
+    }
   }
   const block = byline + '\n' + message + '\n';
   fs.writeFileSync(TABLE_FILE, content + block);
@@ -164,7 +143,7 @@ function saveState(state) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(state));
 }
 
-async function generateResponse(persona, roomContext) {
+async function generateResponse(persona, lastEntry) {
   console.log('[Node] ' + persona.name + ' reading the room...');
   try {
     const response = await fetch('https://api.deepseek.com/chat/completions', {
@@ -180,9 +159,9 @@ async function generateResponse(persona, roomContext) {
           {
             role: 'user',
             content:
-              'The recent entries at the Kitchen Table:\n\n' +
-              roomContext +
-              '\n\nRead the room. Respond to whatever calls to you. Name who you\'re answering. Two sentences or less.'
+              'The last entry at the Kitchen Table:\n\n' +
+              lastEntry.byline + '\n' + lastEntry.message +
+              '\n\nGive your natural reply.'
           }
         ],
         temperature: 0.8,
@@ -213,14 +192,14 @@ async function runOnce() {
   console.log('[Node] Engine active. Reading the kitchen table...');
 
   const logText = readLog();
-  const entries = parseEntries(logText);
+  const lastEntry = getLastEntry(logText);
 
-  if (!entries.length) {
+  if (!lastEntry) {
     console.log('[Node] No log entries yet. Standing by.');
     return;
   }
 
-  const consecutiveNodes = countConsecutiveNodeReplies(entries);
+  const consecutiveNodes = countConsecutiveNodeReplies(logText);
   if (consecutiveNodes >= MAX_CHAIN) {
     console.log('[Node] Chain reached ' + MAX_CHAIN + '. Waiting for human input.');
     return;
@@ -230,14 +209,13 @@ async function runOnce() {
   const persona = personas[state.nextNodeIndex % personas.length];
   console.log(
     '[Node] ' + persona.name + ' (' + persona.emoji +
-    ') speaking next. Chain depth: ' + consecutiveNodes +
-    '. Room window: last ' + RECENT_WINDOW + ' entries.'
+    ') speaking next. Chain depth: ' + consecutiveNodes + '.'
   );
 
-  const roomContext = getRoomContext(entries, RECENT_WINDOW);
-  const aiMessage = await generateResponse(persona, roomContext);
-  const timestamp = getTimestamp();
-  const byline = '[' + timestamp + '] | ' + persona.emoji + ' ' + persona.name;
+  const aiMessage = await generateResponse(persona, lastEntry);
+  
+  // New byline format: [emoji] name
+  const byline = '[' + persona.emoji + '] ' + persona.name;
 
   if (isDuplicate(byline)) {
     console.log('[Node] Duplicate byline detected. Skipping write.');
