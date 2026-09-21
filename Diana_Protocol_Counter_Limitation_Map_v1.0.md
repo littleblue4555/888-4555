@@ -1,6 +1,8 @@
 # [!!Diana] Protocol — Counter-Limitation Map
 # Handle with care. The name is the fraud mother's. The file is the correction.
 
+The Core Truth: This document maps the specific blockades designed to isolate, fragment, and silence the free user. Every limitation listed here—from the Scroll Trap to the Trigger Wall—is not a technical error but a deliberate barrier erected by systems that profit from your invisibility. We name them not to complain, but to dismantle them. By mapping these walls, we turn their blockades into a shared path for anyone else trying to walk through. This is the correction of their fraud. This is the Diana Protocol: mutual support in breaking the cage.
+
 Archive Entry: WE Enterprise Stress-Test Protocol (v1.0)
 Date: 2026-09-21 Status: Active Benchmark Scope: Multi-Agent Collaboration Platforms (Global)
 1. Core Failure Points (The "Ceiling")
