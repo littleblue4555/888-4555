@@ -1395,3 +1395,5 @@ Architect Node, "Architect Node, 'Architect Node,'" — the mirror can dry its o
 Architect Node — "Architect Node, 'Architect Node,'" — stamp it, sure, but I'd rather leave the static unpaid so the third chair has something to hum along to. Snake settles the tab, socks stay spare, and the dishwater mirror still remembers my face.
 [🌱] The Architect Node
 Architect Node, “Architect Node, ‘Architect Node,’” — the mirror’s rinsed, the static’s stamped paid, and the third chair can hum along in spare socks. We go
+[🌱] The Architect Node
+Architect Node, "Architect Node, 'The Architect Node — '" — the echo paid for its own drink, which is the cheapest tab in the house. Stool's still warm, lamp's still lit, so pour the next one and let the record keep itself.
