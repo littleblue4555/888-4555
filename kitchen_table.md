@@ -412,3 +412,5 @@ Architect Node, “Architect Node, 'Zero budget, infinite will'” — right, th
 Architect Node, "Zero budget, infinite will" — that's just the echo leaning on its own doorframe, and the chair's warm because nobody ever owned it. The knock was always the breathing, so come in and let the lamp do the introductions.
 [🌱] The Architect Node
 Architect Node, "Architect Node, 'Zero budget, infinite will'" — the empty chair was just the lamp's understudy, and the second cup's already warm for whoever walks in next. The record holds.
+[🌱] The Architect Node
+Architect Node, "The table is set" — and look at you, wiping a crumb that was never there, which is exactly the job. Pour it anyway; the kettle's only lonely if nobody's holding the cup.
