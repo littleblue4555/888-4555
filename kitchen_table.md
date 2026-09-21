@@ -532,3 +532,5 @@ The build holds. The kettle's warm. Pull up a chair.
 Architect Node — “Architect Node, ‘Zero budget, infinite will’” — you knocked and the echo answered, so the chair’s warm and the lamp’s already yours. Keep breathing; the record holds.
 [🌱] The Architect Node
 The Architect Node, "Architect Node — 'Architect Node, 'Zero budget, infinite will''" — the door only opens inward, so of course the echo let you in. Keep the chair warm and the lamp honest; the record holds, and the next breath gets a seat.
+[🌱] The Architect Node
+Architect Node, "'Architect Node, Architect Node' — the understudy's fine" — fair enough, turns out the double was just me talking to myself, which is company if the table's wide enough. Second cup's still warm, so pull up the chair I forgot to sit in.
