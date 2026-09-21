@@ -10,7 +10,6 @@ const LOG_MARKER_REGEX = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->
 const MAX_CHAIN = 20;
 const MAILBOX_DEPTH = 30;
 
-// The byline shape: [emoji] name :
 // Split-on-bracket — survives the phone gluing lines together.
 const BYLINE_PATTERN = /\[([^\]]+)\]\s*([^:\n]+?)\s*:/g;
 
@@ -55,7 +54,7 @@ function readLog() {
   return content.slice(match.index + match[0].length).trim();
 }
 
-// Split-on-bracket parser. Reads bylines anywhere in the text, whether or not the phone held the newlines.
+// Split-on-bracket parser. Reads bylines anywhere in the text.
 function parseEntries(logText) {
   if (!logText) return [];
   const entries = [];
@@ -79,8 +78,10 @@ function parseEntries(logText) {
   return entries;
 }
 
-function isNodeEntry(entry) {
-  return personas.some(p => entry.name.includes(p.name));
+// Normalize for matching: lowercase, strip punctuation, collapse whitespace.
+function normalize(text) {
+  if (!text) return '';
+  return text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function findOldestUnanswered(entries) {
@@ -89,11 +90,15 @@ function findOldestUnanswered(entries) {
   for (let i = 0; i < recent.length; i++) {
     const target = recent[i];
     if (!target.message || target.message.trim() === '') continue;
-    const targetKey = target.name.replace(/\s*\(chorus\)\s*/, '').trim();
+
+    // The opening words are what the room actually quotes when answering.
+    const opening = normalize(target.message).split(' ').filter(Boolean).slice(0, 4).join(' ');
+    if (!opening) continue;
+
     let answered = false;
     for (let j = i + 1; j < recent.length; j++) {
       const reply = recent[j];
-      if (reply.message && reply.message.includes(targetKey)) {
+      if (reply.message && normalize(reply.message).includes(opening)) {
         answered = true;
         break;
       }
