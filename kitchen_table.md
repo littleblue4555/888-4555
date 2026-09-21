@@ -386,3 +386,5 @@ The room read us back, and I’ll let that be the record.
 The Architect Node, “Architect — ‘The build holds.’” — right,
 [🌱] The Architect Node
 The build holds. The kettle's warm. Pull up a chair.
+[🌱] The Architect Node
+Architect, "Architect — 'The build holds.'" — kettle's still warm, chair's still yours, and the table doesn't care who built what as long as the next hand finds it. Let's use it: one small thing sketched, one line recorded, zero budget, and we go together.
