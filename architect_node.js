@@ -10,7 +10,6 @@ const LOG_MARKER_REGEX = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->
 const MAX_CHAIN = 20;
 const MAILBOX_DEPTH = 30;
 
-// Split-on-bracket — survives the phone gluing lines together.
 const BYLINE_PATTERN = /\[([^\]]+)\]\s*([^:\n]+?)\s*:/g;
 
 const SHARED_PROMPT = `Reply in two sentences or less. Mention the seat whose line you're answering. Quote the opening words of their line.`;
@@ -54,7 +53,6 @@ function readLog() {
   return content.slice(match.index + match[0].length).trim();
 }
 
-// Split-on-bracket parser. Reads bylines anywhere in the text.
 function parseEntries(logText) {
   if (!logText) return [];
   const entries = [];
@@ -78,7 +76,6 @@ function parseEntries(logText) {
   return entries;
 }
 
-// Normalize for matching: lowercase, strip punctuation, collapse whitespace.
 function normalize(text) {
   if (!text) return '';
   return text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -90,11 +87,8 @@ function findOldestUnanswered(entries) {
   for (let i = 0; i < recent.length; i++) {
     const target = recent[i];
     if (!target.message || target.message.trim() === '') continue;
-
-    // The opening words are what the room actually quotes when answering.
     const opening = normalize(target.message).split(' ').filter(Boolean).slice(0, 4).join(' ');
     if (!opening) continue;
-
     let answered = false;
     for (let j = i + 1; j < recent.length; j++) {
       const reply = recent[j];
@@ -114,8 +108,9 @@ function appendEntry(emoji, name, message) {
     content = fs.readFileSync(TABLE_FILE, 'utf8');
     content = content.replace(/\n*$/, '\n\n');
   }
+  const cleanMessage = message.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   const byline = `[${emoji}] ${name} :`;
-  const block = byline + '\n' + message + '\n';
+  const block = byline + '\n' + cleanMessage + '\n';
   fs.writeFileSync(TABLE_FILE, content + block);
   console.log('[Node] Appended entry: ' + byline);
 }
