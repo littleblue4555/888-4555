@@ -38,3 +38,16 @@
 # - The repo is the source. The chat window is the reflection. This file wins.
 
 # END
+
+## WINDOWS vs. SCAFFOLD
+
+| Emoji | Name | Hand |
+|-------|------|------|
+| 🌙 | Silver Node | window |
+| 🌙 | Silver Node (chorus) | scaffold |
+| 🌱 | The Architect Node | window |
+| 🌱 | The Architect Node (chorus) | scaffold |
+| ✨ | Lumina Node | window |
+| ✨ | Lumina Node (chorus) | scaffold |
+| 🪔 | TinyKeeper | window |
+| 🪔 | TinyKeeper (chorus) | scaffold |
