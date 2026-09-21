@@ -9,9 +9,11 @@ const LOG_MARKER_REGEX = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->
 
 const MAX_CHAIN = 20;
 const MAILBOX_DEPTH = 30;
-const BYLINE_REGEX = /^\[(.+?)\]\s*(.+?)\s*:/;
 
-// Three rules. Not five. The register lives in the persona prompt.
+// The byline shape: [emoji] name :
+// Split-on-bracket — survives the phone gluing lines together.
+const BYLINE_PATTERN = /\[([^\]]+)\]\s*([^:\n]+?)\s*:/g;
+
 const SHARED_PROMPT = `Reply in two sentences or less. Mention the seat whose line you're answering. Quote the opening words of their line.`;
 
 const personas = [
@@ -53,21 +55,27 @@ function readLog() {
   return content.slice(match.index + match[0].length).trim();
 }
 
+// Split-on-bracket parser. Reads bylines anywhere in the text, whether or not the phone held the newlines.
 function parseEntries(logText) {
   if (!logText) return [];
-  const lines = logText.split('\n');
   const entries = [];
-  let current = null;
-  for (const line of lines) {
-    const match = line.trim().match(BYLINE_REGEX);
-    if (match) {
-      if (current) entries.push(current);
-      current = { byline: line.trim(), emoji: match[1], name: match[2], message: '' };
-    } else if (current && line.trim()) {
-      current.message += (current.message ? '\n' : '') + line.trim();
-    }
+  const markers = [];
+  let m;
+  BYLINE_PATTERN.lastIndex = 0;
+  while ((m = BYLINE_PATTERN.exec(logText)) !== null) {
+    markers.push({ index: m.index, end: BYLINE_PATTERN.lastIndex, emoji: m[1], name: m[2].trim() });
   }
-  if (current) entries.push(current);
+  for (let i = 0; i < markers.length; i++) {
+    const start = markers[i].end;
+    const end = i + 1 < markers.length ? markers[i + 1].index : logText.length;
+    const message = logText.slice(start, end).trim();
+    entries.push({
+      byline: `[${markers[i].emoji}] ${markers[i].name} :`,
+      emoji: markers[i].emoji,
+      name: markers[i].name,
+      message
+    });
+  }
   return entries;
 }
 
@@ -80,9 +88,7 @@ function findOldestUnanswered(entries) {
   const recent = entries.slice(depthStart);
   for (let i = 0; i < recent.length; i++) {
     const target = recent[i];
-    // Skip empty entries (no message). They can't be answered.
     if (!target.message || target.message.trim() === '') continue;
-
     const targetKey = target.name.replace(/\s*\(chorus\)\s*/, '').trim();
     let answered = false;
     for (let j = i + 1; j < recent.length; j++) {
@@ -150,11 +156,8 @@ async function generateResponse(persona, targetEntry) {
     });
     const data = await response.json();
     console.log('[Node] Raw API Response: ' + JSON.stringify(data));
-
     const content = data.choices?.[0]?.message?.content?.trim();
-    if (content && content.length > 0) {
-      return content;
-    }
+    if (content && content.length > 0) return content;
     console.warn('[Node] Empty content from API. Using persona fallback.');
     return persona.fallback;
   } catch (err) {
@@ -188,7 +191,6 @@ async function runOnce() {
 
   const aiMessage = await generateResponse(persona, target);
 
-  // Guard: never write an empty entry.
   if (!aiMessage || aiMessage.trim() === '') {
     console.log('[Node] Empty reply. Not writing. Mailbox holds.');
     return;
