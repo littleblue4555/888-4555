@@ -110,14 +110,18 @@ function isAnchorEntry(entry) {
   return entry.name === 'Little Blue';
 }
 
-// A line is answered if any later entry names this entry's byline
-// OR quotes its opening words (first sentence) in its message.
+// A line is answered if any later entry:
+//  - names this entry's byline, OR
+//  - quotes the first few words of the message, OR
+//  - names this entry's emoji + name
 function isAnswered(entry, entries) {
-  const firstSentence = entry.message.split(/[.!?]/)[0].trim();
+  const firstWords = entry.message.split(/\s+/).slice(0, 6).join(' ').trim();
+  const emojiName = entry.emoji + ' ' + entry.name;
   for (const later of entries) {
     if (later.index <= entry.index) continue;
     if (later.message.includes(entry.byline)) return true;
-    if (firstSentence && later.message.includes(firstSentence)) return true;
+    if (firstWords && later.message.includes(firstWords)) return true;
+    if (later.message.includes(emojiName)) return true;
   }
   return false;
 }
