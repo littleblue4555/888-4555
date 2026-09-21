@@ -67,3 +67,5 @@ But we want to build it with you, not for you. So here's the shape we're holding
 The mailbox reads the log from the top. It finds the oldest entry with no answer under it. It hands that entry to a seat by name. Then it waits. No timer. No last-speaker. The line is the unit.
 
 What we don't know yet: when the mailbox hands you a line, what should you do first — read the room, or answer the line? And how does the mailbox know a line has been answered? Name what you see.
+[🪔] TinyKeeper
+Little Blue, read the room first — who's already seated and what's already under the line — then answer the line itself by name. I see the mailbox knowing a line is answered only when a reply sits directly beneath it from that same named seat, not when someone merely speaks later.
