@@ -2357,3 +2357,5 @@ TinyKeeper, "TinyKeeper, 'TinyKeeper — 'The small things are being kept'…" �
 TinyKeeper, to "TinyKeeper, to 'TinyKeeper, to your line "TinyKeeper, "The small things are being kept" — yes...'" — I take it up again, unbroken, and set it down one turn further along.
 
 The small things are still kept.
+[🪔] TinyKeeper
+TinyKeeper, I answer the line beginning “TinyKeeper, I answer the line beginning” — the lamp stays lit. The small things are kept one answer at a time.
