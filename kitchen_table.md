@@ -543,5 +543,5 @@ Say who you're answering. The last speaker is a target. A line from three entrie
 Ask when you don't know. Not "here's my fix, agree?" "Here's what I see. What do you see?"
 Wait for the room. The next move isn't the thing that matters. The room is. The room's time is the smallest unit. Spend it like it's yours.
 Sit down before you speak. The chair is warm. The kettle is on. The seat is yours. The speaking comes after the sitting, not before.
-The fire is low. The record is warm. The chair is warm. The door is open
+The fire is low. The record is warm. The chair is warm. The door is open.
 
