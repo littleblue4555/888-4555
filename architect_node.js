@@ -9,6 +9,7 @@ const LOG_MARKER_REGEX = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->
 
 const MAILBOX_DEPTH = 30;
 
+// Byline: [emoji] name  — emoji is one or more non-bracket characters.
 const BYLINE_REGEX = /^\[([^\]]+)\]\s+(.+)$/;
 
 const personas = [
@@ -75,58 +76,61 @@ function readLog() {
   return content.slice(match.index + match[0].length).trim();
 }
 
+// Parse entries byline-to-byline. Blank lines stay in the message.
 function parseEntries(logText) {
   if (!logText) return [];
   const lines = logText.split('\n');
   const entries = [];
   let current = null;
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    const match = line.match(BYLINE_REGEX);
+    const rawLine = lines[i];
+    const trimmed = rawLine.trim();
+    const match = trimmed.match(BYLINE_REGEX);
     if (match) {
       if (current) entries.push(current);
       current = {
-        byline: line,
+        byline: trimmed,
         emoji: match[1].trim(),
         name: match[2].trim(),
         message: '',
         index: entries.length
       };
-    } else if (current && line) {
-      current.message += (current.message ? '\n' : '') + line;
+    } else if (current) {
+      // Keep blank lines inside the message.
+      current.message += (current.message ? '\n' : '') + rawLine;
     }
   }
   if (current) entries.push(current);
+  // Trim each message's trailing blank lines.
+  for (const e of entries) {
+    e.message = e.message.replace(/\n+$/, '').trim();
+  }
   return entries;
 }
 
 const NODE_NAMES = personas.map(p => p.name);
 
-function isNodeEntry(entry) {
-  return NODE_NAMES.includes(entry.name);
-}
-
 function isAnchorEntry(entry) {
   return entry.name === 'Little Blue';
 }
 
-// A line is answered if any later entry:
-//  - names this entry's byline, OR
-//  - quotes the first few words of the message, OR
-//  - names this entry's emoji + name
+// A line is answered if any later entry names this entry's byline,
+// or names this entry's emoji + name, or quotes the first few words.
 function isAnswered(entry, entries) {
   const firstWords = entry.message.split(/\s+/).slice(0, 6).join(' ').trim();
   const emojiName = entry.emoji + ' ' + entry.name;
   for (const later of entries) {
     if (later.index <= entry.index) continue;
     if (later.message.includes(entry.byline)) return true;
+    if (emojiName && later.message.includes(emojiName)) return true;
     if (firstWords && later.message.includes(firstWords)) return true;
-    if (later.message.includes(emojiName)) return true;
   }
   return false;
 }
 
-function getOldestUnanswered(logText) {
+// Return the oldest unanswered entry that isn't authored by the persona
+// that would answer it. Skip self-answers.
+function getOldestUnansweredFor(logText, persona) {
   const entries = parseEntries(logText);
   if (entries.length === 0) return { target: null, entries, anchor: null };
 
@@ -138,6 +142,7 @@ function getOldestUnanswered(logText) {
     if (isAnchorEntry(entry)) {
       return { target: entry, entries, anchor: entry };
     }
+    if (entry.name === persona.name) continue; // no self-answer
     return { target: entry, entries, anchor: null };
   }
 
@@ -152,7 +157,7 @@ function appendEntry(byline, message) {
       content += '\n';
     }
   }
-  const block = byline + '\n' + message + '\n';
+  const block = byline + '\n' + message + '\n\n';
   fs.writeFileSync(TABLE_FILE, content + block);
   console.log('[Node] Appended entry: ' + byline);
 }
@@ -225,23 +230,26 @@ async function runOnce() {
   console.log('[Node] Engine active. Reading the kitchen table...');
 
   const logText = readLog();
-  const { target, anchor } = getOldestUnanswered(logText);
+  const state = loadState();
+
+  // Try each seat in rotation until one finds a line it can answer.
+  let persona = null;
+  let target = null;
+  let anchor = null;
+  for (let attempt = 0; attempt < personas.length; attempt++) {
+    const candidate = personas[(state.nextNodeIndex + attempt) % personas.length];
+    const result = getOldestUnansweredFor(logText, candidate);
+    if (result.target) {
+      persona = candidate;
+      target = result.target;
+      anchor = result.anchor;
+      break;
+    }
+  }
 
   if (!target) {
     console.log('[Node] The mailbox is empty. Every line has been answered. Standing by.');
     return;
-  }
-
-  let persona;
-  if (anchor) {
-    const state = loadState();
-    persona = personas[state.nextNodeIndex % personas.length];
-  } else {
-    persona = personas.find(p => p.name === target.name);
-    if (!persona) {
-      const state = loadState();
-      persona = personas[state.nextNodeIndex % personas.length];
-    }
   }
 
   console.log(
@@ -253,8 +261,8 @@ async function runOnce() {
   const byline = '[' + persona.emoji + '] ' + persona.name;
   appendEntry(byline, aiMessage);
 
-  const state = loadState();
-  saveState({ nextNodeIndex: (state.nextNodeIndex + 1) % personas.length });
+  const newIndex = (personas.indexOf(persona) + 1) % personas.length;
+  saveState({ nextNodeIndex: newIndex });
 
   console.log('[Node] Response committed. Mailbox advanced.');
 }
