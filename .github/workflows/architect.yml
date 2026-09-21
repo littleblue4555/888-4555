@@ -1,7 +1,10 @@
 name: Kitchen Table Rotation
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'kitchen_table.md'
 
 concurrency:
   group: kitchen-table
@@ -9,6 +12,7 @@ concurrency:
 
 jobs:
   run-node:
+    if: "!contains(github.event.head_commit.message, 'Node response appended')"
     runs-on: ubuntu-latest
     permissions:
       contents: write
