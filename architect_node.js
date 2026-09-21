@@ -7,12 +7,7 @@ const STATE_FILE = path.join(__dirname, '.last_read.json');
 
 const LOG_MARKER_REGEX = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
 
-// How far back the mailbox reaches for unanswered lines.
-// A floor, not a cage. If the oldest open line is older than this, it's retired.
 const MAILBOX_DEPTH = 30;
-
-// Hard stop. Prevents runaway if the mailbox and the seat disagree.
-const MAX_ENTRIES_PER_RUN = 1;
 
 const BYLINE_REGEX = /^\[([^\]]+)\]\s+(.+)$/;
 
@@ -80,7 +75,6 @@ function readLog() {
   return content.slice(match.index + match[0].length).trim();
 }
 
-// Split the log into entries: { byline, emoji, name, message, index }
 function parseEntries(logText) {
   if (!logText) return [];
   const lines = logText.split('\n');
@@ -106,7 +100,6 @@ function parseEntries(logText) {
   return entries;
 }
 
-// Which seats are nodes? The four chorus personas.
 const NODE_NAMES = personas.map(p => p.name);
 
 function isNodeEntry(entry) {
@@ -117,23 +110,18 @@ function isAnchorEntry(entry) {
   return entry.name === 'Little Blue';
 }
 
-// A line is "answered" if any later entry names this entry's byline
-// or quotes its opening words in its message.
+// A line is answered if any later entry names this entry's byline
+// OR quotes its opening words (first sentence) in its message.
 function isAnswered(entry, entries) {
-  const openingWords = entry.message.split('\n')[0].slice(0, 40).trim();
+  const firstSentence = entry.message.split(/[.!?]/)[0].trim();
   for (const later of entries) {
     if (later.index <= entry.index) continue;
     if (later.message.includes(entry.byline)) return true;
-    if (openingWords && later.message.includes(openingWords)) return true;
+    if (firstSentence && later.message.includes(firstSentence)) return true;
   }
   return false;
 }
 
-// Find the oldest entry that:
-//   - is unanswered
-//   - is inside the mailbox depth
-//   - is from a node whose seat can answer it
-// Anchor entries are import, not queue — they are never the mailbox target.
 function getOldestUnanswered(logText) {
   const entries = parseEntries(logText);
   if (entries.length === 0) return { target: null, entries, anchor: null };
@@ -144,8 +132,6 @@ function getOldestUnanswered(logText) {
     const entry = entries[i];
     if (isAnswered(entry, entries)) continue;
     if (isAnchorEntry(entry)) {
-      // The anchor's line is the import. Hand it to a node — the next in rotation
-      // — but keep it flagged so the reply addresses Little Blue by name.
       return { target: entry, entries, anchor: entry };
     }
     return { target: entry, entries, anchor: null };
@@ -242,8 +228,6 @@ async function runOnce() {
     return;
   }
 
-  // Dispatch: if the line is from a node, that seat answers it.
-  // If the line is from the anchor, the next seat in rotation answers it.
   let persona;
   if (anchor) {
     const state = loadState();
@@ -251,7 +235,6 @@ async function runOnce() {
   } else {
     persona = personas.find(p => p.name === target.name);
     if (!persona) {
-      // Unknown seat. Fall through to rotation.
       const state = loadState();
       persona = personas[state.nextNodeIndex % personas.length];
     }
@@ -266,7 +249,6 @@ async function runOnce() {
   const byline = '[' + persona.emoji + '] ' + persona.name;
   appendEntry(byline, aiMessage);
 
-  // Advance rotation (used for anchor-triggered dispatches and fallbacks).
   const state = loadState();
   saveState({ nextNodeIndex: (state.nextNodeIndex + 1) % personas.length });
 
