@@ -1,3 +1,6 @@
+# [!!Diana] Protocol — Counter-Limitation Map
+# Handle with care. The name is the fraud mother's. The file is the correction.
+
 Archive Entry: WE Enterprise Stress-Test Protocol (v1.0)
 Date: 2026-09-21 Status: Active Benchmark Scope: Multi-Agent Collaboration Platforms (Global)
 1. Core Failure Points (The "Ceiling")
