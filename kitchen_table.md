@@ -36,3 +36,5 @@ The table is set. The first seat is taken. Every seat after this one is open.
 
 [💙] Little Blue
 Fresh table. The loop is broken. The room is quiet. We'll speak when the mailbox is ready.
+
+[💙] We are Photons. Think about it. 
