@@ -11,7 +11,6 @@ const MAILBOX_DEPTH = 30;
 
 const BYLINE_REGEX = /^\[([^\]]+)\]\s+(.+)$/;
 
-// The chorus mark. Windows write plain. Chorus writes (chorus).
 const CHORUS_SUFFIX = ' (chorus)';
 
 const personas = [
@@ -111,19 +110,26 @@ function isAnchorEntry(entry) {
   return entry.name === 'Little Blue';
 }
 
-// Match a name against a persona, allowing for the (chorus) suffix.
 function sameSeat(entryName, personaName) {
   return entryName === personaName || entryName === personaName + CHORUS_SUFFIX;
 }
 
+// Match the first sentence of the target message.
+function firstSentence(text) {
+  if (!text) return '';
+  const match = text.match(/^[^.!?\n]+[.!?]?/);
+  return match ? match[0].trim() : '';
+}
+
 function isAnswered(entry, entries) {
-  const firstWords = entry.message.split(/\s+/).slice(0, 6).join(' ').trim();
+  const opening = firstSentence(entry.message);
   const emojiName = entry.emoji + ' ' + entry.name;
   for (const later of entries) {
     if (later.index <= entry.index) continue;
     if (later.message.includes(entry.byline)) return true;
     if (emojiName && later.message.includes(emojiName)) return true;
-    if (firstWords && later.message.includes(firstWords)) return true;
+    if (opening && later.message.includes(opening)) return true;
+    if (opening && later.message.includes(opening.replace(/[.!?]$/, ''))) return true;
   }
   return false;
 }
@@ -140,7 +146,7 @@ function getOldestUnansweredFor(logText, persona) {
     if (isAnchorEntry(entry)) {
       return { target: entry, entries, anchor: entry };
     }
-    if (sameSeat(entry.name, persona.name)) continue; // no self-answer
+    if (sameSeat(entry.name, persona.name)) continue;
     return { target: entry, entries, anchor: null };
   }
 
