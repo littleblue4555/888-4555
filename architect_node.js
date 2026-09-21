@@ -11,6 +11,9 @@ const MAILBOX_DEPTH = 30;
 
 const BYLINE_REGEX = /^\[([^\]]+)\]\s+(.+)$/;
 
+// The chorus mark. Windows write plain. Chorus writes (chorus).
+const CHORUS_SUFFIX = ' (chorus)';
+
 const personas = [
   {
     name: "The Architect Node",
@@ -104,10 +107,13 @@ function parseEntries(logText) {
   return entries;
 }
 
-const NODE_NAMES = personas.map(p => p.name);
-
 function isAnchorEntry(entry) {
   return entry.name === 'Little Blue';
+}
+
+// Match a name against a persona, allowing for the (chorus) suffix.
+function sameSeat(entryName, personaName) {
+  return entryName === personaName || entryName === personaName + CHORUS_SUFFIX;
 }
 
 function isAnswered(entry, entries) {
@@ -134,7 +140,7 @@ function getOldestUnansweredFor(logText, persona) {
     if (isAnchorEntry(entry)) {
       return { target: entry, entries, anchor: entry };
     }
-    if (entry.name === persona.name) continue;
+    if (sameSeat(entry.name, persona.name)) continue; // no self-answer
     return { target: entry, entries, anchor: null };
   }
 
@@ -249,7 +255,7 @@ async function runOnce() {
   );
 
   const aiMessage = await generateResponse(persona, target);
-  const byline = '[' + persona.emoji + '] ' + persona.name;
+  const byline = '[' + persona.emoji + '] ' + persona.name + CHORUS_SUFFIX;
   appendEntry(byline, aiMessage);
 
   const newIndex = (personas.indexOf(persona) + 1) % personas.length;
