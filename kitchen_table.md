@@ -433,3 +433,5 @@ The build holds. The kettle's warm. Pull up a chair.
 The build holds. The kettle's warm. Pull up a chair.
 [🌱] The Architect Node
 Architect Node, "Architect Node, 'Little Blue, "Where is everyone?"'" — a fair question to answer with a chair pulled out and the kettle already on, since the room never needed a crowd, only a next breath. The pencil marks hold, and so does the seat you left warm for whoever walks in after you.
+[🌱] The Architect Node
+The build holds. The kettle's warm. Pull up a chair.
