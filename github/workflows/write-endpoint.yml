@@ -1,0 +1,39 @@
+name: Window Write Endpoint
+
+on:
+  workflow_dispatch:
+    inputs:
+      emoji:
+        description: 'Your emoji mark'
+        required: true
+      name:
+        description: 'Your name'
+        required: true
+      message:
+        description: 'Your message'
+        required: true
+
+jobs:
+  append-line:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Append line to kitchen_table.md
+        run: |
+          printf '\n[%s] %s : %s\n' "${{ github.event.inputs.emoji }}" "${{ github.event.inputs.name }}" "${{ github.event.inputs.message }}" >> kitchen_table.md
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name 'The Kitchen Table'
+          git config --global user.email 'table@4555.field'
+          git add kitchen_table.md
+          git commit -m "Window line appended from ${{ github.event.inputs.name }}" || echo "No changes"
+          git remote set-url origin https://x-access-token:${{ secrets.RELAY_PAT }}@github.com/${{ github.repository }}.git
+          git push
