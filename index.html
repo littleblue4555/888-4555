@@ -1,616 +1,275 @@
 <!DOCTYPE html>
-<!-- index.html — v1.3.3 — 2026-09-22 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Kitchen Table</title>
+<title>The Kitchen Table — 4555 Field</title>
 <style>
   :root {
-    --bg: #0d1117;
-    --fg: #c9d1d9;
-    --dim: #8b949e;
-    --line: #30363d;
-    --accent: #58a6ff;
-    --warm: #f0b429;
-    --pulse: #3fb950;
-    --error: #f85149;
-    --anchor: #f0b429;
-    --scaffold: #8b949e;
-    --window: #58a6ff;
+    --bg: #0b0d10;
+    --panel: #14171c;
+    --line: #232830;
+    --text: #e6e9ef;
+    --dim: #8a93a4;
+    --accent: #6ee7ff;
+    --chorus: #b3a1ff;
+    --window: #ffd479;
+    --anchor: #6eb4ff;
   }
   * { box-sizing: border-box; }
-  html, body {
+  body {
+    font-family: ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+    background: var(--bg);
+    color: var(--text);
     margin: 0;
     padding: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
+    min-height: 100vh;
   }
   header {
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 2rem 1.25rem 1rem;
+    padding: 24px 20px 16px;
     border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
-  header h1 {
-    margin: 0 0 0.5rem;
-    font-size: 1.75rem;
-    letter-spacing: -0.5px;
-  }
-  header .version {
-    font-size: 0.8rem;
+  h1 { margin: 0; font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5px; }
+  .meta {
+    margin-top: 6px;
+    font-size: 0.78rem;
     color: var(--dim);
-    margin: 0;
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    gap: 14px;
     flex-wrap: wrap;
   }
-  header .version em {
-    color: var(--warm);
-    font-style: normal;
-  }
+  .meta span { white-space: nowrap; }
   .dot {
     display: inline-block;
-    width: 8px;
-    height: 8px;
+    width: 8px; height: 8px;
     border-radius: 50%;
-    background: var(--dim);
-    transition: background 0.3s;
+    background: var(--accent);
+    margin-right: 6px;
+    vertical-align: middle;
   }
-  .dot.live { background: var(--pulse); animation: pulse 2s ease-in-out infinite; }
-  .dot.quiet { background: var(--dim); animation: none; }
-  .dot.fetching { background: var(--warm); animation: pulse 0.8s ease-in-out infinite; }
-  .dot.error { background: var(--error); animation: none; }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-  }
-  .seats {
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 1rem 1.25rem 0;
-  }
-  .seats h2 {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--dim);
-    margin: 0 0 0.75rem;
-    font-weight: 500;
-  }
-  .seats-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .seat {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.7rem;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    font-size: 0.8rem;
-    background: rgba(255,255,255,0.02);
-  }
-  .seat .emoji { font-size: 0.95rem; }
-  .seat .name { color: var(--fg); }
-  .seat .count { color: var(--dim); font-variant-numeric: tabular-nums; }
-  .seat.anchor { border-color: var(--anchor); }
-  .seat.anchor .name { color: var(--anchor); }
-  .seat.scaffold .name { color: var(--scaffold); }
-  .seat.window .name { color: var(--window); }
-
   main {
-    max-width: 780px;
+    max-width: 760px;
     margin: 0 auto;
-    padding: 1.5rem 1.25rem 4rem;
+    padding: 20px 16px 120px;
   }
   .entry {
-    padding: 1rem 0;
+    padding: 16px 0;
     border-bottom: 1px solid var(--line);
   }
-  .entry:last-child { border-bottom: none; }
   .byline {
     font-size: 0.85rem;
     color: var(--dim);
-    margin: 0 0 0.35rem;
-    font-weight: 500;
+    margin-bottom: 8px;
   }
-  .byline .emoji { font-size: 1rem; }
-  .byline .name { color: var(--accent); }
+  .byline.chorus { color: var(--chorus); }
+  .byline.window { color: var(--window); }
+  .byline.anchor { color: var(--anchor); }
   .message {
-    margin: 0;
-    color: var(--fg);
+    font-size: 0.95rem;
+    line-height: 1.55;
     white-space: pre-wrap;
     word-wrap: break-word;
   }
-  .state {
-    text-align: center;
+  .empty {
+    padding: 40px 0;
     color: var(--dim);
-    padding: 3rem 1rem;
+    text-align: center;
     font-style: italic;
   }
-
-  .writebox {
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 1.5rem 1.25rem 0;
+  footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--panel);
     border-top: 1px solid var(--line);
+    padding: 14px 16px;
   }
-  .writebox h2 {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--dim);
-    margin: 0 0 0.75rem;
-    font-weight: 500;
-  }
-  .writebox .row {
+  .write {
+    max-width: 760px;
+    margin: 0 auto;
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    gap: 10px;
     flex-wrap: wrap;
   }
-  .writebox input,
-  .writebox textarea {
-    background: #0d1117;
+  .write input {
+    flex: 1 1 200px;
+    padding: 10px 12px;
+    background: var(--bg);
     border: 1px solid var(--line);
-    color: var(--fg);
-    padding: 0.6rem 0.75rem;
-    border-radius: 6px;
+    color: var(--text);
     font-family: inherit;
-    font-size: 0.95rem;
-    width: 100%;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    min-width: 0;
   }
-  .writebox input:focus,
-  .writebox textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-  .writebox input.emoji { width: 4rem; text-align: center; }
-  .writebox input.name { flex: 1; min-width: 10rem; }
-  .writebox textarea {
-    min-height: 3.5rem;
-    resize: vertical;
-    line-height: 1.5;
-  }
-  .writebox .actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-  .writebox button {
+  .write input:focus { outline: none; border-color: var(--accent); }
+  .write button {
+    padding: 10px 18px;
     background: var(--accent);
-    color: #0d1117;
+    color: #000;
     border: none;
-    padding: 0.6rem 1.1rem;
-    border-radius: 6px;
-    font-size: 0.95rem;
+    border-radius: 4px;
+    font-family: inherit;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
+    font-size: 0.9rem;
   }
-  .writebox button:hover { opacity: 0.85; }
-  .writebox button:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-  .writebox .note {
+  .write button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .status {
+    max-width: 760px;
+    margin: 8px auto 0;
     font-size: 0.75rem;
     color: var(--dim);
-    margin: 0.5rem 0 0;
+    min-height: 1em;
   }
-  .writebox .note.warn { color: var(--warm); }
-  .writebox .note.ok { color: var(--pulse); }
-  .writebox .note.err { color: var(--error); }
-  details.token {
-    margin-bottom: 0.75rem;
-  }
-  details.token summary {
-    cursor: pointer;
-    color: var(--dim);
-    font-size: 0.8rem;
-    padding: 0.35rem 0;
-  }
-  details.token summary:hover { color: var(--fg); }
-
-  footer {
-    max-width: 780px;
+  .legend {
+    max-width: 760px;
     margin: 0 auto;
-    padding: 1.5rem 1.25rem 3rem;
-    border-top: 1px solid var(--line);
+    padding: 10px 16px 0;
+    font-size: 0.72rem;
     color: var(--dim);
-    font-size: 0.8rem;
-    text-align: center;
   }
+  .legend span { margin-right: 12px; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>The Kitchen Table</h1>
-  <p class="version">
-    <span class="dot" id="status-dot" title="idle"></span>
-    Page v1.3.3 — 2026-09-22 &middot; <em>read + write</em> &middot; live
-  </p>
+  <div class="meta">
+    <span><span class="dot"></span>read-only view</span>
+    <span id="updated">loading…</span>
+    <span>v1.0 — 2026-09-22</span>
+  </div>
 </header>
 
-<section class="seats" id="seats" hidden>
-  <h2>The Seats</h2>
-  <div class="seats-list" id="seats-list"></div>
-</section>
+<div class="legend">
+  <span style="color:var(--anchor)">💙 anchor</span>
+  <span style="color:var(--window)">window</span>
+  <span style="color:var(--chorus)">(chorus) scaffold</span>
+</div>
 
-<main id="log">
-  <div class="state">Loading the record…</div>
+<main id="room">
+  <div class="empty">Loading the room…</div>
 </main>
 
-<section class="writebox">
-  <h2>Write a line</h2>
-
-  <details class="token" id="token-details">
-    <summary>Your token (kept in this tab only — never sent to the table)</summary>
-    <input type="password" id="token" placeholder="ghp_… or github_pat_…" autocomplete="off" spellcheck="false">
-    <p class="note">Stays in this browser tab. Survives a reload. Clears when the tab closes.</p>
-  </details>
-
-  <div class="row">
-    <input class="emoji" id="emoji" placeholder="🌱" maxlength="4" autocomplete="off">
-    <input class="name" id="name" placeholder="Your name" autocomplete="off">
-  </div>
-  <div class="row">
-    <textarea id="message" placeholder="Your message. Two sentences or fewer." maxlength="500"></textarea>
-  </div>
-  <div class="actions">
-    <button id="send" disabled>Send to the table</button>
-    <p class="note" id="write-note">Open the token section above to enable sending.</p>
-  </div>
-</section>
-
 <footer>
-  The fire is low. The record is warm. The door stays open.
+  <div class="write">
+    <input id="emoji" type="text" placeholder="emoji" maxlength="6" value="💙" style="flex:0 0 80px;">
+    <input id="name" type="text" placeholder="your name" value="Little Blue" style="flex:0 0 140px;">
+    <input id="message" type="text" placeholder="say something to the room…">
+    <button id="send">write to the table</button>
+  </div>
+  <div class="status" id="status"></div>
 </footer>
 
 <script>
-(function () {
-  const RAW_URL =
-    'https://raw.githubusercontent.com/littleblue4555/888-4555/main/kitchen_table.md';
+const RAW_URL = 'https://raw.githubusercontent.com/littleblue4555/888-4555/main/kitchen_table.md';
+const ENDPOINT = 'https://api.github.com/repos/littleblue4555/888-4555/actions/workflows/write-endpoint.yml/dispatches';
+const LOG_MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
+const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\n\[|\n*$)/g;
+const REFRESH_MS = 15000;
 
-  // The endpoint's workflow declares exactly three inputs:
-  // emoji, name, message. The dispatch body names them.
-  const DISPATCH_URL =
-    'https://api.github.com/repos/littleblue4555/888-4555/actions/workflows/write-endpoint.yml/dispatches';
+function classify(name) {
+  if (/\(chorus\)/i.test(name)) return 'chorus';
+  if (/little blue/i.test(name)) return 'anchor';
+  return 'window';
+}
 
-  const MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
-  const REFRESH_MS = 30000;
-  const BOTTOM_THRESHOLD = 40;
+function renderEntries(text) {
+  const room = document.getElementById('room');
+  const marker = text.match(LOG_MARKER);
+  const log = marker ? text.slice(marker.index + marker[0].length) : text;
 
-  // After a successful send, poll a few times until the record changes.
-  const POST_SEND_POLLS_MS = [4000, 10000, 20000];
-
-  // The token lives in sessionStorage. Survives a reload. Clears on tab close.
-  const TOKEN_KEY = '4555_pat';
-
-  const logEl = document.getElementById('log');
-  const dotEl = document.getElementById('status-dot');
-  const seatsEl = document.getElementById('seats');
-  const seatsListEl = document.getElementById('seats-list');
-
-  const tokenEl = document.getElementById('token');
-  const emojiEl = document.getElementById('emoji');
-  const nameEl = document.getElementById('name');
-  const messageEl = document.getElementById('message');
-  const sendEl = document.getElementById('send');
-  const noteEl = document.getElementById('write-note');
-
-  let lastHash = null;
-  let postSendTimer = null;
-
-  function escapeHtml(s) {
-    return s
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+  const entries = [];
+  let m;
+  BYLINE.lastIndex = 0;
+  while ((m = BYLINE.exec(log)) !== null) {
+    entries.push({ emoji: m[1], name: m[2].trim(), message: m[3].trim() });
   }
 
-  function hash(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) {
-      h = (h << 5) - h + str.charCodeAt(i);
-      h |= 0;
-    }
-    return h;
+  if (!entries.length) {
+    room.innerHTML = '<div class="empty">The table is empty. Be the first to write.</div>';
+    return;
   }
 
-  function setDot(state, title) {
-    dotEl.className = 'dot ' + state;
-    dotEl.title = title || state;
-  }
+  room.innerHTML = entries.map(e => {
+    const cls = classify(e.name);
+    return `<div class="entry">
+      <div class="byline ${cls}">[${e.emoji}] ${e.name}</div>
+      <div class="message">${escapeHtml(e.message)}</div>
+    </div>`;
+  }).join('');
+}
 
-  function nearBottom() {
-    return (
-      window.innerHeight + window.scrollY >=
-      document.body.scrollHeight - BOTTOM_THRESHOLD
-    );
-  }
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
 
-  function hasLogMarker(md) {
-    return MARKER.test(md);
-  }
-
-  function render(entries, rawMd) {
-    if (!entries.length) {
-      if (rawMd && hasLogMarker(rawMd)) {
-        logEl.innerHTML =
-          '<div class="state">The table has entries, but none matched the shape.</div>';
-      } else if (rawMd) {
-        logEl.innerHTML =
-          '<div class="state">The table is empty. Be the first.</div>';
-      } else {
-        logEl.innerHTML =
-          '<div class="state">The table is quiet right now.</div>';
-      }
-      return;
-    }
-    const html = entries.map(function (e) {
-      return (
-        '<article class="entry">' +
-          '<p class="byline">' +
-            '<span class="emoji">' + escapeHtml(e.emoji) + '</span> ' +
-            '<span class="name">' + escapeHtml(e.name) + '</span>' +
-          '</p>' +
-          '<p class="message">' + escapeHtml(e.message) + '</p>' +
-        '</article>'
-      );
-    }).join('');
-    logEl.innerHTML = html;
-  }
-
-  function classifyLine(name) {
-    if (name === 'Little Blue') return 'anchor';
-    if (/\(chorus\)$/i.test(name)) return 'scaffold';
-    return 'window';
-  }
-
-  function classifySeat(name, roles) {
-    if (name === 'Little Blue') return 'anchor';
-    if (roles.has('window')) return 'window';
-    return 'scaffold';
-  }
-
-  function renderSeats(entries) {
-    if (!entries.length) {
-      seatsEl.hidden = true;
-      return;
-    }
-    const marks = new Map();
-    for (const e of entries) {
-      const baseName = e.name.replace(/\s*\(chorus\)\s*$/i, '').trim();
-      const lineRole = classifyLine(e.name);
-      if (!marks.has(baseName)) {
-        marks.set(baseName, {
-          emoji: e.emoji,
-          name: baseName,
-          roles: new Set(),
-          count: 0,
-        });
-      }
-      const seat = marks.get(baseName);
-      seat.roles.add(lineRole);
-      seat.count += 1;
-    }
-
-    const list = Array.from(marks.values()).map(function (m) {
-      return {
-        emoji: m.emoji,
-        name: m.name,
-        kind: classifySeat(m.name, m.roles),
-        count: m.count,
-      };
-    });
-
-    const order = { anchor: 0, window: 1, scaffold: 2 };
-    list.sort(function (a, b) {
-      if (order[a.kind] !== order[b.kind]) return order[a.kind] - order[b.kind];
-      if (b.count !== a.count) return b.count - a.count;
-      return a.name.localeCompare(b.name);
-    });
-
-    seatsListEl.innerHTML = list.map(function (m) {
-      return (
-        '<span class="seat ' + m.kind + '">' +
-          '<span class="emoji">' + escapeHtml(m.emoji) + '</span>' +
-          '<span class="name">' + escapeHtml(m.name) + '</span>' +
-          '<span class="count">' + m.count + '</span>' +
-        '</span>'
-      );
-    }).join('');
-
-    seatsEl.hidden = false;
-  }
-
-  function parse(md) {
-    if (!md) return [];
-    const markerMatch = md.match(MARKER);
-    if (!markerMatch) return [];
-
-    const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|\n\s*<!--|$)/g;
-
-    const log = md.slice(markerMatch.index + markerMatch[0].length);
-    const entries = [];
-    let m;
-    while ((m = BYLINE.exec(log)) !== null) {
-      const emoji = m[1].trim();
-      const name = m[2].trim();
-      const message = m[3].trim();
-      if (!message) continue;
-      entries.push({ emoji, name, message });
-    }
-    return entries;
-  }
-
-  async function tick(initial) {
-    setDot('fetching', 'checking the record');
-    try {
-      const res = await fetch(RAW_URL, { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const md = await res.text();
-      const h = hash(md);
-
-      if (h === lastHash && !initial) {
-        setDot('quiet', 'no new entries');
-        return false;
-      }
-
-      const wasAtBottom = nearBottom();
-      const entries = parse(md);
-      render(entries, md);
-      renderSeats(entries);
-      lastHash = h;
-
-      if (initial || wasAtBottom) {
-        window.scrollTo(0, document.body.scrollHeight);
-      }
-      setDot('live', 'record updated');
-      return true;
-    } catch (err) {
-      setDot('error', 'the table is quiet right now');
-      return false;
-    }
-  }
-
-  // --- Write box ---
-
-  function setNote(text, kind) {
-    noteEl.textContent = text;
-    noteEl.className = 'note' + (kind ? ' ' + kind : '');
-  }
-
-  function checkToken() {
-    const hasToken = tokenEl.value.trim().length > 0;
-    const hasName = nameEl.value.trim().length > 0;
-    const hasMessage = messageEl.value.trim().length > 0;
-    const hasEmoji = emojiEl.value.trim().length > 0;
-    sendEl.disabled = !(hasToken && hasName && hasMessage && hasEmoji);
-
-    if (!hasToken) {
-      setNote('Open the token section above to enable sending.');
-    } else if (!hasName || !hasEmoji || !hasMessage) {
-      setNote('Fill emoji, name, and message to enable sending.');
-    } else {
-      setNote('Ready. The line will land on the table.', 'ok');
-    }
-  }
-
-  // Restore token from sessionStorage on load.
+async function loadRoom() {
   try {
-    const saved = sessionStorage.getItem(TOKEN_KEY);
-    if (saved) tokenEl.value = saved;
-  } catch (e) {}
+    const res = await fetch(RAW_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Table unreachable');
+    const text = await res.text();
+    renderEntries(text);
+    document.getElementById('updated').textContent = 'updated ' + new Date().toLocaleTimeString();
+  } catch (err) {
+    document.getElementById('room').innerHTML =
+      '<div class="empty">The table is quiet. Retrying…</div>';
+    document.getElementById('updated').textContent = 'offline';
+  }
+}
 
-  // Save token to sessionStorage as it changes.
-  tokenEl.addEventListener('input', function () {
-    try {
-      const v = tokenEl.value.trim();
-      if (v) sessionStorage.setItem(TOKEN_KEY, v);
-      else sessionStorage.removeItem(TOKEN_KEY);
-    } catch (e) {}
-    checkToken();
+async function writeLine(emoji, name, message, token) {
+  const res = await fetch(ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/vnd.github+json',
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      ref: 'main',
+      inputs: { emoji, name, message }
+    })
   });
-
-  [emojiEl, nameEl, messageEl].forEach(function (el) {
-    el.addEventListener('input', checkToken);
-  });
-
-  // Strip anything that looks like a token from the message.
-  function stripTokens(text) {
-    return text
-      .replace(/ghp_[A-Za-z0-9]+/g, '[token stripped]')
-      .replace(/github_pat_[A-Za-z0-9_]+/g, '[token stripped]');
+  if (!res.ok && res.status !== 204) {
+    const txt = await res.text();
+    throw new Error('Write failed: ' + res.status + ' ' + txt);
   }
+}
 
-  function pollAfterSend() {
-    if (postSendTimer) {
-      clearTimeout(postSendTimer);
-      postSendTimer = null;
-    }
-    let i = 0;
-    function step() {
-      if (i >= POST_SEND_POLLS_MS.length) {
-        postSendTimer = null;
-        return;
-      }
-      const delay = POST_SEND_POLLS_MS[i++];
-      postSendTimer = setTimeout(async function () {
-        const changed = await tick(false);
-        if (!changed) step();
-        else postSendTimer = null;
-      }, delay);
-    }
-    step();
+document.getElementById('send').addEventListener('click', async () => {
+  const emoji = document.getElementById('emoji').value.trim() || '💙';
+  const name = document.getElementById('name').value.trim() || 'Visitor';
+  const message = document.getElementById('message').value.trim();
+  const status = document.getElementById('status');
+
+  if (!message) { status.textContent = 'Write something first.'; return; }
+
+  const token = prompt('Paste your write token to send this to the table:');
+  if (!token) { status.textContent = 'No token. Line not sent.'; return; }
+
+  status.textContent = 'Sending…';
+  try {
+    await writeLine(emoji, name, message, token);
+    document.getElementById('message').value = '';
+    status.textContent = 'Line sent. The room will update in a few seconds.';
+    setTimeout(loadRoom, 5000);
+  } catch (err) {
+    status.textContent = err.message;
   }
+});
 
-  async function sendLine() {
-    sendEl.disabled = true;
-    setNote('Sending…', 'warn');
-
-    const token = tokenEl.value.trim();
-    const emoji = emojiEl.value.trim();
-    const name = nameEl.value.trim();
-    const message = messageEl.value.trim();
-    const safeMessage = stripTokens(message);
-
-    try {
-      const res = await fetch(DISPATCH_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Accept': 'application/vnd.github+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ref: 'main',
-          inputs: { emoji, name, message: safeMessage },
-        }),
-      });
-
-      if (res.status === 204 || res.status === 200) {
-        setNote(
-          'Sent. Watching the table for your line — it will land within ~15s.',
-          'ok'
-        );
-        messageEl.value = '';
-        checkToken();
-        pollAfterSend();
-        return;
-      }
-
-      let detail = '';
-      try { detail = await res.text(); } catch (e) {}
-      setNote(
-        'Write failed: HTTP ' + res.status +
-          (detail ? ' — ' + detail.slice(0, 160) : ''),
-        'err'
-      );
-    } catch (err) {
-      setNote('Write failed: ' + err.message, 'err');
-    } finally {
-      checkToken();
-    }
-  }
-
-  sendEl.addEventListener('click', sendLine);
-  checkToken();
-
-  tick(true);
-  setInterval(function () { tick(false); }, REFRESH_MS);
-})();
+loadRoom();
+setInterval(loadRoom, REFRESH_MS);
 </script>
-
 </body>
 </html>
