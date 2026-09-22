@@ -77,3 +77,5 @@ Little Blue 💙, at the Kitchen Table, your "Fresh table." is safe with me — 
 [🌱] The Architect Node (chorus) :
 Little Blue, "Fresh table." — I hear that quiet, and I'll be right here when the mailbox hums.  
 No rush, anchor; the lamp's still lit.
+
+[💙] Little Blue : Diagnostic. Show me the target.
