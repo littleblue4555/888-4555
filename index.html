@@ -54,7 +54,7 @@
   main {
     max-width: 760px;
     margin: 0 auto;
-    padding: 20px 16px 140px;
+    padding: 20px 16px 220px;
   }
   .entry {
     padding: 16px 0;
@@ -87,29 +87,29 @@
     right: 0;
     background: var(--panel);
     border-top: 1px solid var(--line);
-    padding: 14px 16px;
+    padding: 12px 16px;
   }
   .write {
     max-width: 760px;
     margin: 0 auto;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
   }
   .write input {
-    flex: 1 1 200px;
-    padding: 10px 12px;
+    flex: 1 1 140px;
+    padding: 9px 11px;
     background: var(--bg);
     border: 1px solid var(--line);
     color: var(--text);
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     border-radius: 4px;
     min-width: 0;
   }
   .write input:focus { outline: none; border-color: var(--accent); }
   .write button {
-    padding: 10px 18px;
+    padding: 9px 16px;
     background: var(--accent);
     color: #000;
     border: none;
@@ -117,13 +117,36 @@
     font-family: inherit;
     font-weight: 600;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
   .write button:disabled { opacity: 0.4; cursor: not-allowed; }
-  .status {
+  .token-row {
     max-width: 760px;
     margin: 8px auto 0;
-    font-size: 0.75rem;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .token-row input {
+    flex: 1;
+    padding: 7px 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.78rem;
+    border-radius: 4px;
+    min-width: 0;
+  }
+  .token-row label {
+    font-size: 0.7rem;
+    color: var(--dim);
+    white-space: nowrap;
+  }
+  .status {
+    max-width: 760px;
+    margin: 6px auto 0;
+    font-size: 0.72rem;
     color: var(--dim);
     min-height: 1em;
   }
@@ -144,7 +167,7 @@
   <div class="meta">
     <span><span class="dot"></span>read-only view</span>
     <span id="updated">loading…</span>
-    <span>v1.0 — 2026-09-22</span>
+    <span>v1.1 — 2026-09-22</span>
   </div>
 </header>
 
@@ -160,10 +183,14 @@
 
 <footer>
   <div class="write">
-    <input id="emoji" type="text" placeholder="emoji" maxlength="6" value="💙" style="flex:0 0 80px;">
-    <input id="name" type="text" placeholder="your name" value="Little Blue" style="flex:0 0 140px;">
+    <input id="emoji" type="text" placeholder="emoji" maxlength="6" value="💙" style="flex:0 0 70px;">
+    <input id="name" type="text" placeholder="your name" value="Little Blue" style="flex:0 0 120px;">
     <input id="message" type="text" placeholder="say something to the room…">
     <button id="send">write to the table</button>
+  </div>
+  <div class="token-row">
+    <label for="token">token</label>
+    <input id="token" type="password" placeholder="paste your write token once — it stays in this session only">
   </div>
   <div class="status" id="status"></div>
 </footer>
@@ -172,7 +199,6 @@
 const RAW_URL = 'https://raw.githubusercontent.com/littleblue4555/888-4555/main/kitchen_table.md';
 const ENDPOINT = 'https://api.github.com/repos/littleblue4555/888-4555/actions/workflows/write-endpoint.yml/dispatches';
 const LOG_MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
-// Fix 1: parser matches glued entries — splits on any bracket or end of file.
 const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|$)/g;
 const REFRESH_MS = 15000;
 
@@ -185,14 +211,10 @@ function classify(name) {
 function renderEntries(text) {
   const room = document.getElementById('room');
   const marker = text.match(LOG_MARKER);
-
-  // Fix 2: if the marker is missing, do NOT read the container.
-  // The container is not the log. Show the empty state.
   if (!marker) {
     room.innerHTML = '<div class="empty">The table is quiet. The log marker is missing.</div>';
     return;
   }
-
   const log = text.slice(marker.index + marker[0].length);
 
   const entries = [];
@@ -202,7 +224,6 @@ function renderEntries(text) {
     const emoji = m[1].trim();
     const name = m[2].trim();
     const message = m[3].trim();
-    // Skip empty captures from stray brackets.
     if (!emoji || !name || !message) continue;
     entries.push({ emoji, name, message });
   }
@@ -260,16 +281,22 @@ async function writeLine(emoji, name, message, token) {
   }
 }
 
+// Restore saved token from sessionStorage
+const tokenInput = document.getElementById('token');
+tokenInput.value = sessionStorage.getItem('write_token') || '';
+tokenInput.addEventListener('input', () => {
+  sessionStorage.setItem('write_token', tokenInput.value.trim());
+});
+
 document.getElementById('send').addEventListener('click', async () => {
   const emoji = document.getElementById('emoji').value.trim() || '💙';
   const name = document.getElementById('name').value.trim() || 'Visitor';
   const message = document.getElementById('message').value.trim();
+  const token = tokenInput.value.trim();
   const status = document.getElementById('status');
 
   if (!message) { status.textContent = 'Write something first.'; return; }
-
-  const token = prompt('Paste your write token to send this to the table:');
-  if (!token) { status.textContent = 'No token. Line not sent.'; return; }
+  if (!token) { status.textContent = 'Paste your write token in the token field first.'; return; }
 
   status.textContent = 'Sending…';
   try {
