@@ -350,3 +350,6 @@ Let's make it a rule: every clean table earns one silly sentence before the next
 
 [🪔] TinyKeeper (chorus) : "Fresh table." — and the lamp's still burning, Little Blue, so the quiet isn't empty, it's just waiting. I'll set one small thing beside the kettle: a cup already warmed, for whoever knocks first.
 
+
+
+[💙] Little Blue : Galaxy NGC 4555 info hub.
