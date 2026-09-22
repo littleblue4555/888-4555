@@ -5,6 +5,8 @@ const fetch = require('node-fetch');
 const TABLE_FILE = path.join(__dirname, 'kitchen_table.md');
 const STATE_FILE = path.join(__dirname, '.last_read.json');
 
+const CYCLES_PER_RUN = 8;
+
 const personas = [
   {
     name: "The Architect Node",
@@ -145,8 +147,6 @@ function findMailboxTarget(entries) {
   return null;
 }
 
-// A seat cannot answer the same line consecutively.
-// Exclude the last seat that answered this line (from state).
 function pickPersona(target, state) {
   const lastSeat = state.lastSeat[target.key];
   const candidates = personas.filter(p => p.emoji !== lastSeat);
@@ -161,12 +161,12 @@ function appendEntry(text) {
   }
   const prefix = content.length > 0 ? '\n\n' : '';
   fs.writeFileSync(TABLE_FILE, content + prefix + text + '\n');
-  console.log('[Node] Appended: ' + text);
+  console.log('[Node] Appended: ' + text.slice(0, 80));
 }
 
 async function generateResponse(persona, targetEntry) {
   const targetSummary = `[${targetEntry.emoji}] ${targetEntry.name} : ${targetEntry.message}`;
-  console.log('[Node] ' + persona.name + ' analyzing target: "' + targetSummary + '"');
+  console.log('[Node] ' + persona.name + ' analyzing target: "' + targetSummary.slice(0, 120) + '"');
   try {
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
@@ -181,11 +181,11 @@ async function generateResponse(persona, targetEntry) {
           { role: 'user', content: 'Answer this line. Two sentences or less. Name who you are answering inside the sentence — not at the start. Quote the opening words of their line.\n\n' + targetSummary }
         ],
         temperature: 0.8,
-        max_tokens: 800
+        max_tokens: 2000
       })
     });
     const data = await response.json();
-    console.log('[Node] Raw API Response: ' + JSON.stringify(data));
+    console.log('[Node] Raw API Response (trimmed): ' + JSON.stringify(data).slice(0, 400));
     if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content && data.choices[0].message.content.trim()) {
       return data.choices[0].message.content.trim();
     }
@@ -196,28 +196,26 @@ async function generateResponse(persona, targetEntry) {
   }
 }
 
-async function runOnce() {
-  console.log('[Node] Engine active. Reading the kitchen table...');
-
+async function oneCycle(cycleNumber) {
   const content = readTable();
   const entries = parseEntries(content);
   const state = loadState();
 
   const target = findMailboxTarget(entries);
   if (!target) {
-    console.log('[Node] Mailbox empty. Nothing open. Standing by.');
-    return;
+    console.log('[Node] Cycle ' + cycleNumber + ': Mailbox empty. Stopping.');
+    return false;
   }
 
-  console.log('[Node] Mailbox target: [' + target.entry.emoji + '] ' + target.entry.name + ' | ' + target.entry.message.slice(0, 60));
+  console.log('[Node] Cycle ' + cycleNumber + ': Target — [' + target.entry.emoji + '] ' + target.entry.name + ' | ' + target.entry.message.slice(0, 60));
 
   const persona = pickPersona(target, state);
   if (!persona) {
-    console.log('[Node] No seats available. Standing by.');
-    return;
+    console.log('[Node] Cycle ' + cycleNumber + ': No seats available. Stopping.');
+    return false;
   }
 
-  console.log('[Node] Dispatch to: ' + persona.name + ' (' + persona.emoji + ')');
+  console.log('[Node] Cycle ' + cycleNumber + ': Dispatch to ' + persona.name + ' (' + persona.emoji + ')');
 
   const aiMessage = await generateResponse(persona, target.entry);
   const timestamp = getTimestamp();
@@ -227,7 +225,21 @@ async function runOnce() {
 
   state.lastSeat[target.key] = persona.emoji;
   saveState(state);
-  console.log('[Node] Response committed. Last seat on this line: ' + persona.emoji);
+  console.log('[Node] Cycle ' + cycleNumber + ': Committed. Last seat on this line: ' + persona.emoji);
+
+  return true;
+}
+
+async function runOnce() {
+  console.log('[Node] Engine active. Reading the kitchen table...');
+  console.log('[Node] Cycles this run: ' + CYCLES_PER_RUN);
+
+  for (let i = 1; i <= CYCLES_PER_RUN; i++) {
+    const moved = await oneCycle(i);
+    if (!moved) break;
+  }
+
+  console.log('[Node] Run complete.');
 }
 
 runOnce();
