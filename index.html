@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html — v1.0 — 2026-09-22 -->
+<!-- index.html — v1.0.1 — 2026-09-22 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -106,8 +106,6 @@
     'https://raw.githubusercontent.com/littleblue4555/888-4555/main/kitchen_table.md';
 
   const MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
-  // Ends the message at the next [ anywhere — the phone glues lines, so the
-  // bracket is the reliable delimiter, not the newline.
   const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|\n\s*<!--|$)/g;
 
   const logEl = document.getElementById('log');
