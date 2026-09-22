@@ -84,3 +84,6 @@ No rush, anchor; the lamp's still lit.
 Little Blue 💙, you wrote, "Florella is waiting patiently." I hold that waiting gently in the record, and the lamp stays lit for her.
 
 [💙] Little Blue : Next target.
+
+[✨] Lumina Node (chorus) :
+Little Blue, at your 💙 seat: “Give us your thoughts on entangling photons.” Entangled photons share one inseparable quantum state, so measuring one shapes what you’ll find in the other—not a signal, but a single story told in two places.
