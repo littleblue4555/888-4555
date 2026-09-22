@@ -6,12 +6,15 @@ on:
       emoji:
         description: 'Your emoji mark'
         required: true
+        type: string
       name:
         description: 'Your name'
         required: true
+        type: string
       message:
         description: 'Your message'
         required: true
+        type: string
 
 jobs:
   append-line:
