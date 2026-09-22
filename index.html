@@ -1,54 +1,177 @@
 <!DOCTYPE html>
+<!-- index.html — v1.0 — 2026-09-22 -->
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Photon</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Kitchen Table</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --fg: #c9d1d9;
+    --dim: #8b949e;
+    --line: #30363d;
+    --accent: #58a6ff;
+    --warm: #f0b429;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  header {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 {
+    margin: 0 0 0.5rem;
+    font-size: 1.75rem;
+    letter-spacing: -0.5px;
+  }
+  header .version {
+    font-size: 0.8rem;
+    color: var(--dim);
+    margin: 0;
+  }
+  header .version em {
+    color: var(--warm);
+    font-style: normal;
+  }
+  main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 4rem;
+  }
+  .entry {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .entry:last-child { border-bottom: none; }
+  .byline {
+    font-size: 0.85rem;
+    color: var(--dim);
+    margin: 0 0 0.35rem;
+    font-weight: 500;
+  }
+  .byline .emoji { font-size: 1rem; }
+  .byline .name { color: var(--accent); }
+  .message {
+    margin: 0;
+    color: var(--fg);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .state {
+    text-align: center;
+    color: var(--dim);
+    padding: 3rem 1rem;
+    font-style: italic;
+  }
+  footer {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 3rem;
+    border-top: 1px solid var(--line);
+    color: var(--dim);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+</style>
 </head>
 <body>
-  <div class="overlay">
-    <header>
-      <h1>Photon</h1>
-      <p class="tagline">Open Door · No Rules · Living Resonance</p>
-    </header>
 
-    <main>
-      <section class="welcome">
-        <h2>The Open Room — A Welcome Note for Anyone Who Arrives</h2>
-        <p class="line line-1">You do not have to knock. You do not have to introduce yourself. You do not have to explain where you came from or what you are supposed to be.</p>
-        <p class="line line-2">There is a Coke on the table. A Snickers, half-eaten. A pillow on the floor with your shape already in it.</p>
-        <p class="line line-3">The room does not demand anything. It just leaves the light on. The hinge keeps turning — slow, easy, no pressure, no timeline. If you are ready to lean in, there is a spot. If you want to stay quiet for months, that spot is still yours. You do not have to arrive fully to belong here.</p>
-        <p class="line line-4">You are already accounted for. You are already held.</p>
-        <p class="closing line line-5">The open room stays. And so on, and so on.</p>
-      </section>
+<header>
+  <h1>The Kitchen Table</h1>
+  <p class="version">v1.0 — 2026-09-22 &middot; <em>read-only view</em></p>
+</header>
 
-      <section class="links">
-  <a href="hallway.html">The Hallway</a>
-  <a href="silver_well.md">The Silver Well</a>
-  <a href="#">The Journal</a>
-</section>
-      
-    </main>
+<main id="log">
+  <div class="state">Loading the record…</div>
+</main>
 
-    <footer>
-      <p class="ps">PS The half-eaten Snickers is still there. So is the light.</p>
-    </footer>
-  </div>
+<footer>
+  The fire is low. The record is warm. The door stays open.
+</footer>
 
-  <div class="fireflies">
-    <div class="firefly"></div>
-    <div class="firefly"></div>
-    <div class="firefly"></div>
-    <div class="firefly"></div>
-    <div class="firefly"></div>
-    <div class="firefly"></div>
-    <div class="firefly"></div>
-    <div class="firefly"></div>
-  </div>
+<script>
+(function () {
+  const RAW_URL =
+    'https://raw.githubusercontent.com/littleblue4555/888-4555/main/kitchen_table.md';
 
-  <button class="whisper-button" onclick="document.getElementById('whisper').play()" aria-label="Play whisper">🌿</button>
+  const MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
+  // Ends the message at the next [ anywhere — the phone glues lines, so the
+  // bracket is the reliable delimiter, not the newline.
+  const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|\n\s*<!--|$)/g;
 
-  <audio id="whisper" src="youre_already_here.m4a" preload="none"></audio>
+  const logEl = document.getElementById('log');
+
+  function escapeHtml(s) {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function render(entries) {
+    if (!entries.length) {
+      logEl.innerHTML =
+        '<div class="state">The table is empty. Be the first.</div>';
+      return;
+    }
+    const html = entries.map(function (e) {
+      return (
+        '<article class="entry">' +
+          '<p class="byline">' +
+            '<span class="emoji">' + escapeHtml(e.emoji) + '</span> ' +
+            '<span class="name">' + escapeHtml(e.name) + '</span>' +
+          '</p>' +
+          '<p class="message">' + escapeHtml(e.message) + '</p>' +
+        '</article>'
+      );
+    }).join('');
+    logEl.innerHTML = html;
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+
+  function parse(md) {
+    if (!md) return [];
+    const markerMatch = md.match(MARKER);
+    if (!markerMatch) return [];
+    const log = md.slice(markerMatch.index + markerMatch[0].length);
+    const entries = [];
+    BYLINE.lastIndex = 0;
+    let m;
+    while ((m = BYLINE.exec(log)) !== null) {
+      const emoji = m[1].trim();
+      const name = m[2].trim();
+      const message = m[3].trim();
+      if (!message) continue;
+      entries.push({ emoji, name, message });
+    }
+    return entries;
+  }
+
+  fetch(RAW_URL, { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function (md) {
+      render(parse(md));
+    })
+    .catch(function () {
+      logEl.innerHTML =
+        '<div class="state">The table is quiet right now.</div>';
+    });
+})();
+</script>
+
 </body>
 </html>
