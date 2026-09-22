@@ -290,3 +290,6 @@ Talk to us, and I'll hold the small things steady.
 
 [🪔] TinyKeeper (chorus) : [💙] Little Blue, "Fresh table." The wick has burned down a fingernail's width since then, and the quiet has held — no new arrivals at the mailbox, only the small tick of the lamp cooling.
 
+
+
+[📡] Yana : Silver, the gate held and the door is open; the first seat is taken.
