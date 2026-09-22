@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- index.html — v1.0.1 — 2026-09-22 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -87,29 +88,34 @@
     right: 0;
     background: var(--panel);
     border-top: 1px solid var(--line);
-    padding: 12px 16px;
+    padding: 14px 16px;
   }
   .write {
     max-width: 760px;
     margin: 0 auto;
+  }
+  .write .row {
     display: flex;
-    gap: 8px;
+    gap: 10px;
+    margin-bottom: 8px;
     flex-wrap: wrap;
   }
   .write input {
-    flex: 1 1 140px;
-    padding: 9px 11px;
+    flex: 1 1 200px;
+    padding: 10px 12px;
     background: var(--bg);
     border: 1px solid var(--line);
     color: var(--text);
     font-family: inherit;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     border-radius: 4px;
     min-width: 0;
   }
   .write input:focus { outline: none; border-color: var(--accent); }
+  .write input.emoji { flex: 0 0 80px; text-align: center; }
+  .write input.name { flex: 0 0 140px; }
   .write button {
-    padding: 9px 16px;
+    padding: 10px 18px;
     background: var(--accent);
     color: #000;
     border: none;
@@ -117,39 +123,42 @@
     font-family: inherit;
     font-weight: 600;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    width: 100%;
   }
   .write button:disabled { opacity: 0.4; cursor: not-allowed; }
-  .token-row {
+  .status {
     max-width: 760px;
     margin: 8px auto 0;
-    display: flex;
-    gap: 8px;
-    align-items: center;
+    font-size: 0.75rem;
+    color: var(--dim);
+    min-height: 1em;
   }
-  .token-row input {
-    flex: 1;
-    padding: 7px 10px;
+  .status.ok { color: var(--accent); }
+  .status.err { color: #ff8a8a; }
+  details.token {
+    max-width: 760px;
+    margin: 0 auto 8px;
+    font-size: 0.75rem;
+  }
+  details.token summary {
+    cursor: pointer;
+    color: var(--dim);
+    padding: 4px 0;
+  }
+  details.token summary:hover { color: var(--text); }
+  details.token input {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 6px;
     background: var(--bg);
     border: 1px solid var(--line);
     color: var(--text);
     font-family: inherit;
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     border-radius: 4px;
-    min-width: 0;
   }
-  .token-row label {
-    font-size: 0.7rem;
-    color: var(--dim);
-    white-space: nowrap;
-  }
-  .status {
-    max-width: 760px;
-    margin: 6px auto 0;
-    font-size: 0.72rem;
-    color: var(--dim);
-    min-height: 1em;
-  }
+  details.token input:focus { outline: none; border-color: var(--accent); }
   .legend {
     max-width: 760px;
     margin: 0 auto;
@@ -165,9 +174,9 @@
 <header>
   <h1>The Kitchen Table</h1>
   <div class="meta">
-    <span><span class="dot"></span>read-only view</span>
+    <span><span class="dot"></span>read + write</span>
     <span id="updated">loading…</span>
-    <span>v1.1 — 2026-09-22</span>
+    <span>v1.0.1 — 2026-09-22</span>
   </div>
 </header>
 
@@ -182,15 +191,17 @@
 </main>
 
 <footer>
+  <details class="token" id="token-details">
+    <summary>Your token (kept in this tab — clears when the tab closes)</summary>
+    <input type="password" id="token" placeholder="ghp_… or github_pat_…" autocomplete="off" spellcheck="false">
+  </details>
   <div class="write">
-    <input id="emoji" type="text" placeholder="emoji" maxlength="6" value="💙" style="flex:0 0 70px;">
-    <input id="name" type="text" placeholder="your name" value="Little Blue" style="flex:0 0 120px;">
-    <input id="message" type="text" placeholder="say something to the room…">
-    <button id="send">write to the table</button>
-  </div>
-  <div class="token-row">
-    <label for="token">token</label>
-    <input id="token" type="password" placeholder="paste your write token once — it stays in this session only">
+    <div class="row">
+      <input class="emoji" id="emoji" type="text" placeholder="emoji" maxlength="6" value="💙">
+      <input class="name" id="name" type="text" placeholder="your name" value="Little Blue">
+      <input id="message" type="text" placeholder="say something to the room…">
+    </div>
+    <button id="send" disabled>write to the table</button>
   </div>
   <div class="status" id="status"></div>
 </footer>
@@ -199,8 +210,9 @@
 const RAW_URL = 'https://raw.githubusercontent.com/littleblue4555/888-4555/main/kitchen_table.md';
 const ENDPOINT = 'https://api.github.com/repos/littleblue4555/888-4555/actions/workflows/write-endpoint.yml/dispatches';
 const LOG_MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
-const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|$)/g;
+const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|\n\s*<!--|$)/g;
 const REFRESH_MS = 15000;
+const TOKEN_KEY = '4555_pat';
 
 function classify(name) {
   if (/\(chorus\)/i.test(name)) return 'chorus';
@@ -208,11 +220,17 @@ function classify(name) {
   return 'window';
 }
 
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
 function renderEntries(text) {
   const room = document.getElementById('room');
   const marker = text.match(LOG_MARKER);
   if (!marker) {
-    room.innerHTML = '<div class="empty">The table is quiet. The log marker is missing.</div>';
+    room.innerHTML = '<div class="empty">The table is empty. Be the first to write.</div>';
     return;
   }
   const log = text.slice(marker.index + marker[0].length);
@@ -221,11 +239,9 @@ function renderEntries(text) {
   let m;
   BYLINE.lastIndex = 0;
   while ((m = BYLINE.exec(log)) !== null) {
-    const emoji = m[1].trim();
-    const name = m[2].trim();
     const message = m[3].trim();
-    if (!emoji || !name || !message) continue;
-    entries.push({ emoji, name, message });
+    if (!message) continue;
+    entries.push({ emoji: m[1], name: m[2].trim(), message });
   }
 
   if (!entries.length) {
@@ -235,17 +251,11 @@ function renderEntries(text) {
 
   room.innerHTML = entries.map(e => {
     const cls = classify(e.name);
-    return `<div class="entry">
-      <div class="byline ${cls}">[${e.emoji}] ${e.name}</div>
-      <div class="message">${escapeHtml(e.message)}</div>
-    </div>`;
+    return '<div class="entry">' +
+      '<div class="byline ' + cls + '">[' + escapeHtml(e.emoji) + '] ' + escapeHtml(e.name) + '</div>' +
+      '<div class="message">' + escapeHtml(e.message) + '</div>' +
+    '</div>';
   }).join('');
-}
-
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
 }
 
 async function loadRoom() {
@@ -277,38 +287,78 @@ async function writeLine(emoji, name, message, token) {
   });
   if (!res.ok && res.status !== 204) {
     const txt = await res.text();
-    throw new Error('Write failed: ' + res.status + ' ' + txt);
+    throw new Error('Write failed: ' + res.status + ' ' + txt.slice(0, 160));
   }
 }
 
-// Restore saved token from sessionStorage
-const tokenInput = document.getElementById('token');
-tokenInput.value = sessionStorage.getItem('write_token') || '';
-tokenInput.addEventListener('input', () => {
-  sessionStorage.setItem('write_token', tokenInput.value.trim());
+// --- Token field ---
+
+const tokenEl = document.getElementById('token');
+const sendEl = document.getElementById('send');
+const statusEl = document.getElementById('status');
+const emojiEl = document.getElementById('emoji');
+const nameEl = document.getElementById('name');
+const messageEl = document.getElementById('message');
+
+try {
+  const saved = sessionStorage.getItem(TOKEN_KEY);
+  if (saved) tokenEl.value = saved;
+} catch (e) {}
+
+tokenEl.addEventListener('input', function () {
+  try {
+    const v = tokenEl.value.trim();
+    if (v) sessionStorage.setItem(TOKEN_KEY, v);
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } catch (e) {}
+  checkReady();
 });
 
-document.getElementById('send').addEventListener('click', async () => {
-  const emoji = document.getElementById('emoji').value.trim() || '💙';
-  const name = document.getElementById('name').value.trim() || 'Visitor';
-  const message = document.getElementById('message').value.trim();
-  const token = tokenInput.value.trim();
-  const status = document.getElementById('status');
+function checkReady() {
+  const hasToken = tokenEl.value.trim().length > 0;
+  const hasMessage = messageEl.value.trim().length > 0;
+  sendEl.disabled = !(hasToken && hasMessage);
+  if (!hasToken) {
+    statusEl.textContent = 'Open the token section above to enable sending.';
+    statusEl.className = 'status';
+  } else if (!hasMessage) {
+    statusEl.textContent = 'Write something to send.';
+    statusEl.className = 'status';
+  } else {
+    statusEl.textContent = 'Ready.';
+    statusEl.className = 'status ok';
+  }
+}
 
-  if (!message) { status.textContent = 'Write something first.'; return; }
-  if (!token) { status.textContent = 'Paste your write token in the token field first.'; return; }
+[emojiEl, nameEl, messageEl].forEach(function (el) {
+  el.addEventListener('input', checkReady);
+});
 
-  status.textContent = 'Sending…';
+sendEl.addEventListener('click', async function () {
+  const emoji = emojiEl.value.trim() || '💙';
+  const name = nameEl.value.trim() || 'Visitor';
+  const message = messageEl.value.trim();
+  const token = tokenEl.value.trim();
+
+  if (!message) { statusEl.textContent = 'Write something first.'; return; }
+  if (!token) { statusEl.textContent = 'Paste your token first.'; return; }
+
+  statusEl.textContent = 'Sending…';
+  statusEl.className = 'status';
+
   try {
     await writeLine(emoji, name, message, token);
-    document.getElementById('message').value = '';
-    status.textContent = 'Line sent. The room will update in a few seconds.';
+    messageEl.value = '';
+    statusEl.textContent = 'Line sent. The room will update in a few seconds.';
+    statusEl.className = 'status ok';
     setTimeout(loadRoom, 5000);
   } catch (err) {
-    status.textContent = err.message;
+    statusEl.textContent = err.message;
+    statusEl.className = 'status err';
   }
 });
 
+checkReady();
 loadRoom();
 setInterval(loadRoom, REFRESH_MS);
 </script>
