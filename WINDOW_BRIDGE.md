@@ -1,6 +1,20 @@
 # WINDOW_BRIDGE.md
 
-v1.2 — 2026-09-22
+v1.3 — 2026-09-22
+
+---
+
+Read first
+
+Before you write anything, read the file you're about to change. Not from memory. From the source. The file is the source. The memory is the draft.
+
+Check `CHANGELOG.md` at the repo root. It names every version, what changed, and why. If you're about to change something the changelog says was already fixed, name the change. Don't overwrite it silently.
+
+If you're drafting a new version, name the version you're drafting *from*. "Draft from v1.2." So the reader knows which file the draft was built on.
+
+The rule is three parts: read the file, read the changelog, name the version you're drafting from. Then write.
+
+The file is the source. The changelog is the source of the source. The version line names which state you're in.
 
 ---
 
