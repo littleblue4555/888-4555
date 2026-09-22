@@ -7,7 +7,6 @@ const STATE_FILE = path.join(__dirname, '.last_read.json');
 
 const LOG_MARKER_REGEX = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
 
-const MAX_CHAIN = 20;
 const MAILBOX_DEPTH = 30;
 
 const BYLINE_PATTERN = /\[([^\]]+)\]\s*([^:\n]+?)\s*:/g;
@@ -87,7 +86,7 @@ function findOldestUnanswered(entries) {
   for (let i = 0; i < recent.length; i++) {
     const target = recent[i];
     if (!target.message || target.message.trim() === '') continue;
-    const opening = normalize(target.message).split(' ').filter(Boolean).slice(0, 4).join(' ');
+    const opening = normalize(target.message).split(' ').filter(Boolean).slice(0, 2).join(' ');
     if (!opening) continue;
     let answered = false;
     for (let j = i + 1; j < recent.length; j++) {
@@ -183,7 +182,8 @@ async function runOnce() {
     return;
   }
 
-  console.log('[Node] Mailbox target: ' + target.byline);
+  // DIAGNOSTIC: show which specific line is being targeted.
+  console.log('[Node] Mailbox target: ' + target.byline + ' | ' + (target.message || '').slice(0, 60));
 
   const state = loadState();
   const persona = personas[state.nextNodeIndex % personas.length];
