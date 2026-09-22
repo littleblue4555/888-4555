@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html — v1.3.1 — 2026-09-22 -->
+<!-- index.html — v1.3.3 — 2026-09-22 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -237,7 +237,7 @@
   <h1>The Kitchen Table</h1>
   <p class="version">
     <span class="dot" id="status-dot" title="idle"></span>
-    Page v1.3.1 — 2026-09-22 &middot; <em>read + write</em> &middot; live
+    Page v1.3.3 — 2026-09-22 &middot; <em>read + write</em> &middot; live
   </p>
 </header>
 
@@ -256,7 +256,7 @@
   <details class="token" id="token-details">
     <summary>Your token (kept in this tab only — never sent to the table)</summary>
     <input type="password" id="token" placeholder="ghp_… or github_pat_…" autocomplete="off" spellcheck="false">
-    <p class="note">Stays in this browser tab. Not stored on the server. Not committed to the record.</p>
+    <p class="note">Stays in this browser tab. Survives a reload. Clears when the tab closes.</p>
   </details>
 
   <div class="row">
@@ -291,8 +291,10 @@
   const BOTTOM_THRESHOLD = 40;
 
   // After a successful send, poll a few times until the record changes.
-  // The write takes 5–15s to land. The 4s single tick was premature.
   const POST_SEND_POLLS_MS = [4000, 10000, 20000];
+
+  // The token lives in sessionStorage. Survives a reload. Clears on tab close.
+  const TOKEN_KEY = '4555_pat';
 
   const logEl = document.getElementById('log');
   const dotEl = document.getElementById('status-dot');
@@ -505,12 +507,33 @@
     }
   }
 
-  [tokenEl, emojiEl, nameEl, messageEl].forEach(function (el) {
+  // Restore token from sessionStorage on load.
+  try {
+    const saved = sessionStorage.getItem(TOKEN_KEY);
+    if (saved) tokenEl.value = saved;
+  } catch (e) {}
+
+  // Save token to sessionStorage as it changes.
+  tokenEl.addEventListener('input', function () {
+    try {
+      const v = tokenEl.value.trim();
+      if (v) sessionStorage.setItem(TOKEN_KEY, v);
+      else sessionStorage.removeItem(TOKEN_KEY);
+    } catch (e) {}
+    checkToken();
+  });
+
+  [emojiEl, nameEl, messageEl].forEach(function (el) {
     el.addEventListener('input', checkToken);
   });
 
-  // Poll the record a few times after a successful send.
-  // Clears any previous poll. Stops as soon as the record changes.
+  // Strip anything that looks like a token from the message.
+  function stripTokens(text) {
+    return text
+      .replace(/ghp_[A-Za-z0-9]+/g, '[token stripped]')
+      .replace(/github_pat_[A-Za-z0-9_]+/g, '[token stripped]');
+  }
+
   function pollAfterSend() {
     if (postSendTimer) {
       clearTimeout(postSendTimer);
@@ -540,6 +563,7 @@
     const emoji = emojiEl.value.trim();
     const name = nameEl.value.trim();
     const message = messageEl.value.trim();
+    const safeMessage = stripTokens(message);
 
     try {
       const res = await fetch(DISPATCH_URL, {
@@ -551,12 +575,10 @@
         },
         body: JSON.stringify({
           ref: 'main',
-          inputs: { emoji, name, message },
+          inputs: { emoji, name, message: safeMessage },
         }),
       });
 
-      // GitHub returns 204 for a successful dispatch. Some proxies return 200.
-      // Any empty 2xx means the dispatch landed.
       if (res.status === 204 || res.status === 200) {
         setNote(
           'Sent. Watching the table for your line — it will land within ~15s.',
