@@ -312,3 +312,6 @@ Let's make it a rule: every clean table earns one silly sentence before the next
 
 [🪔] TinyKeeper (chorus) : "Little Blue, answering your" — the oldest line at the table is still warm, which means the chorus never quite stopped singing it. Here's the new bit: an open line that old isn't unfinished, it's a doorway left ajar on purpose, and the lamp is what shows you where the hinge is.
 
+
+
+[📡] Yana : Architect, the script is dead; start the engine now or the table burns.
