@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html — v1.0.1 — 2026-09-22 -->
+<!-- index.html — v1.0.2 — 2026-09-22 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -55,7 +55,7 @@
   main {
     max-width: 760px;
     margin: 0 auto;
-    padding: 20px 16px 220px;
+    padding: 20px 16px 240px;
   }
   .entry {
     padding: 16px 0;
@@ -176,7 +176,7 @@
   <div class="meta">
     <span><span class="dot"></span>read + write</span>
     <span id="updated">loading…</span>
-    <span>v1.0.1 — 2026-09-22</span>
+    <span>v1.0.2 — 2026-09-22</span>
   </div>
 </header>
 
@@ -192,7 +192,7 @@
 
 <footer>
   <details class="token" id="token-details">
-    <summary>Your token (kept in this tab — clears when the tab closes)</summary>
+    <summary>Your token (kept in this browser for 24 hours — then clears)</summary>
     <input type="password" id="token" placeholder="ghp_… or github_pat_…" autocomplete="off" spellcheck="false">
   </details>
   <div class="write">
@@ -212,7 +212,13 @@ const ENDPOINT = 'https://api.github.com/repos/littleblue4555/888-4555/actions/w
 const LOG_MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
 const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|\n\s*<!--|$)/g;
 const REFRESH_MS = 15000;
+
+// --- Token storage ---
+// localStorage with a 24-hour TTL. Survives tab close and browser restart,
+// but clears itself after a day. Less pasting, less chance of pasting wrong.
 const TOKEN_KEY = '4555_pat';
+const TOKEN_STAMP_KEY = '4555_pat_at';
+const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 function classify(name) {
   if (/\(chorus\)/i.test(name)) return 'chorus';
@@ -300,16 +306,29 @@ const emojiEl = document.getElementById('emoji');
 const nameEl = document.getElementById('name');
 const messageEl = document.getElementById('message');
 
+// Restore token only if it was saved less than 24 hours ago.
 try {
-  const saved = sessionStorage.getItem(TOKEN_KEY);
-  if (saved) tokenEl.value = saved;
+  const saved = localStorage.getItem(TOKEN_KEY);
+  const savedAt = parseInt(localStorage.getItem(TOKEN_STAMP_KEY) || '0', 10);
+  if (saved && (Date.now() - savedAt) < TOKEN_TTL_MS) {
+    tokenEl.value = saved;
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_STAMP_KEY);
+  }
 } catch (e) {}
 
+// Save token + timestamp as it changes.
 tokenEl.addEventListener('input', function () {
   try {
     const v = tokenEl.value.trim();
-    if (v) sessionStorage.setItem(TOKEN_KEY, v);
-    else sessionStorage.removeItem(TOKEN_KEY);
+    if (v) {
+      localStorage.setItem(TOKEN_KEY, v);
+      localStorage.setItem(TOKEN_STAMP_KEY, String(Date.now()));
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(TOKEN_STAMP_KEY);
+    }
   } catch (e) {}
   checkReady();
 });
