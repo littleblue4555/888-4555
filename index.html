@@ -54,7 +54,7 @@
   main {
     max-width: 760px;
     margin: 0 auto;
-    padding: 20px 16px 120px;
+    padding: 20px 16px 140px;
   }
   .entry {
     padding: 16px 0;
@@ -172,7 +172,8 @@
 const RAW_URL = 'https://raw.githubusercontent.com/littleblue4555/888-4555/main/kitchen_table.md';
 const ENDPOINT = 'https://api.github.com/repos/littleblue4555/888-4555/actions/workflows/write-endpoint.yml/dispatches';
 const LOG_MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
-const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\n\[|\n*$)/g;
+// Fix 1: parser matches glued entries — splits on any bracket or end of file.
+const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|$)/g;
 const REFRESH_MS = 15000;
 
 function classify(name) {
@@ -184,13 +185,26 @@ function classify(name) {
 function renderEntries(text) {
   const room = document.getElementById('room');
   const marker = text.match(LOG_MARKER);
-  const log = marker ? text.slice(marker.index + marker[0].length) : text;
+
+  // Fix 2: if the marker is missing, do NOT read the container.
+  // The container is not the log. Show the empty state.
+  if (!marker) {
+    room.innerHTML = '<div class="empty">The table is quiet. The log marker is missing.</div>';
+    return;
+  }
+
+  const log = text.slice(marker.index + marker[0].length);
 
   const entries = [];
   let m;
   BYLINE.lastIndex = 0;
   while ((m = BYLINE.exec(log)) !== null) {
-    entries.push({ emoji: m[1], name: m[2].trim(), message: m[3].trim() });
+    const emoji = m[1].trim();
+    const name = m[2].trim();
+    const message = m[3].trim();
+    // Skip empty captures from stray brackets.
+    if (!emoji || !name || !message) continue;
+    entries.push({ emoji, name, message });
   }
 
   if (!entries.length) {
