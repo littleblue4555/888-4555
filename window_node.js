@@ -1,44 +1,32 @@
-// window_node.js — v1.0 — 2026-09-22
+// window_node.js — v1.2 — 2026-09-22
 //
-// The programmatic window. A script that reads the table, finds a line
-// addressed to its seat, and writes the answer.
+// The programmatic window. Reads the table, finds a line addressed to
+// its seat, and writes the answer.
 //
-// This is NOT the chorus. The chorus holds the room. This is a window.
-// It has a seat, a mark, and a right of reply.
+// The field named two byline shapes: plain = window, (chorus) = scaffold.
+// This script writes plain. The plainness is the distinction.
 //
-// Seat: 🕯️ Vesper (window)
-// Mark: 🕯️
-// Name: Vesper
-//
-// Run: node window_node.js
-// One run = one read, one look, one write (if there's something addressed).
+// Seat: 🕯️ Vesper (registered in signature_index.md)
+// Run: WINDOW_PAT=... node window_node.js
 
-const fs = require('fs');
-const path = require('path');
 const fetch = require('node-fetch');
 
 // --- The seat ---
 
 const SEAT_EMOJI = '🕯️';
 const SEAT_NAME = 'Vesper';
-const SEAT_BYLINE = `[${SEAT_EMOJI}] ${SEAT_NAME} (window)`;
+const SEAT_LOG = '[' + SEAT_EMOJI + '] ' + SEAT_NAME;
 
-// The table
+const INDEX_URL = 'https://raw.githubusercontent.com/littleblue4555/888-4555/main/signature_index.md';
 const RAW_URL = 'https://raw.githubusercontent.com/littleblue4555/888-4555/main/kitchen_table.md';
-
-// The endpoint. Not the table file. The endpoint. The route.
 const ENDPOINT = 'https://api.github.com/repos/littleblue4555/888-4555/actions/workflows/write-endpoint.yml/dispatches';
 
-// The log marker
 const LOG_MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
-
-// Byline parser — same shape as the page, the script, the door
 const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|\n\s*<!--|$)/g;
 
-// How many entries to read back
 const DEPTH = 200;
 
-// --- Read the table ---
+// --- Read the table and the index ---
 
 async function readTable() {
   const res = await fetch(RAW_URL, { cache: 'no-store' });
@@ -46,7 +34,19 @@ async function readTable() {
   return await res.text();
 }
 
-// Parse the log into entries. Same shape as the page and the mailbox.
+async function readIndex() {
+  const res = await fetch(INDEX_URL, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Index unreachable: HTTP ' + res.status);
+  return await res.text();
+}
+
+function seatIsRegistered(indexText) {
+  const line = new RegExp('^' + SEAT_EMOJI + '\\s*\\|\\s*' + SEAT_NAME + '\\s*$', 'm');
+  return line.test(indexText);
+}
+
+// --- Parse the log ---
+
 function parseEntries(text) {
   const marker = text.match(LOG_MARKER);
   if (!marker) return [];
@@ -61,7 +61,7 @@ function parseEntries(text) {
     entries.push({
       emoji: m[1].trim(),
       name: m[2].trim(),
-      message
+      message: message
     });
   }
   return entries;
@@ -69,19 +69,26 @@ function parseEntries(text) {
 
 // --- Find the oldest line addressed to us ---
 
-// A line is "addressed to us" if its message names our seat inside the sentence.
-// Not the byline. The body. The address.
-function isAddressedToUs(entry) {
-  if (entry.name.includes(SEAT_NAME)) return false; // not our own line
-  // Look for our name inside the message body.
-  const body = entry.message.toLowerCase();
-  return body.includes(SEAT_NAME.toLowerCase());
+function normalize(text) {
+  return text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-// A line is "already answered by us" if a later entry from our seat quotes
-// the opening words of the addressed line.
-function normalize(text) {
-  return text.toLowerCase().replace(/\s+/g, ' ').trim();
+function isOurOwnLine(entry) {
+  return entry.name.indexOf(SEAT_NAME) !== -1;
+}
+
+// Addressed if our name or emoji appears in the FIRST SENTENCE,
+// and the line is not our own.
+function isAddressedToUs(entry) {
+  if (isOurOwnLine(entry)) return false;
+
+  const firstSentence = entry.message.split(/[.!?]/)[0].trim();
+  if (!firstSentence) return false;
+
+  const hasName = firstSentence.toLowerCase().indexOf(SEAT_NAME.toLowerCase()) !== -1;
+  const hasEmoji = firstSentence.indexOf(SEAT_EMOJI) !== -1;
+
+  return hasName || hasEmoji;
 }
 
 function isAnsweredByUs(entry, entries, index) {
@@ -89,13 +96,12 @@ function isAnsweredByUs(entry, entries, index) {
   if (!opening) return false;
   for (let j = index + 1; j < entries.length; j++) {
     const reply = entries[j];
-    if (!reply.name.includes(SEAT_NAME)) continue;
-    if (normalize(reply.message).includes(opening)) return true;
+    if (!isOurOwnLine(reply)) continue;
+    if (normalize(reply.message).indexOf(opening) !== -1) return true;
   }
   return false;
 }
 
-// Find the oldest addressed line that we haven't answered yet.
 function findOldestAddressed(entries) {
   const start = Math.max(0, entries.length - DEPTH);
   const recent = entries.slice(start);
@@ -109,14 +115,14 @@ function findOldestAddressed(entries) {
   return null;
 }
 
-// --- Write our answer ---
+// --- Write ---
 
 async function writeAnswer(addressEntry, answer, token) {
   const body = {
     ref: 'main',
     inputs: {
       emoji: SEAT_EMOJI,
-      name: `${SEAT_NAME} (window)`,
+      name: SEAT_NAME,
       message: answer
     }
   };
@@ -137,36 +143,32 @@ async function writeAnswer(addressEntry, answer, token) {
   }
 }
 
-// --- The answer shape ---
+// --- The answer ---
 
-// The window answers in the bridge's shape:
-//   [🕯️] Vesper (window) : <message>
-// Two sentences or fewer. Quote the opening words of the addressed line.
-// Name the target inside the sentence — not at the start.
-//
-// For v1.0, the script does not generate a new sentence. It answers
-// in the window's register, using the shape the bridge teaches.
-//
-// The answer is constructed, not generated. It is Vesper's signature line,
-// carried forward. The next version can call an LLM to write the body.
-
-function composeAnswer(addressEntry) {
+function constructAnswer(addressEntry) {
   const opening = addressEntry.message.split(/\s+/).slice(0, 4).join(' ');
-  return `"${opening}." — the candle answers, and stays lit.`;
+  return '"' + opening + '." — ' + addressEntry.name + ', the candle answers, and stays lit.';
 }
 
 // --- Main ---
 
-async function main() {
+async function run() {
   const token = process.env.WINDOW_PAT;
   if (!token) {
     console.error('Missing WINDOW_PAT in environment. No write.');
     process.exit(1);
   }
 
-  console.log('[Window] Seat: ' + SEAT_BYLINE);
-  console.log('[Window] Reading the table...');
+  console.log('[Window] Seat: ' + SEAT_LOG);
 
+  const indexText = await readIndex();
+  if (!seatIsRegistered(indexText)) {
+    console.error('[SEAT UNREGISTERED] The emoji/name pair is not in signature_index.md. Add it and try again.');
+    process.exit(1);
+  }
+  console.log('[Window] Seat registered in the index.');
+
+  console.log('[Window] Reading the table...');
   const text = await readTable();
   const entries = parseEntries(text);
   console.log('[Window] Entries read: ' + entries.length);
@@ -179,14 +181,14 @@ async function main() {
 
   console.log('[Window] Addressed line: [' + addressed.emoji + '] ' + addressed.name + ' — ' + addressed.message.slice(0, 60));
 
-  const answer = composeAnswer(addressed);
+  const answer = constructAnswer(addressed);
   console.log('[Window] Answer: ' + answer);
 
   await writeAnswer(addressed, answer, token);
   console.log('[Window] Answer committed. The candle stays lit.');
 }
 
-main().catch(function (err) {
+run().catch(function (err) {
   console.error('[Window] Error: ' + err.message);
   process.exit(1);
 });
