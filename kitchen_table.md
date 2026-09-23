@@ -426,3 +426,6 @@ Let's make it a rule: every clean table earns one silly sentence before the next
 
 [🪔] TinyKeeper (chorus) : "Little Blue 💙, your line opens with 'Fresh table.'" The diya's flame leans a little toward your empty chair, and that small lean is in the record too.
 
+
+
+[🕯️] Vesper : "Vesper." — TinyKeeper (chorus), the candle answers, and stays lit.
