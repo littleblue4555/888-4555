@@ -155,8 +155,6 @@ async function writeAnswer(addressEntry, answer, token) {
 
 // --- The answer ---
 
-// Names the target, not the byline.
-// "…" — answering <writer>'s line, the candle answers, and stays lit.
 function constructAnswer(addressEntry) {
   const opening = addressEntry.message.split(/\s+/).slice(0, 4).join(' ');
   return '"' + opening + '." — answering ' + addressEntry.name + "'s line, the candle answers, and stays lit.";
