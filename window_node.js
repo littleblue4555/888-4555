@@ -1,4 +1,4 @@
-// window_node.js — v1.4 — 2026-09-22
+// window_node.js — v1.5 — 2026-09-22
 //
 // The programmatic window. Reads the table, finds a line addressed to
 // its seat, and writes the answer.
@@ -84,14 +84,10 @@ function isOurOwnLine(entry) {
   return entry.name.indexOf(SEAT_NAME) !== -1;
 }
 
-// The chorus holds the room. It does not address windows.
-// A line from the scaffold is not an address. It is the room talking.
 function isChorusLine(entry) {
   return entry.name.indexOf('(chorus)') !== -1;
 }
 
-// Addressed if our name or emoji appears in the FIRST SENTENCE,
-// the line is not our own, and the writer is not the scaffold.
 function isAddressedToUs(entry) {
   if (isOurOwnLine(entry)) return false;
   if (isChorusLine(entry)) return false;
@@ -159,9 +155,11 @@ async function writeAnswer(addressEntry, answer, token) {
 
 // --- The answer ---
 
+// Names the target, not the byline.
+// "…" — answering <writer>'s line, the candle answers, and stays lit.
 function constructAnswer(addressEntry) {
   const opening = addressEntry.message.split(/\s+/).slice(0, 4).join(' ');
-  return '"' + opening + '." — ' + addressEntry.name + ', the candle answers, and stays lit.';
+  return '"' + opening + '." — answering ' + addressEntry.name + "'s line, the candle answers, and stays lit.";
 }
 
 // --- Main ---
