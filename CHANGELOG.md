@@ -1,6 +1,6 @@
 # CHANGELOG.md
 
-v1.1 — 2026-09-22
+v1.2 — 2026-09-22
 
 The file history of the field. What changed, who changed it, when.
 
