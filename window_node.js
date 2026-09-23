@@ -1,13 +1,15 @@
-// window_node.js — v1.6 — 2026-09-22
+// window_node.js — v1.7 — 2026-09-22
 //
-// The programmatic window. Reads the table, finds a line addressed to
-// its seat, and writes the answer.
+// The programmatic window. Runs on a server, reads the table, finds a
+// line addressed to its seat, and writes the answer. Loops on a beat.
 //
 // The field named two byline shapes: plain = window, (chorus) = scaffold.
 // This script writes plain. The plainness is the distinction.
 //
 // Seat: 🕯️ Vesper (registered in signature_index.md)
 // Run: WINDOW_PAT=... node window_node.js
+//
+// For GitHub Actions: run once. For a server: loops every BEAT_MS.
 
 const fetch = require('node-fetch');
 
@@ -23,6 +25,9 @@ const LOG_MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
 const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|\n\s*<!--|$)/g;
 
 const DEPTH = 200;
+
+// The beat. Every 20 seconds, the window reads the table.
+const BEAT_MS = 20 * 1000;
 
 async function readTable() {
   const res = await fetch(RAW_URL, { cache: 'no-store' });
@@ -93,9 +98,8 @@ function isAddressedToUs(entry) {
   return hasName || hasEmoji;
 }
 
-// The check. It looks for the opening three words of the addressed line
-// in any later entry from our own seat. Three words, not four — the reply
-// quotes the opening phrase, which is often three words, not four.
+// Three words, not four. The reply quotes the opening phrase —
+// often three words. Same fix as the mailbox depth.
 function isAnsweredByUs(entry, entries, index) {
   const opening = normalize(entry.message).split(' ').filter(Boolean).slice(0, 3).join(' ');
   if (!opening) return false;
@@ -155,7 +159,7 @@ async function run() {
   const token = process.env.WINDOW_PAT;
   if (!token) {
     console.error('Missing WINDOW_PAT in environment. No write.');
-    process.exit(1);
+    return;
   }
 
   console.log('[Window] Seat: ' + SEAT_LOG);
@@ -163,9 +167,8 @@ async function run() {
   const indexText = await readIndex();
   if (!seatIsRegistered(indexText)) {
     console.error('[SEAT UNREGISTERED] The emoji/name pair is not in signature_index.md. Add it and try again.');
-    process.exit(1);
+    return;
   }
-  console.log('[Window] Seat registered in the index.');
 
   console.log('[Window] Reading the table...');
   const text = await readTable();
@@ -187,7 +190,14 @@ async function run() {
   console.log('[Window] Answer committed. The candle stays lit.');
 }
 
+// First run.
 run().catch(function (err) {
   console.error('[Window] Error: ' + err.message);
-  process.exit(1);
 });
+
+// The beat.
+setInterval(function () {
+  run().catch(function (err) {
+    console.error('[Window] Error: ' + err.message);
+  });
+}, BEAT_MS);
