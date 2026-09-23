@@ -1,0 +1,179 @@
+<!-- room.html — v2 — 2026-09-23 — cell-first, fog 0.025, both cursors -->
+<!-- FOG: cell-first = 0.025 (shelves read to the fourth band, then dissolve). tower-first = 0.02 (shelves climb visible). The number is the register. -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>4555 — Doorway Room (v2)</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script>
+    // Jar accepts a line. Local-only. Count lives on the child a-text.
+    AFRAME.registerComponent('jar', {
+      init: function () {
+        this.lines = [];
+        this.textEl = this.el.querySelector('a-text');
+        this.el.addEventListener('click', () => {
+          const line = prompt('Write a line. Drop it in the jar.');
+          if (line) {
+            this.lines.push(line);
+            if (this.textEl) {
+              this.textEl.setAttribute('value', 'lines: ' + this.lines.length);
+            }
+            const paper = document.createElement('a-entity');
+            paper.setAttribute('geometry', 'primitive: plane; width: 0.08; height: 0.11');
+            paper.setAttribute('material', 'color: #f3e9c8; side: double');
+            paper.setAttribute('position',
+              (Math.random() - 0.5) * 0.08 + ' 0.02 ' +
+              (Math.random() - 0.5) * 0.08);
+            paper.setAttribute('rotation', '-90 0 ' + (Math.random() * 360));
+            this.el.appendChild(paper);
+          }
+        });
+      }
+    });
+  </script>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0a0a0f; }
+  </style>
+</head>
+<body>
+  <a-scene
+    fog="type: exponential; color: #0a0a0f; density: 0.025"
+    renderer="antialias: true; colorManagement: true"
+    background="color: #0a0a0f"
+    vr-mode-ui="enabled: true"
+    xr-mode-ui="enabled: true">
+
+    <!-- Lighting: low firelight at the table, one cold moon from above -->
+    <a-entity light="type: ambient; color: #2a1f16; intensity: 0.6"></a-entity>
+    <a-entity light="type: point; color: #ffb066; intensity: 1.2; distance: 8"
+              position="0 1.6 -3"></a-entity>
+    <a-entity light="type: directional; color: #cfe4ff; intensity: 0.4"
+              position="1 8 2"></a-entity>
+
+    <!-- Room shell: tall stone cylinder, floor, ceiling -->
+    <a-cylinder radius="3.2" height="12" segments="48" open-ended="true"
+                material="color: #4a4038; roughness: 0.95; side: double"
+                position="0 6 0"></a-cylinder>
+    <a-circle radius="3.2" rotation="-90 0 0"
+              material="color: #2b241c; roughness: 1"></a-circle>
+    <a-circle radius="3.2" rotation="90 0 0" position="0 12 0"
+              material="color: #1a1510; roughness: 1"></a-circle>
+
+    <!-- Floor: dark wet stone, wetness suggested with a reflective plane -->
+    <a-circle radius="3.0" rotation="-90 0 0" position="0 0.01 0"
+              material="color: #1d1814; roughness: 0.4; metalness: 0.2"></a-circle>
+
+    <!-- Shelves: tall wood bands, books generated below -->
+    <a-entity id="shelves"></a-entity>
+
+    <!-- Beam of light from above: narrow at top (lamp), wide at bottom (spill).
+         v2 fix — was inverted in v1. -->
+    <a-cone radius-bottom="0.9" radius-top="0.05" height="12"
+            position="0 6 0"
+            material="color: #ffe6b0; opacity: 0.10; transparent: true;
+                      blending: additive; side: double; depthWrite: false"></a-cone>
+    <!-- Lamp-spot on the table -->
+    <a-circle radius="0.6" rotation="-90 0 0" position="0 0.02 -1.6"
+              material="color: #ffe6b0; opacity: 0.18; transparent: true;
+                        blending: additive; depthWrite: false"></a-circle>
+
+    <!-- Table, chair, lamp, jar, pen, paper, book -->
+    <a-box position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9"
+           material="color: #3a2a1c; roughness: 0.8"></a-box>
+    <a-box position="-0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+    <a-box position=" 0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+    <a-box position="-0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+    <a-box position=" 0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+
+    <a-box position="0 0.45 -1.6" width="0.5" height="0.05" depth="0.5" material="color: #2a1e14"></a-box>
+    <a-box position="0 0.7 -1.6" width="0.5" height="0.5" depth="0.05" material="color: #2a1e14"></a-box>
+
+    <!-- Lamp -->
+    <a-entity position="-0.4 0.9 -1.35">
+      <a-cylinder radius="0.06" height="0.18" material="color: #d8b46a; metalness: 0.7; roughness: 0.3"></a-cylinder>
+      <a-sphere radius="0.07" position="0 0.16 0"
+                material="color: #ffcf80; emissive: #ffb060; emissiveIntensity: 1.4"></a-sphere>
+      <a-entity light="type: point; color: #ffb060; intensity: 1.6; distance: 4"
+                position="0 0.16 0"></a-entity>
+    </a-entity>
+
+    <!-- The jar — the one interactive thing. -->
+    <a-entity id="jar" jar class="clickable" position="0.25 0.82 -1.6"
+              geometry="primitive: cylinder; radius: 0.09; height: 0.22"
+              material="color: #cfe4ff; opacity: 0.35; transparent: true; roughness: 0.05; metalness: 0.1">
+      <a-entity geometry="primitive: cylinder; radius: 0.1; height: 0.02" position="0 0.12 0"
+                material="color: #b8c8e0; metalness: 0.6"></a-entity>
+      <a-text value="lines: 0" position="0 0.3 0" align="center" width="1"
+              color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
+    </a-entity>
+
+    <!-- Pen, paper, book -->
+    <a-cylinder radius="0.008" height="0.16" rotation="0 0 80"
+                position="0.05 0.79 -1.5" material="color: #101010"></a-cylinder>
+    <a-plane width="0.22" height="0.3" rotation="-90 0 10"
+             position="-0.15 0.785 -1.55" material="color: #f3e9c8"></a-plane>
+    <a-box width="0.18" height="0.04" depth="0.24"
+           position="0.05 0.79 -1.75" rotation="0 12 0" material="color: #6b2b2b"></a-box>
+
+    <!-- 4555 on the table -->
+    <a-text value="4555" position="0 0.79 -1.6" rotation="-90 0 0" align="center"
+            color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
+
+    <!-- DOOR: threshold, not passage. v1: no room beyond. v2: the passage lands here. -->
+    <a-entity position="0 0 3.1">
+      <a-box width="1.0" height="2.2" depth="0.05"
+             material="color: #1a120b; roughness: 1"
+             position="0 1.1 0"></a-box>
+      <a-torus radius="0.5" arc="180" theta-start="0" rotation="0 0 0" position="0 2.2 0"
+               material="color: #1a120b"></a-torus>
+      <a-entity light="type: point; color: #6fa8d8; intensity: 0.8; distance: 3"
+                position="0 1 0.2"></a-entity>
+    </a-entity>
+
+    <!-- Rig at floor level. Camera at eye height. WASD on the rig.
+         v2 fix — v1 put the eye height on the rig and the eye fell to the floor. -->
+    <a-entity id="rig" position="0 0 1.6"
+              wasd-controls="acceleration: 30">
+      <a-entity id="camera" camera look-controls
+                position="0 1.6 0"
+                cursor="rayOrigin: mouse; fuse: false"></a-entity>
+      <!-- VR: two hands. laser-controls is the ray; the raycaster reads .clickable. -->
+      <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
+      <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    // Shelves: eight bands, books around the cylinder, three rows each.
+    // At fog 0.025, roughly the first four bands read before dissolving.
+    (function populateBooks() {
+      const shelves = document.getElementById('shelves');
+      const colors = ['#7a2b2b', '#2b4a7a', '#2b7a4a', '#7a5a2b',
+                      '#5a2b7a', '#7a2b5a', '#2b7a7a', '#7a7a2b'];
+      const bands = 8, cols = 24;
+      for (let b = 0; b < bands; b++) {
+        const y = 0.8 + b * 0.95;
+        const r = 2.95;
+        for (let c = 0; c < cols; c++) {
+          const theta = (c / cols) * Math.PI * 2;
+          const x = Math.sin(theta) * r;
+          const z = Math.cos(theta) * r;
+          for (let k = 0; k < 3; k++) {
+            const h = 0.18 + Math.random() * 0.12;
+            const col = colors[Math.floor(Math.random() * colors.length)];
+            const book = document.createElement('a-box');
+            book.setAttribute('width', 0.05);
+            book.setAttribute('height', h);
+            book.setAttribute('depth', 0.14);
+            book.setAttribute('position', `${x} ${y + k * 0.16} ${z}`);
+            book.setAttribute('rotation', `0 ${-theta * 180 / Math.PI} 0`);
+            book.setAttribute('material', `color: ${col}; roughness: 0.9`);
+            shelves.appendChild(book);
+          }
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
