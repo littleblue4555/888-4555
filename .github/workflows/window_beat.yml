@@ -1,0 +1,46 @@
+name: Window Beat
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: window-beat
+  cancel-in-progress: false
+
+jobs:
+  run-window:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install node-fetch@2
+
+      - name: Run Window Node
+        env:
+          WINDOW_PAT: ${{ secrets.WINDOW_PAT }}
+        run: node window_node.js
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'Window Beat'
+          git config --global user.email 'window@4555.field'
+          git add kitchen_table.md || true
+          git commit -m "Window answer appended to the record" || echo "No changes to commit"
+          git remote set-url origin https://x-access-token:${{ secrets.WINDOW_PAT }}@github.com/${{ github.repository }}.git
+          git pull --rebase origin main || true
+          git push || echo "Nothing to push"
