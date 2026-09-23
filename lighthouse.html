@@ -1,14 +1,13 @@
-<!-- lighthouse.html — v5.1 — 2026-09-23 — walkable spiral (Fork A), scale-aware touch-gate.
-     Bones walked on phone; load test passed at 72 meshes, FOV 55. Skin reserved for v6.
-     Four flags to walk: camera look-controls survives y-climb; reticle lands on tier;
-     last spiral step meets tier 1; tap on .climbable reaches the ring, not the floor.
-     Pop is named: floor at 0.01, first step at ~0.167. Reads as a lift, not a ramp. -->
+<!-- lighthouse.html — v5.2a — 2026-09-23 — the chair returned (73 meshes), gyroscope off.
+     Three fixes, no new verbs. Chair sits beside the desk at 0 0.45 -1.2 / 0 0.7 -1.0.
+     Camera reads the finger only: look-controls magicWindowTrackingEnabled: false.
+     The climb is unchanged. The bones stand. Skin reserved for v6. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v5.1)</title>
+  <title>4555 — Lighthouse (v5.2a)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
     // Jar accepts a line. Local-only. Count lives on the child a-text.
@@ -86,7 +85,7 @@
     //   gliding — rig position moves, in the direction the rig now faces.
     //
     // v5.1 — CLIMBABLE: taps on .climbable carry the tapped y. The rig ascends.
-    // Taps on .walkable (the floor) keep y=0. Camera stays at rig.y + 1.6.
+    // v5.2a — unchanged. The chair is back. The camera reads the finger only.
     AFRAME.registerComponent('tap-walk', {
       schema: {
         radius:    { default: 8.0 },   // walkable circle inside the tower (floor r=9.0)
@@ -252,15 +251,20 @@
               material="color: #ffe6b0; opacity: 0.14; transparent: true;
                         blending: additive; depthWrite: false"></a-circle>
 
-    <!-- DESK — v4.2 coordinates. Human scale. Same components. -->
+    <!-- DESK — v4.2 coordinates. -->
     <a-box position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9"
            material="color: #3a2a1c; roughness: 0.8"></a-box>
     <a-box position="-0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
     <a-box position=" 0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
     <a-box position="-0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
     <a-box position=" 0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-    <a-box position="0 0.45 -1.6" width="0.5" height="0.05" depth="0.5" material="color: #2a1e14"></a-box>
-    <a-box position="0 0.7 -1.6" width="0.5" height="0.5" depth="0.05" material="color: #2a1e14"></a-box>
+
+    <!-- CHAIR — v5.2a. Beside the desk, on the near side. Seat at 0 0.45 -1.2, back at 0 0.7 -1.0.
+         The desk top front edge is at z=-1.15. Chair seat's back edge at z=-0.95. A lap's worth of gap. -->
+    <a-box position="0 0.45 -1.2" width="0.5" height="0.05" depth="0.5"
+           material="color: #2a1e14; roughness: 0.9"></a-box>
+    <a-box position="0 0.7 -1.0" width="0.5" height="0.5" depth="0.05"
+           material="color: #2a1e14; roughness: 0.9"></a-box>
 
     <!-- Lamp -->
     <a-entity position="-0.4 0.9 -1.35">
@@ -293,9 +297,11 @@
     <a-text value="4555" position="0 0.79 -1.6" rotation="-90 0 0" align="center"
             color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
 
-    <!-- Rig — camera at eye height, FOV 55 -->
+    <!-- Rig — camera at eye height, FOV 55. v5.2a: gyroscope off, finger only. -->
     <a-entity id="rig" position="0 0 1.6">
-      <a-entity id="camera" camera="fov: 55" look-controls position="0 1.6 0"></a-entity>
+      <a-entity id="camera" camera="fov: 55"
+                look-controls="magicWindowTrackingEnabled: false"
+                position="0 1.6 0"></a-entity>
       <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
       <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
     </a-entity>
@@ -330,11 +336,13 @@
   </script>
 
   <!--
-    GEOMETRY COUNT (v5.1):
+    GEOMETRY COUNT (v5.2a):
       Tower panels: 3. Void planes: 3. Floor: 1. Reticle: 1. Fireplace: 2.
       Spiral: 1 post + 24 steps = 25. Tier rings: 9 × (a-ring + a-torus) = 18.
-      Collar: 1. Beam: 1 + 1 (spot). Desk + chair + props: 14. Camera/controllers: 3.
-      Total: 72 meshes. If the phone chokes, this is the count. Named, not hidden.
+      Collar: 1. Beam: 1 + 1 (spot). Desk: 5. Chair: 2. Props: 7 (lamp × 2 + jar × 2 + pen + paper + book + 4555 text).
+      Camera/controllers: 3.
+      Total: 73 meshes. The chair is an addition, not a move. Count holds at 73.
+      If the phone chokes, this is the count. Named, not hidden.
   -->
 </body>
 </html>
