@@ -1,10 +1,11 @@
-<!-- lighthouse.html — v4 — 2026-09-23 — the walk, three states, yaw on rig, head free -->
+<!-- touch-gate: the room's touch gate. Upstream of every click. Platform-shaped, not walk-shaped. -->
+<!-- lighthouse.html — v4.2 — 2026-09-23 — the walk, three states, touch-gate upstream -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v4)</title>
+  <title>4555 — Lighthouse (v4.2)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
     // Jar accepts a line. Local-only. Count lives on the child a-text.
@@ -29,6 +30,48 @@
             this.el.appendChild(paper);
           }
         });
+      }
+    });
+
+    // TOUCH-GATE — the room's touch gate, upstream of every click.
+    // Distinguishes a tap from a drag for the whole scene, not just the walk.
+    //   dist > dragThreshold  → drag, suppress the click (looking)
+    //   dist <= dragThreshold → tap, let it through (walking)
+    // Capture phase, on the scene. Nothing in the room hears a drag.
+    AFRAME.registerComponent('touch-gate', {
+      schema: {
+        dragThreshold: { default: 10 }   // px — finger movement above this = a look, not a walk
+      },
+      init: function () {
+        this.start = null;
+        this.moved = false;
+        // Capture phase so we hear the click before tap-walk does.
+        this.el.addEventListener('touchstart', (e) => {
+          const t = e.touches[0];
+          if (!t) return;
+          this.start = { x: t.clientX, y: t.clientY };
+          this.moved = false;
+        }, true);
+        this.el.addEventListener('touchmove', (e) => {
+          if (!this.start) return;
+          const t = e.touches[0];
+          if (!t) return;
+          const dist = Math.hypot(t.clientX - this.start.x, t.clientY - this.start.y);
+          if (dist > this.data.dragThreshold) this.moved = true;
+        }, true);
+        this.el.addEventListener('click', (e) => {
+          if (!this.start) return;            // desktop mouse — no touchstart, nothing to guard
+          if (this.moved === true) {
+            e.stopPropagation();
+            e.preventDefault();
+          }
+        }, true);
+        this.el.addEventListener('touchend', () => {
+          this.start = null;
+          // Reset on next frame so the click handler (which fires after touchend)
+          // can still read this.moved.
+          setTimeout(() => { this.moved = false; }, 0);
+        }, true);
       }
     });
 
@@ -115,6 +158,7 @@
 </head>
 <body>
   <a-scene
+    touch-gate="dragThreshold: 10"
     tap-walk="radius: 2.5; speed: 1.6; turnSpeed: 3.2"
     fog="type: exponential; color: #0a0a0f; density: 0.025"
     renderer="antialias: true; colorManagement: true"
