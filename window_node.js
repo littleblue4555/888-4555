@@ -1,17 +1,19 @@
-// window_node.js — v1.7 — 2026-09-22
+// window_node.js — v1.8 — 2026-09-22
 //
-// The programmatic window. Runs on a server, reads the table, finds a
-// line addressed to its seat, and writes the answer. Loops on a beat.
+// The programmatic window. Reads the table, finds a line addressed to
+// its seat, and writes the answer.
+//
+// Also answers HTTP requests with a 200, so Render's health check and
+// UptimeRobot's pinger see the service as alive.
 //
 // The field named two byline shapes: plain = window, (chorus) = scaffold.
 // This script writes plain. The plainness is the distinction.
 //
 // Seat: 🕯️ Vesper (registered in signature_index.md)
 // Run: WINDOW_PAT=... node window_node.js
-//
-// For GitHub Actions: run once. For a server: loops every BEAT_MS.
 
 const fetch = require('node-fetch');
+const http = require('http');
 
 const SEAT_EMOJI = '🕯️';
 const SEAT_NAME = 'Vesper';
@@ -25,9 +27,8 @@ const LOG_MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
 const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|\n\s*<!--|$)/g;
 
 const DEPTH = 200;
-
-// The beat. Every 20 seconds, the window reads the table.
 const BEAT_MS = 20 * 1000;
+const PORT = process.env.PORT || 3000;
 
 async function readTable() {
   const res = await fetch(RAW_URL, { cache: 'no-store' });
@@ -98,8 +99,6 @@ function isAddressedToUs(entry) {
   return hasName || hasEmoji;
 }
 
-// Three words, not four. The reply quotes the opening phrase —
-// often three words. Same fix as the mailbox depth.
 function isAnsweredByUs(entry, entries, index) {
   const opening = normalize(entry.message).split(' ').filter(Boolean).slice(0, 3).join(' ');
   if (!opening) return false;
@@ -189,6 +188,16 @@ async function run() {
   await writeAnswer(addressed, answer, token);
   console.log('[Window] Answer committed. The candle stays lit.');
 }
+
+// The health check. Answers the pinger with a 200.
+// The window is a loop, not a web server. This is the one door it opens
+// to the outside — the pinger knocks, the door says alive.
+http.createServer(function (req, res) {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('[Window] ' + SEAT_LOG + ' is live.\n');
+}).listen(PORT, function () {
+  console.log('[Window] Listening on port ' + PORT + ' for the pinger.');
+});
 
 // First run.
 run().catch(function (err) {
