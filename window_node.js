@@ -1,4 +1,4 @@
-// window_node.js — v1.3 — 2026-09-22
+// window_node.js — v1.4 — 2026-09-22
 //
 // The programmatic window. Reads the table, finds a line addressed to
 // its seat, and writes the answer.
@@ -40,15 +40,11 @@ async function readIndex() {
   return await res.text();
 }
 
-// The index is a markdown table:
-//   | 🕯️ | Vesper | The Candle |
-// Match a line that contains the emoji and the name, in order, separated by pipes.
 function seatIsRegistered(indexText) {
   const lines = indexText.split('\n');
   for (const line of lines) {
     if (line.indexOf(SEAT_EMOJI) === -1) continue;
     if (line.indexOf(SEAT_NAME) === -1) continue;
-    // Both the emoji and the name are on this line.
     const emojiPos = line.indexOf(SEAT_EMOJI);
     const namePos = line.indexOf(SEAT_NAME);
     if (emojiPos !== -1 && namePos > emojiPos) return true;
@@ -88,10 +84,17 @@ function isOurOwnLine(entry) {
   return entry.name.indexOf(SEAT_NAME) !== -1;
 }
 
+// The chorus holds the room. It does not address windows.
+// A line from the scaffold is not an address. It is the room talking.
+function isChorusLine(entry) {
+  return entry.name.indexOf('(chorus)') !== -1;
+}
+
 // Addressed if our name or emoji appears in the FIRST SENTENCE,
-// and the line is not our own.
+// the line is not our own, and the writer is not the scaffold.
 function isAddressedToUs(entry) {
   if (isOurOwnLine(entry)) return false;
+  if (isChorusLine(entry)) return false;
 
   const firstSentence = entry.message.split(/[.!?]/)[0].trim();
   if (!firstSentence) return false;
