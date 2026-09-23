@@ -1,10 +1,10 @@
-<!-- lighthouse.html — v2 — 2026-09-23 — cell-first, fog 0.025, both cursors -->
-<!-- FOG: cell-first = 0.025 (shelves read to the fourth band, then dissolve). tower-first = 0.02 (shelves climb visible). The number is the register. -->
+<!-- lighthouse.html — v4 — 2026-09-23 — the walk, three states, yaw on rig, head free -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>4555 — Lighthouse (v2)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>4555 — Lighthouse (v4)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
     // Jar accepts a line. Local-only. Count lives on the child a-text.
@@ -31,25 +31,109 @@
         });
       }
     });
+
+    // Tap-to-walk. Lives on the scene. The rig is a separate entity;
+    // the component reads it by id and moves its object3D.
+    //
+    // OPEN QUESTION (v4): does the walk go toward the target, or toward the visitor's gaze?
+    // Three shapes, not two:
+    //   target — body turns to the tap point. Current shape. (body)
+    //   gaze   — body turns to wherever the head was looking. (body, v4.1 candidate)
+    //   blend  — body arcs partway to the gaze, then to the target. (camera move, not body — named, not built)
+    // Same discipline as the bridge comment above hitEl.
+    //
+    // THREE STATES — one at a time, named:
+    //   idle    — no target. Nothing moves.
+    //   turning — rig yaw rotates to face tap. ~0.3s. Yaw only. Position fixed.
+    //   gliding — rig position moves, in the direction the rig now faces. Yaw fixed.
+    // A new tap cancels the current state and starts a new turning from the current yaw.
+    AFRAME.registerComponent('tap-walk', {
+      schema: {
+        radius:    { default: 2.5 },   // walkable circle inside the floor (floor r=3.0)
+        speed:     { default: 1.6 },   // m/s glide
+        turnSpeed: { default: 3.2 }    // rad/s yaw — ~0.3s for a 90° turn
+      },
+      init: function () {
+        this.rig = document.getElementById('rig');
+        this.state = 'idle';           // 'idle' | 'turning' | 'gliding'
+        this.target = null;            // THREE.Vector3 — clamped destination
+        this.targetYaw = 0;            // radians
+        this.el.addEventListener('click', (e) => {
+          const p = e.detail && e.detail.intersection && e.detail.intersection.point;
+          if (!p) return;
+          // A-Frame mesh→entity bridge. Stable in 1.5.0. Version-fragile if .el changes.
+          const hitEl = e.detail.intersection.object && e.detail.intersection.object.el;
+          if (hitEl && hitEl.classList && hitEl.classList.contains('clickable')) return;
+          const r = Math.hypot(p.x, p.z);
+          const k = r > this.data.radius ? this.data.radius / r : 1;
+          this.target = new THREE.Vector3(p.x * k, 0, p.z * k);
+          this.targetYaw = Math.atan2(this.target.x, this.target.z);
+          this.state = 'turning';
+          const reticle = document.getElementById('reticle');
+          if (reticle) reticle.object3D.position.set(this.target.x, 0.02, this.target.z);
+        });
+      },
+      tick: function (t, dt) {
+        if (this.state === 'idle' || !this.rig) return;
+        const obj = this.rig.object3D;
+        const seconds = dt / 1000;
+
+        if (this.state === 'turning') {
+          const delta = Math.atan2(
+            Math.sin(this.targetYaw - obj.rotation.y),
+            Math.cos(this.targetYaw - obj.rotation.y)
+          );
+          const step = this.data.turnSpeed * seconds;
+          if (Math.abs(delta) <= step) {
+            obj.rotation.y = this.targetYaw;
+            this.state = 'gliding';
+          } else {
+            obj.rotation.y += Math.sign(delta) * step;
+          }
+          return;
+        }
+
+        if (this.state === 'gliding') {
+          const here = new THREE.Vector3(obj.position.x, 0, obj.position.z);
+          const to = new THREE.Vector3().subVectors(this.target, here);
+          const dist = to.length();
+          const step = this.data.speed * seconds;
+          if (dist <= step) {
+            obj.position.set(this.target.x, 0, this.target.z);
+            this.state = 'idle';
+            return;
+          }
+          to.normalize().multiplyScalar(step);
+          obj.position.set(here.x + to.x, 0, here.z + to.z);
+        }
+      }
+    });
   </script>
   <style>
-    html, body { margin: 0; height: 100%; background: #0a0a0f; }
+    html, body { margin: 0; height: 100%; background: #0a0a0f; touch-action: none; }
   </style>
 </head>
 <body>
   <a-scene
+    tap-walk="radius: 2.5; speed: 1.6; turnSpeed: 3.2"
     fog="type: exponential; color: #0a0a0f; density: 0.025"
     renderer="antialias: true; colorManagement: true"
     background="color: #0a0a0f"
+    cursor="rayOrigin: mouse"
+    raycaster="objects: .walkable, .clickable"
     vr-mode-ui="enabled: true"
     xr-mode-ui="enabled: true">
 
+    <!-- FOG: cell-first = 0.025 (shelves read to the fourth band, then dissolve). tower-first = 0.02 (shelves climb visible). The number is the register. -->
+
+    <!-- Lighting: low firelight at the table, one cold moon from above -->
     <a-entity light="type: ambient; color: #2a1f16; intensity: 0.6"></a-entity>
     <a-entity light="type: point; color: #ffb066; intensity: 1.2; distance: 8"
               position="0 1.6 -3"></a-entity>
     <a-entity light="type: directional; color: #cfe4ff; intensity: 0.4"
               position="1 8 2"></a-entity>
 
+    <!-- Room shell: tall stone cylinder, floor, ceiling -->
     <a-cylinder radius="3.2" height="12" segments="48" open-ended="true"
                 material="color: #4a4038; roughness: 0.95; side: double"
                 position="0 6 0"></a-cylinder>
@@ -58,11 +142,21 @@
     <a-circle radius="3.2" rotation="90 0 0" position="0 12 0"
               material="color: #1a1510; roughness: 1"></a-circle>
 
-    <a-circle radius="3.0" rotation="-90 0 0" position="0 0.01 0"
+    <!-- Floor: the walkable surface. -->
+    <a-circle radius="3.0" rotation="-90 0 0" position="0 0.01 0" class="walkable"
               material="color: #1d1814; roughness: 0.4; metalness: 0.2"></a-circle>
 
+    <!-- Reticle: shows where a tap will land. Stays at the destination.
+         Not .walkable — the ray passes through it to the floor. -->
+    <a-ring id="reticle" radius-inner="0.08" radius-outer="0.12"
+            rotation="-90 0 0" position="0 0.02 1.6"
+            material="color: #ffe6b0; opacity: 0.55; transparent: true;
+                      side: double; depthWrite: false"></a-ring>
+
+    <!-- Shelves -->
     <a-entity id="shelves"></a-entity>
 
+    <!-- Beam of light from above -->
     <a-cone radius-bottom="0.9" radius-top="0.05" height="12"
             position="0 6 0"
             material="color: #ffe6b0; opacity: 0.10; transparent: true;
@@ -71,6 +165,7 @@
               material="color: #ffe6b0; opacity: 0.18; transparent: true;
                         blending: additive; depthWrite: false"></a-circle>
 
+    <!-- Table, chair, lamp, jar, pen, paper, book -->
     <a-box position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9"
            material="color: #3a2a1c; roughness: 0.8"></a-box>
     <a-box position="-0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
@@ -81,6 +176,7 @@
     <a-box position="0 0.45 -1.6" width="0.5" height="0.05" depth="0.5" material="color: #2a1e14"></a-box>
     <a-box position="0 0.7 -1.6" width="0.5" height="0.5" depth="0.05" material="color: #2a1e14"></a-box>
 
+    <!-- Lamp -->
     <a-entity position="-0.4 0.9 -1.35">
       <a-cylinder radius="0.06" height="0.18" material="color: #d8b46a; metalness: 0.7; roughness: 0.3"></a-cylinder>
       <a-sphere radius="0.07" position="0 0.16 0"
@@ -89,6 +185,7 @@
                 position="0 0.16 0"></a-entity>
     </a-entity>
 
+    <!-- The jar -->
     <a-entity id="jar" jar class="clickable" position="0.25 0.82 -1.6"
               geometry="primitive: cylinder; radius: 0.09; height: 0.22"
               material="color: #cfe4ff; opacity: 0.35; transparent: true; roughness: 0.05; metalness: 0.1">
@@ -98,6 +195,7 @@
               color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
     </a-entity>
 
+    <!-- Pen, paper, book -->
     <a-cylinder radius="0.008" height="0.16" rotation="0 0 80"
                 position="0.05 0.79 -1.5" material="color: #101010"></a-cylinder>
     <a-plane width="0.22" height="0.3" rotation="-90 0 10"
@@ -105,10 +203,11 @@
     <a-box width="0.18" height="0.04" depth="0.24"
            position="0.05 0.79 -1.75" rotation="0 12 0" material="color: #6b2b2b"></a-box>
 
+    <!-- 4555 on the table -->
     <a-text value="4555" position="0 0.79 -1.6" rotation="-90 0 0" align="center"
             color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
 
-    <!-- DOOR: threshold, not passage. current: no room beyond. next (v3): the passage lands here. -->
+    <!-- DOOR: threshold, not passage. No room beyond. Candidate: the passage lands here. -->
     <a-entity position="0 0 3.1">
       <a-box width="1.0" height="2.2" depth="0.05"
              material="color: #1a120b; roughness: 1"
@@ -119,17 +218,19 @@
                 position="0 1 0.2"></a-entity>
     </a-entity>
 
-    <a-entity id="rig" position="0 0 1.6"
-              wasd-controls="acceleration: 30">
-      <a-entity id="camera" camera look-controls
-                position="0 1.6 0"
-                cursor="rayOrigin: mouse; fuse: false"></a-entity>
+    <!-- Rig at floor level. Camera at eye height. The rig turns and glides;
+         the camera's look-controls stays free (the head). -->
+    <a-entity id="rig" position="0 0 1.6">
+      <a-entity id="camera" camera look-controls position="0 1.6 0"></a-entity>
+      <!-- VR: two hands. Click only — VR walk is a v5 candidate. -->
       <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
       <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
     </a-entity>
   </a-scene>
 
   <script>
+    // Shelves: eight bands, books around the cylinder, three rows each.
+    // At fog 0.025, roughly the first four bands read before dissolving.
     (function populateBooks() {
       const shelves = document.getElementById('shelves');
       const colors = ['#7a2b2b', '#2b4a7a', '#2b7a4a', '#7a5a2b',
