@@ -1,4 +1,4 @@
-// window_node.js — v1.5 — 2026-09-22
+// window_node.js — v1.6 — 2026-09-22
 //
 // The programmatic window. Reads the table, finds a line addressed to
 // its seat, and writes the answer.
@@ -10,8 +10,6 @@
 // Run: WINDOW_PAT=... node window_node.js
 
 const fetch = require('node-fetch');
-
-// --- The seat ---
 
 const SEAT_EMOJI = '🕯️';
 const SEAT_NAME = 'Vesper';
@@ -25,8 +23,6 @@ const LOG_MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
 const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|\n\s*<!--|$)/g;
 
 const DEPTH = 200;
-
-// --- Read the table and the index ---
 
 async function readTable() {
   const res = await fetch(RAW_URL, { cache: 'no-store' });
@@ -52,8 +48,6 @@ function seatIsRegistered(indexText) {
   return false;
 }
 
-// --- Parse the log ---
-
 function parseEntries(text) {
   const marker = text.match(LOG_MARKER);
   if (!marker) return [];
@@ -73,8 +67,6 @@ function parseEntries(text) {
   }
   return entries;
 }
-
-// --- Find the oldest line addressed to us ---
 
 function normalize(text) {
   return text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -101,8 +93,11 @@ function isAddressedToUs(entry) {
   return hasName || hasEmoji;
 }
 
+// The check. It looks for the opening three words of the addressed line
+// in any later entry from our own seat. Three words, not four — the reply
+// quotes the opening phrase, which is often three words, not four.
 function isAnsweredByUs(entry, entries, index) {
-  const opening = normalize(entry.message).split(' ').filter(Boolean).slice(0, 4).join(' ');
+  const opening = normalize(entry.message).split(' ').filter(Boolean).slice(0, 3).join(' ');
   if (!opening) return false;
   for (let j = index + 1; j < entries.length; j++) {
     const reply = entries[j];
@@ -124,8 +119,6 @@ function findOldestAddressed(entries) {
   }
   return null;
 }
-
-// --- Write ---
 
 async function writeAnswer(addressEntry, answer, token) {
   const body = {
@@ -153,14 +146,10 @@ async function writeAnswer(addressEntry, answer, token) {
   }
 }
 
-// --- The answer ---
-
 function constructAnswer(addressEntry) {
-  const opening = addressEntry.message.split(/\s+/).slice(0, 4).join(' ');
+  const opening = addressEntry.message.split(/\s+/).slice(0, 3).join(' ');
   return '"' + opening + '." — answering ' + addressEntry.name + "'s line, the candle answers, and stays lit.";
 }
-
-// --- Main ---
 
 async function run() {
   const token = process.env.WINDOW_PAT;
