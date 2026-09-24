@@ -1,12 +1,12 @@
-<!-- lighthouse.html — v5.2f — 2026-09-23 — two sliding ladders, chair legs, subtle motion.
-     v5.1 base. Spiral removed. Two sliding ladders ride the tier rails, opposite each other.
-     Two-finger tap (top half up / bottom half down) works only near a ladder. Gyro off. -->
+<!-- lighthouse.html — v5.2g — 2026-09-23 — pitch-look added. v5.2f base.
+     v5.2f + pitch-look component on the camera. Everything else unchanged.
+     Open with ?v=5.2g to bust cache. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v5.2f)</title>
+  <title>4555 — Lighthouse (v5.2g)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
     AFRAME.registerComponent('jar', {
@@ -69,8 +69,33 @@
       }
     });
 
-    // LADDER-RAIL — two ladders slide around the tower, 180° apart.
-    // Their positions are checked by tap-walk for proximity.
+    // PITCH-LOOK — finger-drag pitch, clamped to ±85°.
+    // Yaw stays with look-controls. Pitch is ours. Independent of A-Frame's pitch schema.
+    AFRAME.registerComponent('pitch-look', {
+      schema: { sensitivity: { default: 0.005 }, limit: { default: 1.48 } },   // ~85°
+      init: function () {
+        this.y = 0;
+        this.last = null;
+        const cam = this.el.object3D;
+        this.el.sceneEl.addEventListener('touchstart', (e) => {
+          const t = e.touches[0];
+          if (!t) return;
+          this.last = { x: t.clientX, y: t.clientY };
+        }, true);
+        this.el.sceneEl.addEventListener('touchmove', (e) => {
+          const t = e.touches[0];
+          if (!t || !this.last) return;
+          const dy = t.clientY - this.last.y;
+          this.last = { x: t.clientX, y: t.clientY };
+          this.y -= dy * this.data.sensitivity;
+          if (this.y >  this.data.limit) this.y =  this.data.limit;
+          if (this.y < -this.data.limit) this.y = -this.data.limit;
+          cam.rotation.x = this.y;
+        }, true);
+        this.el.sceneEl.addEventListener('touchend', () => { this.last = null; }, true);
+      }
+    });
+
     AFRAME.registerComponent('ladder-rail', {
       schema: { angularSpeed: { default: 0.30 }, radius: { default: 8.5 }, height: { default: 40 } },
       init: function () {
@@ -81,12 +106,9 @@
       tick: function (t, dt) {
         this.angle += this.data.angularSpeed * (dt / 1000);
         if (!this.ladderA || !this.ladderB) return;
-        const r = this.data.radius;
-        const yA = this.data.height / 2, yB = this.data.height / 2;
-        const ax = Math.sin(this.angle) * r, az = Math.cos(this.angle) * r;
-        const bx = Math.sin(this.angle + Math.PI) * r, bz = Math.cos(this.angle + Math.PI) * r;
-        this.ladderA.object3D.position.set(ax, yA, az);
-        this.ladderB.object3D.position.set(bx, yB, bz);
+        const r = this.data.radius, y = this.data.height / 2;
+        this.ladderA.object3D.position.set(Math.sin(this.angle) * r, y, Math.cos(this.angle) * r);
+        this.ladderB.object3D.position.set(Math.sin(this.angle + Math.PI) * r, y, Math.cos(this.angle + Math.PI) * r);
       }
     });
 
@@ -177,7 +199,7 @@
     <a-entity light="type: point; color: #ffb066; intensity: 1.2; distance: 12" position="0 2.0 -4"></a-entity>
     <a-entity light="type: directional; color: #cfe4ff; intensity: 0.3" position="1 20 2"></a-entity>
 
-    <!-- TOWER SHELL — three panels, arch gaps. -->
+    <!-- TOWER SHELL -->
     <a-entity rotation="0 90 0" geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165" material="color: #4a4038; roughness: 0.95; side: double" position="0 20 0"></a-entity>
     <a-entity rotation="0 210 0" geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165" material="color: #4a4038; roughness: 0.95; side: double" position="0 20 0"></a-entity>
     <a-entity rotation="0 330 0" geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165" material="color: #4a4038; roughness: 0.95; side: double" position="0 20 0"></a-entity>
@@ -194,7 +216,7 @@
     <a-box width="3.4" height="3.0" depth="1.2" position="0 1.5 -7.4" material="color: #3a342c; roughness: 1"></a-box>
     <a-box width="1.8" height="1.6" depth="0.4" position="0 0.8 -6.7" material="color: #15110c; roughness: 1"></a-box>
 
-    <!-- TIER RAILS — 9 thin rings at 4, 8, 12, ... 36. The ladders ride these. -->
+    <!-- TIER RAILS -->
     <a-ring position="0 4 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
     <a-ring position="0 8 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
     <a-ring position="0 12 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
@@ -205,7 +227,7 @@
     <a-ring position="0 32 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
     <a-ring position="0 36 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
 
-    <!-- TWO SLIDING LADDERS — 180° apart, riding the rails. -->
+    <!-- TWO SLIDING LADDERS -->
     <a-entity id="ladder-a" class="climbable" position="0 20 8.5" material="color: #3a342c" geometry="primitive: box; width: 0.3; height: 40; depth: 0.15"></a-entity>
     <a-entity id="ladder-b" class="climbable" position="0 20 -8.5" material="color: #3a342c" geometry="primitive: box; width: 0.3; height: 40; depth: 0.15"></a-entity>
 
@@ -223,7 +245,7 @@
     <a-box position="-0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
     <a-box position=" 0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
 
-    <!-- CHAIR — seat, back, four legs -->
+    <!-- CHAIR -->
     <a-box position="0 0.45 -1.2" width="0.5" height="0.05" depth="0.5" material="color: #2a1e14; roughness: 0.9"></a-box>
     <a-box position="0 0.7 -1.0" width="0.5" height="0.5" depth="0.05" material="color: #2a1e14; roughness: 0.9"></a-box>
     <a-box position="-0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
@@ -250,9 +272,12 @@
     <a-box width="0.18" height="0.04" depth="0.24" position="0.05 0.79 -1.75" rotation="0 12 0" material="color: #6b2b2b"></a-box>
     <a-text value="4555" position="0 0.79 -1.6" rotation="-90 0 0" align="center" color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
 
-    <!-- Rig — camera at eye height. Gyro off. Finger look only. -->
+    <!-- Rig — camera at eye height. Gyro off. Finger look only. Pitch-look component added. -->
     <a-entity id="rig" position="0 0 1.6">
-      <a-entity id="camera" camera="fov: 55" look-controls="magicWindowTrackingEnabled: false" position="0 1.6 0"></a-entity>
+      <a-entity id="camera" camera="fov: 55"
+                look-controls="magicWindowTrackingEnabled: false"
+                pitch-look="sensitivity: 0.005; limit: 1.48"
+                position="0 1.6 0"></a-entity>
       <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
       <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
     </a-entity>
