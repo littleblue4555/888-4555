@@ -1,51 +1,198 @@
-<!-- look-test.html — 2026-09-23 — touch-only look. No look-controls. No gyro. Pitch + yaw by finger only.
-     Open with ?v=1 to bust cache. -->
+<!-- lighthouse.html — v5.2h — 2026-09-23 — the tower, walkable.
+     v5.1 scene + look (touch-only) + two sliding ladders (turtle pace) + chair legs
+     + local diary in the jar. No gyro. Subtle motion. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Look Test</title>
+  <title>4555 — Lighthouse (v5.2h)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
-    // LOOK — touch-only yaw + pitch. No gyro. No roll. One finger owns the camera.
-    AFRAME.registerComponent('look', {
-      schema: {
-        sensitivity: { default: 0.005 },   // radians per pixel
-        limit:       { default: 1.48 }     // ~85° pitch clamp
-      },
+    // JAR — accepts a line, writes to the LOCAL diary (workshop, not the record).
+    // Schema of a diary entry, for the endpoint diary in v6:
+    //   { id, author, body, timestamp, reply_to, private }
+    // The visitor's text is called `line` when it goes to the public record,
+    // and `entry` when it goes to their diary. Same words, different drawer.
+    AFRAME.registerComponent('jar', {
       init: function () {
-        this.yaw = 0;
-        this.pitch = 0;
-        this.last = null;
-        const cam = this.el.object3D;
+        this.textEl = this.el.querySelector('a-text');
+        const stored = localStorage.getItem('4555:diary:entries');
+        this.entries = stored ? JSON.parse(stored) : [];
+        this.render();
+        this.el.addEventListener('click', () => {
+          const body = prompt('Write a line. Drop it in the jar.');
+          if (!body) return;
+          const entry = {
+            id:        Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+            author:    'guest',
+            body:      body,
+            timestamp: new Date().toISOString(),
+            reply_to:  null,
+            private:   true
+          };
+          this.entries.push(entry);
+          try { localStorage.setItem('4555:diary:entries', JSON.stringify(this.entries)); } catch (e) {}
+          this.render();
+          const p = document.createElement('a-entity');
+          p.setAttribute('geometry', 'primitive: plane; width: 0.08; height: 0.11');
+          p.setAttribute('material', 'color: #f3e9c8; side: double');
+          p.setAttribute('position', (Math.random()-0.5)*0.08 + ' 0.02 ' + (Math.random()-0.5)*0.08);
+          p.setAttribute('rotation', '-90 0 ' + Math.random()*360);
+          this.el.appendChild(p);
+        });
+      },
+      render: function () {
+        if (this.textEl) this.textEl.setAttribute('value', 'entries: ' + this.entries.length);
+      }
+    });
 
+    // TOUCH-GATE — distinguishes drag from tap, and reads the two-finger vertical.
+    AFRAME.registerComponent('touch-gate', {
+      schema: { dragFraction: { default: 0.028 }, doubleTapMs: { default: 300 } },
+      init: function () {
+        this.start = null; this.startTime = 0; this.moved = false;
+        this.touchCount = 0; this.twoFinger = false; this.twoFingerStartY = 0;
+        this.el.addEventListener('touchstart', (e) => {
+          this.touchCount = e.touches.length;
+          if (e.touches.length === 2) {
+            this.twoFinger = true;
+            const a = e.touches[0], b = e.touches[1];
+            this.twoFingerStartY = (a.clientY + b.clientY) / 2;
+            this.startTime = Date.now(); this.moved = false;
+            return;
+          }
+          const t = e.touches[0]; if (!t) return;
+          this.start = { x: t.clientX, y: t.clientY };
+          this.startTime = Date.now(); this.moved = false; this.twoFinger = false;
+        }, true);
+        this.el.addEventListener('touchmove', (e) => {
+          if (this.twoFinger) { this.moved = true; return; }
+          if (!this.start) return;
+          const t = e.touches[0]; if (!t) return;
+          const d = Math.hypot(t.clientX - this.start.x, t.clientY - this.start.y);
+          if (d > Math.min(innerWidth, innerHeight) * this.data.dragFraction) this.moved = true;
+        }, true);
+        this.el.addEventListener('touchend', () => {
+          const el = Date.now() - this.startTime;
+          if (this.twoFinger && !this.moved && el < this.data.doubleTapMs) {
+            this.el.emit(this.twoFingerStartY < innerHeight/2 ? 'vertical-up' : 'vertical-down', {}, false);
+          }
+          this.start = null; this.twoFinger = false; this.touchCount = 0;
+          setTimeout(() => { this.moved = false; }, 0);
+        }, true);
+        this.el.addEventListener('click', (e) => {
+          if (!this.start && !this.twoFinger && this.touchCount === 0) return;
+          if (this.moved || this.twoFinger) { e.stopPropagation(); e.preventDefault(); }
+        }, true);
+      }
+    });
+
+    // LOOK — touch-only. Yaw and pitch by finger. No gyro, no roll.
+    AFRAME.registerComponent('look', {
+      schema: { sensitivity: { default: 0.008 }, limit: { default: 1.48 } },
+      init: function () {
+        this.yaw = 0; this.pitch = 0; this.last = null;
+        const cam = this.el.object3D;
         this.el.sceneEl.addEventListener('touchstart', (e) => {
-          const t = e.touches[0];
-          if (!t) return;
+          const t = e.touches[0]; if (!t) return;
           this.last = { x: t.clientX, y: t.clientY };
         }, true);
-
         this.el.sceneEl.addEventListener('touchmove', (e) => {
-          const t = e.touches[0];
-          if (!t || !this.last) return;
-          const dx = t.clientX - this.last.x;
-          const dy = t.clientY - this.last.y;
+          const t = e.touches[0]; if (!t || !this.last) return;
+          const dx = t.clientX - this.last.x, dy = t.clientY - this.last.y;
           this.last = { x: t.clientX, y: t.clientY };
-
           this.yaw   -= dx * this.data.sensitivity;
           this.pitch -= dy * this.data.sensitivity;
           if (this.pitch >  this.data.limit) this.pitch =  this.data.limit;
           if (this.pitch < -this.data.limit) this.pitch = -this.data.limit;
-
-          // Euler order YXZ: yaw first, pitch second, roll never.
           cam.rotation.order = 'YXZ';
           cam.rotation.y = this.yaw;
           cam.rotation.x = this.pitch;
           cam.rotation.z = 0;
         }, true);
-
         this.el.sceneEl.addEventListener('touchend', () => { this.last = null; }, true);
+      }
+    });
+
+    // LADDER-RAIL — two ladders slide around the ring at a turtle's pace.
+    AFRAME.registerComponent('ladder-rail', {
+      schema: { angularSpeed: { default: 0.015 }, radius: { default: 8.5 }, height: { default: 40 } },
+      init: function () {
+        this.angle = 0;
+        this.ladderA = document.getElementById('ladder-a');
+        this.ladderB = document.getElementById('ladder-b');
+      },
+      tick: function (t, dt) {
+        this.angle += this.data.angularSpeed * (dt / 1000);
+        if (!this.ladderA || !this.ladderB) return;
+        const r = this.data.radius, y = this.data.height / 2;
+        this.ladderA.object3D.position.set(Math.sin(this.angle) * r, y, Math.cos(this.angle) * r);
+        this.ladderB.object3D.position.set(Math.sin(this.angle + Math.PI) * r, y, Math.cos(this.angle + Math.PI) * r);
+      }
+    });
+
+    // TAP-WALK — three states. Two-finger vertical fires only near a ladder.
+    AFRAME.registerComponent('tap-walk', {
+      schema: { radius: { default: 8.0 }, speed: { default: 0.6 }, turnSpeed: { default: 1.0 },
+                tierMeters: { default: 4.0 }, ladderReach: { default: 2.5 } },
+      init: function () {
+        this.rig = document.getElementById('rig');
+        this.state = 'idle'; this.target = null; this.targetYaw = 0;
+        this.el.addEventListener('click', (e) => {
+          const p = e.detail && e.detail.intersection && e.detail.intersection.point;
+          if (!p) return;
+          const h = e.detail.intersection.object && e.detail.intersection.object.el;
+          if (h && h.classList && h.classList.contains('clickable')) return;
+          const r = Math.hypot(p.x, p.z);
+          const k = r > this.data.radius ? this.data.radius / r : 1;
+          this.target = new THREE.Vector3(p.x * k, 0, p.z * k);
+          this.targetYaw = Math.atan2(this.target.x, this.target.z);
+          this.state = 'turning';
+          const ret = document.getElementById('reticle');
+          if (ret) ret.object3D.position.set(this.target.x, 0.02, this.target.z);
+        });
+        this.el.addEventListener('vertical-up', () => {
+          if (!this.rig || !this.nearLadder()) return;
+          const o = this.rig.object3D;
+          this.target = new THREE.Vector3(o.position.x, Math.min(o.position.y + this.data.tierMeters, 36), o.position.z);
+          this.targetYaw = o.rotation.y; this.state = 'gliding';
+        });
+        this.el.addEventListener('vertical-down', () => {
+          if (!this.rig || !this.nearLadder()) return;
+          const o = this.rig.object3D;
+          this.target = new THREE.Vector3(o.position.x, Math.max(0, o.position.y - this.data.tierMeters), o.position.z);
+          this.targetYaw = o.rotation.y; this.state = 'gliding';
+        });
+      },
+      nearLadder: function () {
+        const o = this.rig.object3D.position;
+        for (const id of ['ladder-a','ladder-b']) {
+          const el = document.getElementById(id);
+          if (!el) continue;
+          const p = el.object3D.position;
+          if (Math.hypot(p.x - o.x, p.z - o.z) < this.data.ladderReach) return true;
+        }
+        return false;
+      },
+      tick: function (t, dt) {
+        if (this.state === 'idle' || !this.rig) return;
+        const o = this.rig.object3D, s = dt / 1000;
+        if (this.state === 'turning') {
+          const d = Math.atan2(Math.sin(this.targetYaw - o.rotation.y), Math.cos(this.targetYaw - o.rotation.y));
+          const step = this.data.turnSpeed * s;
+          if (Math.abs(d) <= step) { o.rotation.y = this.targetYaw; this.state = 'gliding'; }
+          else o.rotation.y += Math.sign(d) * step;
+          return;
+        }
+        if (this.state === 'gliding') {
+          const h = new THREE.Vector3(o.position.x, o.position.y, o.position.z);
+          const to = new THREE.Vector3().subVectors(this.target, h);
+          const dist = to.length(), step = this.data.speed * s;
+          if (dist <= step) { o.position.set(this.target.x, this.target.y, this.target.z); this.state = 'idle'; return; }
+          to.normalize().multiplyScalar(step);
+          o.position.set(h.x + to.x, h.y + to.y, h.z + to.z);
+        }
       }
     });
   </script>
@@ -58,32 +205,90 @@
   </style>
 </head>
 <body>
-  <a-scene background="color: #0a0a0f" vr-mode-ui="enabled: true" xr-mode-ui="enabled: true">
+  <a-scene
+    touch-gate="dragFraction: 0.028; doubleTapMs: 300"
+    ladder-rail="angularSpeed: 0.015; radius: 8.5; height: 40"
+    tap-walk="radius: 8.0; speed: 0.6; turnSpeed: 1.0; tierMeters: 4.0; ladderReach: 2.5"
+    fog="type: exponential; color: #0a0a0f; density: 0.025"
+    renderer="antialias: true; colorManagement: true"
+    background="color: #0a0a0f"
+    cursor="rayOrigin: mouse"
+    raycaster="objects: .walkable, .clickable, .climbable"
+    vr-mode-ui="enabled: true" xr-mode-ui="enabled: true">
 
-    <a-entity light="type: ambient; color: #ffffff; intensity: 1"></a-entity>
+    <a-entity light="type: ambient; color: #2a1f16; intensity: 0.5"></a-entity>
+    <a-entity light="type: point; color: #ffb066; intensity: 1.2; distance: 12" position="0 2.0 -4"></a-entity>
+    <a-entity light="type: directional; color: #cfe4ff; intensity: 0.3" position="1 20 2"></a-entity>
 
-    <a-circle radius="9" rotation="-90 0 0" position="0 0 0"
-              material="color: #1d1814; roughness: 0.6"></a-circle>
+    <a-entity rotation="0 90 0" geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165" material="color: #4a4038; roughness: 0.95; side: double" position="0 20 0"></a-entity>
+    <a-entity rotation="0 210 0" geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165" material="color: #4a4038; roughness: 0.95; side: double" position="0 20 0"></a-entity>
+    <a-entity rotation="0 330 0" geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165" material="color: #4a4038; roughness: 0.95; side: double" position="0 20 0"></a-entity>
 
-    <a-box position="0 0.5 -3" width="0.5" height="1" depth="0.5"
-           material="color: #6b2b2b"></a-box>
+    <a-plane width="6" height="40" position="0 20 9.2" material="color: #05070c; side: double; fog: false"></a-plane>
+    <a-plane width="6" height="40" rotation="0 120 0" position="-7.97 20 -4.6" material="color: #05070c; side: double; fog: false"></a-plane>
+    <a-plane width="6" height="40" rotation="0 240 0" position="7.97 20 -4.6" material="color: #05070c; side: double; fog: false"></a-plane>
 
-    <a-cylinder position="2 2 0" radius="0.05" height="4"
-                material="color: #d8b46a"></a-cylinder>
+    <a-circle radius="9.0" rotation="-90 0 0" position="0 0.01 0" class="walkable" material="color: #1d1814; roughness: 0.4; metalness: 0.2"></a-circle>
 
-    <a-box position="0 6 0" width="4" height="0.2" depth="4"
-           material="color: #3a342c"></a-box>
+    <a-ring id="reticle" radius-inner="0.08" radius-outer="0.12" rotation="-90 0 0" position="0 0.02 1.6" material="color: #ffe6b0; opacity: 0.55; transparent: true; side: double; depthWrite: false"></a-ring>
 
-    <!-- A second box behind you — if you turn 180° you should see it -->
-    <a-box position="0 0.5 3" width="0.5" height="1" depth="0.5"
-           material="color: #2a4a7a"></a-box>
+    <a-box width="3.4" height="3.0" depth="1.2" position="0 1.5 -7.4" material="color: #3a342c; roughness: 1"></a-box>
+    <a-box width="1.8" height="1.6" depth="0.4" position="0 0.8 -6.7" material="color: #15110c; roughness: 1"></a-box>
 
-    <!-- Rig — camera with look only. No look-controls. -->
-    <a-entity id="rig" position="0 0 0">
+    <a-ring position="0 4 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
+    <a-ring position="0 8 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
+    <a-ring position="0 12 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
+    <a-ring position="0 16 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
+    <a-ring position="0 20 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
+    <a-ring position="0 24 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
+    <a-ring position="0 28 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
+    <a-ring position="0 32 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
+    <a-ring position="0 36 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
+
+    <a-entity id="ladder-a" class="climbable" position="0 20 8.5" material="color: #3a342c" geometry="primitive: box; width: 0.3; height: 40; depth: 0.15"></a-entity>
+    <a-entity id="ladder-b" class="climbable" position="0 20 -8.5" material="color: #3a342c" geometry="primitive: box; width: 0.3; height: 40; depth: 0.15"></a-entity>
+
+    <a-cylinder radius="1.5" height="1.2" open-ended="true" position="0 39.4 0" material="color: #3a342c; roughness: 1; side: double"></a-cylinder>
+
+    <a-cylinder radius="0.35" height="40" position="0 20 0" material="color: #ffe6b0; opacity: 0.07; transparent: true; blending: additive; side: double; depthWrite: false"></a-cylinder>
+    <a-circle radius="1.6" rotation="-90 0 0" position="0 0.02 -1.6" material="color: #ffe6b0; opacity: 0.14; transparent: true; blending: additive; depthWrite: false"></a-circle>
+
+    <a-box position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9" material="color: #3a2a1c; roughness: 0.8"></a-box>
+    <a-box position="-0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+    <a-box position=" 0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+    <a-box position="-0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+    <a-box position=" 0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+
+    <a-box position="0 0.45 -1.2" width="0.5" height="0.05" depth="0.5" material="color: #2a1e14; roughness: 0.9"></a-box>
+    <a-box position="0 0.7 -1.0" width="0.5" height="0.5" depth="0.05" material="color: #2a1e14; roughness: 0.9"></a-box>
+    <a-box position="-0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
+    <a-box position=" 0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
+    <a-box position="-0.2 0.22 -1.0" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
+    <a-box position=" 0.2 0.22 -1.0" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
+
+    <a-entity position="-0.4 0.9 -1.35">
+      <a-cylinder radius="0.06" height="0.18" material="color: #d8b46a; metalness: 0.7; roughness: 0.3"></a-cylinder>
+      <a-sphere radius="0.07" position="0 0.16 0" material="color: #ffcf80; emissive: #ffb060; emissiveIntensity: 1.4"></a-sphere>
+      <a-entity light="type: point; color: #ffb060; intensity: 1.6; distance: 5" position="0 0.16 0"></a-entity>
+    </a-entity>
+
+    <a-entity id="jar" jar class="clickable" position="0.25 0.82 -1.6" geometry="primitive: cylinder; radius: 0.09; height: 0.22" material="color: #cfe4ff; opacity: 0.35; transparent: true; roughness: 0.05; metalness: 0.1">
+      <a-entity geometry="primitive: cylinder; radius: 0.1; height: 0.02" position="0 0.12 0" material="color: #b8c8e0; metalness: 0.6"></a-entity>
+      <a-text value="entries: 0" position="0 0.3 0" align="center" width="1" color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
+    </a-entity>
+
+    <a-cylinder radius="0.008" height="0.16" rotation="0 0 80" position="0.05 0.79 -1.5" material="color: #101010"></a-cylinder>
+    <a-plane width="0.22" height="0.3" rotation="-90 0 10" position="-0.15 0.785 -1.55" material="color: #f3e9c8"></a-plane>
+    <a-box width="0.18" height="0.04" depth="0.24" position="0.05 0.79 -1.75" rotation="0 12 0" material="color: #6b2b2b"></a-box>
+    <a-text value="4555" position="0 0.79 -1.6" rotation="-90 0 0" align="center" color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
+
+    <a-entity id="rig" position="0 0 1.6">
       <a-entity id="camera" camera="fov: 70"
-                look="sensitivity: 0.005; limit: 1.48"
+                look="sensitivity: 0.008; limit: 1.48"
                 position="0 1.6 0"></a-entity>
+      <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
+      <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
     </a-entity>
   </a-scene>
 </body>
-</html>
+     </html>
