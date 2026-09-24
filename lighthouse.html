@@ -1,21 +1,38 @@
-<!-- lighthouse.html — v5.2a — 2026-09-23 — the chair returned (73 meshes), gyroscope off.
-     Three fixes, no new verbs. Chair sits beside the desk at 0 0.45 -1.2 / 0 0.7 -1.0.
-     Camera reads the finger only: look-controls magicWindowTrackingEnabled: false.
-     The climb is unchanged. The bones stand. Skin reserved for v6. -->
+<!-- lighthouse.html — v5.2b — 2026-09-23 — six items. Chair legs, descent, further climb,
+     pitch unlocked, three gestures (+ two-finger), spiral entry (Option A), jar reach.
+     Spiral center pulled to (3.0, -2.0); first step has open-floor approach.
+     Gesture state machine upstream of tap-walk: single = walk, double = forward, long = crossing,
+     two-finger tap top/bottom = up/down one tier.
+     Count: 77 meshes (chair legs +4; spiral moved, not added). Skin reserved for v6. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v5.2a)</title>
+  <title>4555 — Lighthouse (v5.2b)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
-    // Jar accepts a line. Local-only. Count lives on the child a-text.
+    // JAR — accepts a line. Local-only. Count lives on the child a-text.
+    // v5.2b — REACH: the jar only answers when the visitor is close enough to touch it.
+    // The raycaster still aims at it from anywhere; the reach check gates the action.
+    // Same shape as every threshold today — the crossing requires presence.
     AFRAME.registerComponent('jar', {
+      schema: {
+        reach: { default: 1.6 }   // meters — visitor must be within this of the jar to write
+      },
       init: function () {
         this.lines = [];
         this.textEl = this.el.querySelector('a-text');
         this.el.addEventListener('click', () => {
+          // Reach check first — if too far, do nothing.
+          const rig = document.getElementById('rig');
+          if (!rig) return;
+          const jarPos = new THREE.Vector3();
+          this.el.object3D.getWorldPosition(jarPos);
+          const rigPos = rig.object3D.position;
+          const dist = Math.hypot(jarPos.x - rigPos.x, jarPos.z - rigPos.z);
+          if (dist > this.data.reach) return;   // too far. No prompt.
+
           const line = prompt('Write a line. Drop it in the jar.');
           if (line) {
             this.lines.push(line);
@@ -32,25 +49,41 @@
             this.el.appendChild(paper);
           }
         });
+        // Named, held. The pick-up verb lands when the arms do.
+        this.el.addEventListener('deliberate-touch', () => { /* v5.4: pick up */ });
       }
     });
 
     // TOUCH-GATE — the room's touch gate, upstream of every click.
-    // dragFraction is a fraction of the shorter screen dimension, so the threshold
-    // scales with the device instead of with the room. At 390×844: ~11px.
-    // At 768×1024: ~21px. Same gate, same rule, scale-aware.
+    // dragFraction is a fraction of the shorter screen dimension (screen-space,
+    // because drag is a screen event). gesture-gate's doubleTapRadius is in
+    // world-space meters, because it reads a 3D intersection point.
+    // Two gates, two units — each matches the thing it measures.
+    // v5.2b: also tracks touch duration for long-press (crossing) detection,
+    // and two-finger taps (up/down one tier).
     AFRAME.registerComponent('touch-gate', {
       schema: {
-        dragFraction: { default: 0.028 }
+        dragFraction: { default: 0.028 },
+        longPressMs:  { default: 500 }   // press longer than this = crossing
       },
       init: function () {
         this.start = null;
+        this.startTime = 0;
         this.moved = false;
+        this.twoFinger = false;
+        this.twoFingerStartY = 0;
         this.el.addEventListener('touchstart', (e) => {
           const t = e.touches[0];
           if (!t) return;
           this.start = { x: t.clientX, y: t.clientY };
+          this.startTime = Date.now();
           this.moved = false;
+          if (e.touches.length === 2) {
+            this.twoFinger = true;
+            this.twoFingerStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+          } else {
+            this.twoFinger = false;
+          }
         }, true);
         this.el.addEventListener('touchmove', (e) => {
           if (!this.start) return;
@@ -61,7 +94,27 @@
           if (dist > threshold) this.moved = true;
         }, true);
         this.el.addEventListener('click', (e) => {
-          if (!this.start) return;            // desktop mouse — no touchstart, nothing to guard
+          if (!this.start) return;            // desktop mouse — nothing to guard
+          // Two-finger tap → up/down one tier. Top half = up, bottom half = down.
+          if (this.twoFinger && !this.moved) {
+            e.stopPropagation();
+            e.preventDefault();
+            const half = window.innerHeight / 2;
+            if (this.twoFingerStartY < half) {
+              this.el.emit('vertical-up', { source: 'two-finger-tap' }, false);
+            } else {
+              this.el.emit('vertical-down', { source: 'two-finger-tap' }, false);
+            }
+            this.twoFinger = false;
+            return;
+          }
+          // Long press → crossing. Block the click.
+          if (!this.moved && (Date.now() - this.startTime) > this.data.longPressMs) {
+            e.stopPropagation();
+            e.preventDefault();
+            this.el.emit('crossing', { source: 'long-press' }, false);
+            return;
+          }
           if (this.moved === true) {
             e.stopPropagation();
             e.preventDefault();
@@ -69,51 +122,132 @@
         }, true);
         this.el.addEventListener('touchend', () => {
           this.start = null;
-          setTimeout(() => { this.moved = false; }, 0);
+          setTimeout(() => { this.moved = false; this.twoFinger = false; }, 0);
+        }, true);
+      }
+    });
+
+    // GESTURE-GATE — separates single tap from double tap. Reads A-Frame's
+    // synthesized `click`. Two-finger gestures are read in touch-gate, not here.
+    // doubleTapRadius is in world-space meters (not px) — both taps are read
+    // from e.detail.intersection.point (a 3D world point), not from screen coords.
+    AFRAME.registerComponent('gesture-gate', {
+      schema: {
+        doubleTapMs:     { default: 300 },
+        doubleTapRadius: { default: 0.6 }   // world-space meters
+      },
+      init: function () {
+        this.lastTapTime = 0;
+        this.lastTapPos = null;
+        this.el.addEventListener('click', (e) => {
+          const p = e.detail && e.detail.intersection && e.detail.intersection.point;
+          if (!p) return;
+          const now = Date.now();
+          const elapsed = now - this.lastTapTime;
+          const near = this.lastTapPos &&
+            Math.hypot(p.x - this.lastTapPos.x, p.z - this.lastTapPos.z) < this.data.doubleTapRadius;
+          if (elapsed < this.data.doubleTapMs && near) {
+            e.stopPropagation();
+            e.preventDefault();
+            this.el.emit('forward', { source: 'double-tap' }, false);
+            this.lastTapTime = 0;
+            this.lastTapPos = null;
+            return;
+          }
+          this.lastTapTime = now;
+          this.lastTapPos = { x: p.x, z: p.z };
         }, true);
       }
     });
 
     // Tap-to-walk. Lives on the scene. The rig is a separate entity.
     //
-    // OPEN QUESTION (v4): does the walk go toward the target, or toward the visitor's gaze?
-    // Three shapes: target (current), gaze (v4.1 candidate), blend (camera, not body).
-    //
     // THREE STATES — one at a time:
-    //   idle    — no target. Nothing moves.
-    //   turning — rig yaw rotates to face tap. ~0.3s. Yaw only. Position fixed.
-    //   gliding — rig position moves, in the direction the rig now faces.
+    //   idle / turning / gliding.
     //
-    // v5.1 — CLIMBABLE: taps on .climbable carry the tapped y. The rig ascends.
-    // v5.2a — unchanged. The chair is back. The camera reads the finger only.
+    // v5.1 — CLIMBABLE: taps on .climbable carry the tapped y.
+    // v5.2b — DESCENT: when rig.y > 0.5, taps on .walkable carry y=0 (down).
+    //          FORWARD: `forward` event glides 2.5m in the rig's current facing.
+    //          VERTICAL: `vertical-up` / `vertical-down` events move y by ±4 (one tier).
+    //          CROSSING: `crossing` event is a no-op for now (no door/stairs wired yet).
     AFRAME.registerComponent('tap-walk', {
       schema: {
-        radius:    { default: 8.0 },   // walkable circle inside the tower (floor r=9.0)
-        speed:     { default: 1.6 },   // m/s glide
-        turnSpeed: { default: 3.2 }    // rad/s yaw
+        radius:    { default: 8.0 },
+        speed:     { default: 1.6 },
+        turnSpeed: { default: 3.2 },
+        forwardMeters: { default: 2.5 },
+        tierHeight:    { default: 4.0 }
       },
       init: function () {
         this.rig = document.getElementById('rig');
         this.state = 'idle';
-        this.target = null;            // THREE.Vector3 — carries x, y, z
+        this.target = null;
         this.targetYaw = 0;
+
+        // Single tap → walk to point.
         this.el.addEventListener('click', (e) => {
           const p = e.detail && e.detail.intersection && e.detail.intersection.point;
           if (!p) return;
-          // A-Frame mesh→entity bridge. Stable in 1.5.0. Version-fragile if .el changes.
           const hitEl = e.detail.intersection.object && e.detail.intersection.object.el;
           if (hitEl && hitEl.classList && hitEl.classList.contains('clickable')) return;
 
           const isClimb = hitEl && hitEl.classList && hitEl.classList.contains('climbable');
+          const rigY = this.rig ? this.rig.object3D.position.y : 0;
+          const isFloor = hitEl && hitEl.classList && hitEl.classList.contains('walkable');
+          const descending = isFloor && rigY > 0.5;
+
           const r = Math.hypot(p.x, p.z);
           const k = r > this.data.radius ? this.data.radius / r : 1;
-          const y = isClimb ? p.y : 0;      // floor taps keep y=0; climbable taps carry y
+          let y;
+          if (isClimb)         y = p.y;
+          else if (descending) y = 0;
+          else                 y = 0;
           this.target = new THREE.Vector3(p.x * k, y, p.z * k);
           this.targetYaw = Math.atan2(this.target.x, this.target.z);
           this.state = 'turning';
           const reticle = document.getElementById('reticle');
           if (reticle) reticle.object3D.position.set(this.target.x, y + 0.02, this.target.z);
         });
+
+        // Double tap → forward along current yaw.
+        this.el.addEventListener('forward', () => {
+          if (!this.rig) return;
+          const obj = this.rig.object3D;
+          const yaw = obj.rotation.y;
+          const dx = Math.sin(yaw) * this.data.forwardMeters;
+          const dz = Math.cos(yaw) * this.data.forwardMeters;
+          const nx = obj.position.x + dx;
+          const nz = obj.position.z + dz;
+          const r = Math.hypot(nx, nz);
+          const k = r > this.data.radius ? this.data.radius / r : 1;
+          this.target = new THREE.Vector3(nx * k, obj.position.y, nz * k);
+          this.targetYaw = yaw;
+          this.state = 'gliding';
+          const reticle = document.getElementById('reticle');
+          if (reticle) reticle.object3D.position.set(this.target.x, this.target.y + 0.02, this.target.z);
+        });
+
+        // Two-finger tap top half → up one tier.
+        this.el.addEventListener('vertical-up', () => {
+          if (!this.rig) return;
+          const obj = this.rig.object3D;
+          this.target = new THREE.Vector3(obj.position.x, obj.position.y + this.data.tierHeight, obj.position.z);
+          this.targetYaw = obj.rotation.y;
+          this.state = 'gliding';
+        });
+
+        // Two-finger tap bottom half → down one tier (floor = 0).
+        this.el.addEventListener('vertical-down', () => {
+          if (!this.rig) return;
+          const obj = this.rig.object3D;
+          const ny = Math.max(0, obj.position.y - this.data.tierHeight);
+          this.target = new THREE.Vector3(obj.position.x, ny, obj.position.z);
+          this.targetYaw = obj.rotation.y;
+          this.state = 'gliding';
+        });
+
+        // Crossing → reserved for doors and non-spiral stairs. No-op in v5.2b.
+        this.el.addEventListener('crossing', () => { /* named, held */ });
       },
       tick: function (t, dt) {
         if (this.state === 'idle' || !this.rig) return;
@@ -157,8 +291,9 @@
 </head>
 <body>
   <a-scene
-    touch-gate="dragFraction: 0.028"
-    tap-walk="radius: 8.0; speed: 1.6; turnSpeed: 3.2"
+    touch-gate="dragFraction: 0.028; longPressMs: 500"
+    gesture-gate="doubleTapMs: 300; doubleTapRadius: 0.6"
+    tap-walk="radius: 8.0; speed: 1.6; turnSpeed: 3.2; forwardMeters: 2.5; tierHeight: 4.0"
     fog="type: exponential; color: #0a0a0f; density: 0.025"
     renderer="antialias: true; colorManagement: true"
     background="color: #0a0a0f"
@@ -167,7 +302,7 @@
     vr-mode-ui="enabled: true"
     xr-mode-ui="enabled: true">
 
-    <!-- FOG: cell-first = 0.025. At 40m the shelves climb past the fourth band, top beyond the fog. -->
+    <!-- FOG: cell-first = 0.025. -->
 
     <!-- Lighting -->
     <a-entity light="type: ambient; color: #2a1f16; intensity: 0.5"></a-entity>
@@ -176,7 +311,7 @@
     <a-entity light="type: directional; color: #cfe4ff; intensity: 0.3"
               position="1 20 2"></a-entity>
 
-    <!-- TOWER SHELL — three panels, gap between each for the arch bays. -->
+    <!-- TOWER SHELL — three panels with arch gaps. -->
     <a-entity rotation="0 90 0"
               geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165"
               material="color: #4a4038; roughness: 0.95; side: double"
@@ -190,7 +325,7 @@
               material="color: #4a4038; roughness: 0.95; side: double"
               position="0 20 0"></a-entity>
 
-    <!-- Void planes behind each arch -->
+    <!-- Void planes -->
     <a-plane width="6" height="40" rotation="0 0 0" position="0 20 9.2"
              material="color: #05070c; side: double; fog: false"></a-plane>
     <a-plane width="6" height="40" rotation="0 120 0"
@@ -220,13 +355,13 @@
              material="color: #15110c; roughness: 1"></a-box>
     </a-entity>
 
-    <!-- SPIRAL STAIRCASE — floor to tier 1. Steps carry .climbable. -->
+    <!-- SPIRAL STAIRCASE — v5.2b: center pulled inward to (3.0, -2.0), Option A. -->
     <a-entity id="spiral">
-      <a-cylinder radius="0.15" height="4" position="5.6 2 -4.8"
+      <a-cylinder radius="0.15" height="4" position="3.0 2 -2.0"
                   material="color: #3a342c; roughness: 1"></a-cylinder>
     </a-entity>
 
-    <!-- TIER RINGS — 9 rings at 4m spacing. Each ring and its railing carry .climbable. -->
+    <!-- TIER RINGS — 9 rings at 4m spacing, .climbable. -->
     <a-entity id="tiers">
       <a-entity position="0 4 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
       <a-entity position="0 8 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
@@ -247,102 +382,4 @@
     <a-cylinder radius="0.35" height="40" position="0 20 0"
                 material="color: #ffe6b0; opacity: 0.07; transparent: true;
                           blending: additive; side: double; depthWrite: false"></a-cylinder>
-    <a-circle radius="1.6" rotation="-90 0 0" position="0 0.02 -1.6"
-              material="color: #ffe6b0; opacity: 0.14; transparent: true;
-                        blending: additive; depthWrite: false"></a-circle>
-
-    <!-- DESK — v4.2 coordinates. -->
-    <a-box position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9"
-           material="color: #3a2a1c; roughness: 0.8"></a-box>
-    <a-box position="-0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-    <a-box position=" 0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-    <a-box position="-0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-    <a-box position=" 0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-
-    <!-- CHAIR — v5.2a. Beside the desk, on the near side. Seat at 0 0.45 -1.2, back at 0 0.7 -1.0.
-         The desk top front edge is at z=-1.15. Chair seat's back edge at z=-0.95. A lap's worth of gap. -->
-    <a-box position="0 0.45 -1.2" width="0.5" height="0.05" depth="0.5"
-           material="color: #2a1e14; roughness: 0.9"></a-box>
-    <a-box position="0 0.7 -1.0" width="0.5" height="0.5" depth="0.05"
-           material="color: #2a1e14; roughness: 0.9"></a-box>
-
-    <!-- Lamp -->
-    <a-entity position="-0.4 0.9 -1.35">
-      <a-cylinder radius="0.06" height="0.18" material="color: #d8b46a; metalness: 0.7; roughness: 0.3"></a-cylinder>
-      <a-sphere radius="0.07" position="0 0.16 0"
-                material="color: #ffcf80; emissive: #ffb060; emissiveIntensity: 1.4"></a-sphere>
-      <a-entity light="type: point; color: #ffb060; intensity: 1.6; distance: 5"
-                position="0 0.16 0"></a-entity>
-    </a-entity>
-
-    <!-- The jar -->
-    <a-entity id="jar" jar class="clickable" position="0.25 0.82 -1.6"
-              geometry="primitive: cylinder; radius: 0.09; height: 0.22"
-              material="color: #cfe4ff; opacity: 0.35; transparent: true; roughness: 0.05; metalness: 0.1">
-      <a-entity geometry="primitive: cylinder; radius: 0.1; height: 0.02" position="0 0.12 0"
-                material="color: #b8c8e0; metalness: 0.6"></a-entity>
-      <a-text value="lines: 0" position="0 0.3 0" align="center" width="1"
-              color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
-    </a-entity>
-
-    <!-- Pen, paper, book -->
-    <a-cylinder radius="0.008" height="0.16" rotation="0 0 80"
-                position="0.05 0.79 -1.5" material="color: #101010"></a-cylinder>
-    <a-plane width="0.22" height="0.3" rotation="-90 0 10"
-             position="-0.15 0.785 -1.55" material="color: #f3e9c8"></a-plane>
-    <a-box width="0.18" height="0.04" depth="0.24"
-           position="0.05 0.79 -1.75" rotation="0 12 0" material="color: #6b2b2b"></a-box>
-
-    <!-- 4555 on the desk -->
-    <a-text value="4555" position="0 0.79 -1.6" rotation="-90 0 0" align="center"
-            color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
-
-    <!-- Rig — camera at eye height, FOV 55. v5.2a: gyroscope off, finger only. -->
-    <a-entity id="rig" position="0 0 1.6">
-      <a-entity id="camera" camera="fov: 55"
-                look-controls="magicWindowTrackingEnabled: false"
-                position="0 1.6 0"></a-entity>
-      <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
-      <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
-    </a-entity>
-  </a-scene>
-
-  <!-- v5-detail — reserved for v6. The skin: fire, glow, books, clock, dove, sea, sky, stone. -->
-
-  <script>
-    // SPIRAL STAIRCASE — 24 steps, 4m rise. Steps carry .climbable.
-    (function buildSpiral() {
-      const spiral = document.getElementById('spiral');
-      const steps = 24;
-      const cx = 5.6, cz = -4.8;
-      for (let i = 0; i < steps; i++) {
-        const t = i / steps;
-        const angle = t * Math.PI * 3;
-        const r = 1.4 - t * 0.9;
-        const x = cx + Math.cos(angle) * r;
-        const z = cz + Math.sin(angle) * r;
-        const y = (i + 1) * (4 / steps);
-        const step = document.createElement('a-box');
-        step.setAttribute('class', 'climbable');
-        step.setAttribute('width', 0.9);
-        step.setAttribute('height', 0.05);
-        step.setAttribute('depth', 0.35);
-        step.setAttribute('position', `${x} ${y} ${z}`);
-        step.setAttribute('rotation', `0 ${-angle * 180 / Math.PI} 0`);
-        step.setAttribute('material', 'color: #3a342c; roughness: 1');
-        spiral.appendChild(step);
-      }
-    })();
-  </script>
-
-  <!--
-    GEOMETRY COUNT (v5.2a):
-      Tower panels: 3. Void planes: 3. Floor: 1. Reticle: 1. Fireplace: 2.
-      Spiral: 1 post + 24 steps = 25. Tier rings: 9 × (a-ring + a-torus) = 18.
-      Collar: 1. Beam: 1 + 1 (spot). Desk: 5. Chair: 2. Props: 7 (lamp × 2 + jar × 2 + pen + paper + book + 4555 text).
-      Camera/controllers: 3.
-      Total: 73 meshes. The chair is an addition, not a move. Count holds at 73.
-      If the phone chokes, this is the count. Named, not hidden.
-  -->
-</body>
-</html>
+    <a-circl
