@@ -1,10 +1,10 @@
-<!-- lighthouse.html — v5.2i — 2026-09-23 — look drag threshold. Tap ≠ look. Walk fires. -->
+<!-- lighthouse.html — v5.2j — 2026-09-23 — manual tap raycast. Walk works from any screen tap. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v5.2i)</title>
+  <title>4555 — Lighthouse (v5.2j)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
     // JAR — local diary. Workshop, not record.
@@ -14,16 +14,14 @@
         const stored = localStorage.getItem('4555:local-diary:entries');
         this.entries = stored ? JSON.parse(stored) : [];
         this.render();
-        this.el.addEventListener('click', () => {
+        const write = () => {
           const body = prompt('Write a line. Drop it in the jar.');
           if (!body) return;
           const entry = {
-            id:        Date.now() + '-' + Math.random().toString(36).slice(2, 8),
-            author:    'guest',
-            body:      body,
+            id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+            author: 'guest', body: body,
             timestamp: new Date().toISOString(),
-            reply_to:  null,
-            private:   true
+            reply_to: null, private: true
           };
           this.entries.push(entry);
           try { localStorage.setItem('4555:local-diary:entries', JSON.stringify(this.entries)); } catch (e) {}
@@ -34,16 +32,18 @@
           p.setAttribute('position', (Math.random()-0.5)*0.08 + ' 0.02 ' + (Math.random()-0.5)*0.08);
           p.setAttribute('rotation', '-90 0 ' + Math.random()*360);
           this.el.appendChild(p);
-        });
+        };
+        this.el.addEventListener('click', write);
+        this.el.addEventListener('tap-jar', write);
       },
       render: function () {
         if (this.textEl) this.textEl.setAttribute('value', 'entries: ' + this.entries.length);
       }
     });
 
-    // TOUCH-GATE — drag vs tap, and two-finger vertical.
+    // TOUCH-GATE — drag vs tap, two-finger vertical, and manual raycast for taps.
     AFRAME.registerComponent('touch-gate', {
-      schema: { dragFraction: { default: 0.028 }, doubleTapMs: { default: 300 } },
+      schema: { dragFraction: { default: 0.028 }, doubleTapMs: { default: 300 }, longPressMs: { default: 500 } },
       init: function () {
         this.start = null; this.startTime = 0; this.moved = false;
         this.touchCount = 0; this.twoFinger = false; this.twoFingerStartY = 0;
@@ -67,41 +67,76 @@
           const d = Math.hypot(t.clientX - this.start.x, t.clientY - this.start.y);
           if (d > Math.min(innerWidth, innerHeight) * this.data.dragFraction) this.moved = true;
         }, true);
-        this.el.addEventListener('touchend', () => {
-          const el = Date.now() - this.startTime;
-          if (this.twoFinger && !this.moved && el < this.data.doubleTapMs) {
-            this.el.emit(this.twoFingerStartY < innerHeight/2 ? 'vertical-up' : 'vertical-down', {}, false);
-          }
+        this.el.addEventListener('touchend', (e) => {
+          const elapsed = Date.now() - this.startTime;
+          const wasTwo = this.twoFinger, wasMoved = this.moved, startY = this.twoFingerStartY;
+          const t = e.changedTouches && e.changedTouches[0];
           this.start = null; this.twoFinger = false; this.touchCount = 0;
           setTimeout(() => { this.moved = false; }, 0);
+
+          if (wasTwo && !wasMoved && elapsed < this.data.doubleTapMs) {
+            this.el.emit(startY < innerHeight/2 ? 'vertical-up' : 'vertical-down', {}, false);
+            return;
+          }
+          if (!wasTwo && !wasMoved && elapsed < this.data.longPressMs && t) {
+            this.tap(t.clientX, t.clientY);
+          }
         }, true);
-        this.el.addEventListener('click', (e) => {
-          if (!this.start && !this.twoFinger && this.touchCount === 0) return;
-          if (this.moved || this.twoFinger) { e.stopPropagation(); e.preventDefault(); }
-        }, true);
+      },
+      tap: function (cx, cy) {
+        const scene = this.el.sceneEl;
+        const cam = scene.camera;
+        if (!cam) return;
+        const ndc = new THREE.Vector2(
+          (cx / window.innerWidth) * 2 - 1,
+          -(cy / window.innerHeight) * 2 + 1
+        );
+        const rc = new THREE.Raycaster();
+        rc.setFromCamera(ndc, cam);
+
+        // Jar hit? — tap-jar
+        const jarEl = document.getElementById('jar');
+        if (jarEl && rc.intersectObject(jarEl.object3D, true).length > 0) {
+          jarEl.emit('tap-jar');
+          return;
+        }
+
+        // Floor: intersect y=0 plane. Any tap anywhere on screen walks.
+        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+        const point = new THREE.Vector3();
+        let dest;
+        if (rc.ray.intersectPlane(plane, point) && point.distanceTo(rc.ray.origin) < 30) {
+          dest = { x: point.x, z: point.z };
+        } else {
+          // Ray goes level/up: walk forward along the horizontal ray direction
+          const dir = rc.ray.direction.clone(); dir.y = 0;
+          if (dir.lengthSq() < 1e-6) return;
+          dir.normalize();
+          const rig = document.getElementById('rig');
+          const from = rig ? rig.object3D.position : { x: 0, z: 0 };
+          dest = { x: from.x + dir.x * 2.5, z: from.z + dir.z * 2.5 };
+        }
+        // Clamp to walkable radius
+        const r = Math.hypot(dest.x, dest.z);
+        const maxR = 8.0;
+        if (r > maxR) { dest.x *= maxR / r; dest.z *= maxR / r; }
+        scene.emit('tap-walk', dest, false);
       }
     });
 
-    // LOOK — touch-only. Waits for dragThreshold before moving. Tap never scans.
+    // LOOK — touch-only, waits for dragThreshold. Tap never scans.
     AFRAME.registerComponent('look', {
-      schema: {
-        sensitivity:   { default: 0.008 },
-        limit:         { default: 1.48 },
-        dragThreshold: { default: 15 }
-      },
+      schema: { sensitivity: { default: 0.008 }, limit: { default: 1.48 }, dragThreshold: { default: 15 } },
       init: function () {
         this.yaw = 0; this.pitch = 0;
-        this.start = null; this.last = null;
-        this.dragging = false;
+        this.start = null; this.last = null; this.dragging = false;
         const cam = this.el.object3D;
-
         this.el.sceneEl.addEventListener('touchstart', (e) => {
           const t = e.touches[0]; if (!t) return;
           this.start = { x: t.clientX, y: t.clientY };
           this.last  = { x: t.clientX, y: t.clientY };
           this.dragging = false;
         }, true);
-
         this.el.sceneEl.addEventListener('touchmove', (e) => {
           const t = e.touches[0]; if (!t || !this.start) return;
           if (!this.dragging) {
@@ -122,7 +157,6 @@
           cam.rotation.x = this.pitch;
           cam.rotation.z = 0;
         }, true);
-
         this.el.sceneEl.addEventListener('touchend', () => {
           this.start = null; this.last = null; this.dragging = false;
         }, true);
@@ -146,25 +180,20 @@
       }
     });
 
-    // TAP-WALK — three states. Two-finger vertical only near a ladder.
+    // TAP-WALK — three states. Walks to tap-walk event; two-finger vertical only near a ladder.
     AFRAME.registerComponent('tap-walk', {
       schema: { radius: { default: 8.0 }, speed: { default: 0.6 }, turnSpeed: { default: 1.0 },
                 tierMeters: { default: 4.0 }, ladderReach: { default: 2.5 } },
       init: function () {
         this.rig = document.getElementById('rig');
         this.state = 'idle'; this.target = null; this.targetYaw = 0;
-        this.el.addEventListener('click', (e) => {
-          const p = e.detail && e.detail.intersection && e.detail.intersection.point;
-          if (!p) return;
-          const h = e.detail.intersection.object && e.detail.intersection.object.el;
-          if (h && h.classList && h.classList.contains('clickable')) return;
-          const r = Math.hypot(p.x, p.z);
-          const k = r > this.data.radius ? this.data.radius / r : 1;
-          this.target = new THREE.Vector3(p.x * k, 0, p.z * k);
-          this.targetYaw = Math.atan2(this.target.x, this.target.z);
+        this.el.addEventListener('tap-walk', (e) => {
+          const x = e.detail.x, z = e.detail.z;
+          this.target = new THREE.Vector3(x, 0, z);
+          this.targetYaw = Math.atan2(x, z);
           this.state = 'turning';
           const ret = document.getElementById('reticle');
-          if (ret) ret.object3D.position.set(this.target.x, 0.02, this.target.z);
+          if (ret) ret.object3D.position.set(x, 0.02, z);
         });
         this.el.addEventListener('vertical-up', () => {
           if (!this.rig || !this.nearLadder()) return;
@@ -220,14 +249,12 @@
 </head>
 <body>
   <a-scene
-    touch-gate="dragFraction: 0.028; doubleTapMs: 300"
+    touch-gate="dragFraction: 0.028; doubleTapMs: 300; longPressMs: 500"
     ladder-rail="angularSpeed: 0.015; radius: 8.5; height: 40"
     tap-walk="radius: 8.0; speed: 0.6; turnSpeed: 1.0; tierMeters: 4.0; ladderReach: 2.5"
     fog="type: exponential; color: #0a0a0f; density: 0.025"
     renderer="antialias: true; colorManagement: true"
     background="color: #0a0a0f"
-    cursor="rayOrigin: mouse"
-    raycaster="objects: .walkable, .clickable, .climbable"
     vr-mode-ui="enabled: true" xr-mode-ui="enabled: true">
 
     <a-entity light="type: ambient; color: #2a1f16; intensity: 0.5"></a-entity>
@@ -305,4 +332,4 @@
     </a-entity>
   </a-scene>
 </body>
-         </html>
+</html>
