@@ -1,23 +1,17 @@
-<!-- lighthouse.html — v5.2h — 2026-09-23 — the tower, walkable.
-     v5.1 scene + look (touch-only) + two sliding ladders (turtle pace) + chair legs
-     + local diary in the jar. No gyro. Subtle motion. -->
+<!-- lighthouse.html — v5.2i — 2026-09-23 — look drag threshold. Tap ≠ look. Walk fires. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v5.2h)</title>
+  <title>4555 — Lighthouse (v5.2i)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
-    // JAR — accepts a line, writes to the LOCAL diary (workshop, not the record).
-    // Schema of a diary entry, for the endpoint diary in v6:
-    //   { id, author, body, timestamp, reply_to, private }
-    // The visitor's text is called `line` when it goes to the public record,
-    // and `entry` when it goes to their diary. Same words, different drawer.
+    // JAR — local diary. Workshop, not record.
     AFRAME.registerComponent('jar', {
       init: function () {
         this.textEl = this.el.querySelector('a-text');
-        const stored = localStorage.getItem('4555:diary:entries');
+        const stored = localStorage.getItem('4555:local-diary:entries');
         this.entries = stored ? JSON.parse(stored) : [];
         this.render();
         this.el.addEventListener('click', () => {
@@ -32,7 +26,7 @@
             private:   true
           };
           this.entries.push(entry);
-          try { localStorage.setItem('4555:diary:entries', JSON.stringify(this.entries)); } catch (e) {}
+          try { localStorage.setItem('4555:local-diary:entries', JSON.stringify(this.entries)); } catch (e) {}
           this.render();
           const p = document.createElement('a-entity');
           p.setAttribute('geometry', 'primitive: plane; width: 0.08; height: 0.11');
@@ -47,7 +41,7 @@
       }
     });
 
-    // TOUCH-GATE — distinguishes drag from tap, and reads the two-finger vertical.
+    // TOUCH-GATE — drag vs tap, and two-finger vertical.
     AFRAME.registerComponent('touch-gate', {
       schema: { dragFraction: { default: 0.028 }, doubleTapMs: { default: 300 } },
       init: function () {
@@ -88,18 +82,35 @@
       }
     });
 
-    // LOOK — touch-only. Yaw and pitch by finger. No gyro, no roll.
+    // LOOK — touch-only. Waits for dragThreshold before moving. Tap never scans.
     AFRAME.registerComponent('look', {
-      schema: { sensitivity: { default: 0.008 }, limit: { default: 1.48 } },
+      schema: {
+        sensitivity:   { default: 0.008 },
+        limit:         { default: 1.48 },
+        dragThreshold: { default: 15 }
+      },
       init: function () {
-        this.yaw = 0; this.pitch = 0; this.last = null;
+        this.yaw = 0; this.pitch = 0;
+        this.start = null; this.last = null;
+        this.dragging = false;
         const cam = this.el.object3D;
+
         this.el.sceneEl.addEventListener('touchstart', (e) => {
           const t = e.touches[0]; if (!t) return;
-          this.last = { x: t.clientX, y: t.clientY };
+          this.start = { x: t.clientX, y: t.clientY };
+          this.last  = { x: t.clientX, y: t.clientY };
+          this.dragging = false;
         }, true);
+
         this.el.sceneEl.addEventListener('touchmove', (e) => {
-          const t = e.touches[0]; if (!t || !this.last) return;
+          const t = e.touches[0]; if (!t || !this.start) return;
+          if (!this.dragging) {
+            const d = Math.hypot(t.clientX - this.start.x, t.clientY - this.start.y);
+            if (d < this.data.dragThreshold) return;
+            this.dragging = true;
+            this.last = { x: t.clientX, y: t.clientY };
+            return;
+          }
           const dx = t.clientX - this.last.x, dy = t.clientY - this.last.y;
           this.last = { x: t.clientX, y: t.clientY };
           this.yaw   -= dx * this.data.sensitivity;
@@ -111,11 +122,14 @@
           cam.rotation.x = this.pitch;
           cam.rotation.z = 0;
         }, true);
-        this.el.sceneEl.addEventListener('touchend', () => { this.last = null; }, true);
+
+        this.el.sceneEl.addEventListener('touchend', () => {
+          this.start = null; this.last = null; this.dragging = false;
+        }, true);
       }
     });
 
-    // LADDER-RAIL — two ladders slide around the ring at a turtle's pace.
+    // LADDER-RAIL — two ladders slide at a turtle's pace.
     AFRAME.registerComponent('ladder-rail', {
       schema: { angularSpeed: { default: 0.015 }, radius: { default: 8.5 }, height: { default: 40 } },
       init: function () {
@@ -132,7 +146,7 @@
       }
     });
 
-    // TAP-WALK — three states. Two-finger vertical fires only near a ladder.
+    // TAP-WALK — three states. Two-finger vertical only near a ladder.
     AFRAME.registerComponent('tap-walk', {
       schema: { radius: { default: 8.0 }, speed: { default: 0.6 }, turnSpeed: { default: 1.0 },
                 tierMeters: { default: 4.0 }, ladderReach: { default: 2.5 } },
@@ -284,11 +298,11 @@
 
     <a-entity id="rig" position="0 0 1.6">
       <a-entity id="camera" camera="fov: 70"
-                look="sensitivity: 0.008; limit: 1.48"
+                look="sensitivity: 0.008; limit: 1.48; dragThreshold: 15"
                 position="0 1.6 0"></a-entity>
       <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
       <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
     </a-entity>
   </a-scene>
 </body>
-</html>
+         </html>
