@@ -1,35 +1,50 @@
-<!-- pitch-test.html — 2026-09-23 — one box, one camera, default look-controls, pitch-look on top.
-     Purpose: find out whether default look-controls already pitches (and drifts).
+<!-- look-test.html — 2026-09-23 — touch-only look. No look-controls. No gyro. Pitch + yaw by finger only.
      Open with ?v=1 to bust cache. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Pitch Test</title>
+  <title>Look Test</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
-    AFRAME.registerComponent('pitch-look', {
-      schema: { sensitivity: { default: 0.005 }, limit: { default: 1.48 } },
+    // LOOK — touch-only yaw + pitch. No gyro. No roll. One finger owns the camera.
+    AFRAME.registerComponent('look', {
+      schema: {
+        sensitivity: { default: 0.005 },   // radians per pixel
+        limit:       { default: 1.48 }     // ~85° pitch clamp
+      },
       init: function () {
-        this.y = 0;
+        this.yaw = 0;
+        this.pitch = 0;
         this.last = null;
         const cam = this.el.object3D;
+
         this.el.sceneEl.addEventListener('touchstart', (e) => {
           const t = e.touches[0];
           if (!t) return;
           this.last = { x: t.clientX, y: t.clientY };
         }, true);
+
         this.el.sceneEl.addEventListener('touchmove', (e) => {
           const t = e.touches[0];
           if (!t || !this.last) return;
+          const dx = t.clientX - this.last.x;
           const dy = t.clientY - this.last.y;
           this.last = { x: t.clientX, y: t.clientY };
-          this.y -= dy * this.data.sensitivity;
-          if (this.y >  this.data.limit) this.y =  this.data.limit;
-          if (this.y < -this.data.limit) this.y = -this.data.limit;
-          cam.rotation.x = this.y;
+
+          this.yaw   -= dx * this.data.sensitivity;
+          this.pitch -= dy * this.data.sensitivity;
+          if (this.pitch >  this.data.limit) this.pitch =  this.data.limit;
+          if (this.pitch < -this.data.limit) this.pitch = -this.data.limit;
+
+          // Euler order YXZ: yaw first, pitch second, roll never.
+          cam.rotation.order = 'YXZ';
+          cam.rotation.y = this.yaw;
+          cam.rotation.x = this.pitch;
+          cam.rotation.z = 0;
         }, true);
+
         this.el.sceneEl.addEventListener('touchend', () => { this.last = null; }, true);
       }
     });
@@ -47,27 +62,26 @@
 
     <a-entity light="type: ambient; color: #ffffff; intensity: 1"></a-entity>
 
-    <!-- Floor -->
     <a-circle radius="9" rotation="-90 0 0" position="0 0 0"
               material="color: #1d1814; roughness: 0.6"></a-circle>
 
-    <!-- The box in front — tells you which way is forward -->
     <a-box position="0 0.5 -3" width="0.5" height="1" depth="0.5"
            material="color: #6b2b2b"></a-box>
 
-    <!-- A tall thin post to your right — tells you up is up -->
     <a-cylinder position="2 2 0" radius="0.05" height="4"
                 material="color: #d8b46a"></a-cylinder>
 
-    <!-- A wide box overhead — you should be able to look up and see it -->
     <a-box position="0 6 0" width="4" height="0.2" depth="4"
            material="color: #3a342c"></a-box>
 
-    <!-- Rig — camera with DEFAULT look-controls, then pitch-look on top. -->
+    <!-- A second box behind you — if you turn 180° you should see it -->
+    <a-box position="0 0.5 3" width="0.5" height="1" depth="0.5"
+           material="color: #2a4a7a"></a-box>
+
+    <!-- Rig — camera with look only. No look-controls. -->
     <a-entity id="rig" position="0 0 0">
       <a-entity id="camera" camera="fov: 70"
-                look-controls
-                pitch-look="sensitivity: 0.005; limit: 1.48"
+                look="sensitivity: 0.005; limit: 1.48"
                 position="0 1.6 0"></a-entity>
     </a-entity>
   </a-scene>
