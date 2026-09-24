@@ -1,204 +1,342 @@
-<!-- lighthouse.html — v5.2e — 2026-09-23 — walk + desk scene + fixed touch-gate. -->
+<!-- lighthouse.html — v5.1 — 2026-09-23 — walkable spiral (Fork A), scale-aware touch-gate.
+     Bones walked on phone; load test passed at 72 meshes, FOV 55. Skin reserved for v6.
+     Four flags to walk: camera look-controls survives y-climb; reticle lands on tier;
+     last spiral step meets tier 1; tap on .climbable reaches the ring, not the floor.
+     Pop is named: floor at 0.01, first step at ~0.167. Reads as a lift, not a ramp. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v5.2e)</title>
+  <title>4555 — Lighthouse (v5.1)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
-    // JAR — accepts a line. Reach check deferred to v5.2f.
+    // Jar accepts a line. Local-only. Count lives on the child a-text.
     AFRAME.registerComponent('jar', {
       init: function () {
         this.lines = [];
         this.textEl = this.el.querySelector('a-text');
         this.el.addEventListener('click', () => {
           const line = prompt('Write a line. Drop it in the jar.');
-          if (!line) return;
-          this.lines.push(line);
-          if (this.textEl) this.textEl.setAttribute('value', 'lines: ' + this.lines.length);
-          const p = document.createElement('a-entity');
-          p.setAttribute('geometry', 'primitive: plane; width: 0.08; height: 0.11');
-          p.setAttribute('material', 'color: #f3e9c8; side: double');
-          p.setAttribute('position', (Math.random()-0.5)*0.08 + ' 0.02 ' + (Math.random()-0.5)*0.08);
-          p.setAttribute('rotation', '-90 0 ' + Math.random()*360);
-          this.el.appendChild(p);
+          if (line) {
+            this.lines.push(line);
+            if (this.textEl) {
+              this.textEl.setAttribute('value', 'lines: ' + this.lines.length);
+            }
+            const paper = document.createElement('a-entity');
+            paper.setAttribute('geometry', 'primitive: plane; width: 0.08; height: 0.11');
+            paper.setAttribute('material', 'color: #f3e9c8; side: double');
+            paper.setAttribute('position',
+              (Math.random() - 0.5) * 0.08 + ' 0.02 ' +
+              (Math.random() - 0.5) * 0.08);
+            paper.setAttribute('rotation', '-90 0 ' + (Math.random() * 360));
+            this.el.appendChild(paper);
+          }
         });
       }
     });
 
-    // TOUCH-GATE — fixed. Reads movement at touchend, not on every touchmove.
-    // A tap is a touch whose total travel stayed under the threshold until it lifted.
+    // TOUCH-GATE — the room's touch gate, upstream of every click.
+    // dragFraction is a fraction of the shorter screen dimension, so the threshold
+    // scales with the device instead of with the room. At 390×844: ~11px.
+    // At 768×1024: ~21px. Same gate, same rule, scale-aware.
     AFRAME.registerComponent('touch-gate', {
-      schema: { dragFraction: { default: 0.05 } },
+      schema: {
+        dragFraction: { default: 0.028 }
+      },
       init: function () {
         this.start = null;
-        this.maxDist = 0;
+        this.moved = false;
         this.el.addEventListener('touchstart', (e) => {
-          const t = e.touches[0]; if (!t) return;
+          const t = e.touches[0];
+          if (!t) return;
           this.start = { x: t.clientX, y: t.clientY };
-          this.maxDist = 0;
+          this.moved = false;
         }, true);
         this.el.addEventListener('touchmove', (e) => {
           if (!this.start) return;
-          const t = e.touches[0]; if (!t) return;
-          const d = Math.hypot(t.clientX - this.start.x, t.clientY - this.start.y);
-          if (d > this.maxDist) this.maxDist = d;
+          const t = e.touches[0];
+          if (!t) return;
+          const dist = Math.hypot(t.clientX - this.start.x, t.clientY - this.start.y);
+          const threshold = Math.min(window.innerWidth, window.innerHeight) * this.data.dragFraction;
+          if (dist > threshold) this.moved = true;
         }, true);
         this.el.addEventListener('click', (e) => {
-          if (!this.start) return;
-          const threshold = Math.min(window.innerWidth, window.innerHeight) * this.data.dragFraction;
-          if (this.maxDist > threshold) {
+          if (!this.start) return;            // desktop mouse — no touchstart, nothing to guard
+          if (this.moved === true) {
             e.stopPropagation();
             e.preventDefault();
           }
-          this.start = null;
-          this.maxDist = 0;
         }, true);
         this.el.addEventListener('touchend', () => {
-          setTimeout(() => { this.start = null; this.maxDist = 0; }, 0);
+          this.start = null;
+          setTimeout(() => { this.moved = false; }, 0);
         }, true);
       }
     });
 
-    // TAP-WALK — same as v5.2d probe. Tap the floor, glide to the point.
+    // Tap-to-walk. Lives on the scene. The rig is a separate entity;
+    // the component reads it by id and moves its object3D.
+    //
+    // OPEN QUESTION (v4): does the walk go toward the target, or toward the visitor's gaze?
+    // Three shapes, not two:
+    //   target — body turns to the tap point. Current shape. (body)
+    //   gaze   — body turns to wherever the head was looking. (body, v4.1 candidate)
+    //   blend  — body arcs partway to the gaze, then to the target. (camera move, not body — named, not built)
+    // Same discipline as the bridge comment above hitEl.
+    //
+    // THREE STATES — one at a time, named:
+    //   idle    — no target. Nothing moves.
+    //   turning — rig yaw rotates to face tap. ~0.3s. Yaw only. Position fixed.
+    //   gliding — rig position moves, in the direction the rig now faces. Yaw fixed.
+    // A new tap cancels the current state and starts a new turning from the current yaw.
     AFRAME.registerComponent('tap-walk', {
-      schema: { radius: { default: 8.0 }, speed: { default: 1.6 } },
+      schema: {
+        radius:    { default: 8.0 },   // walkable circle inside the tower (floor r=9.0)
+        speed:     { default: 1.6 },   // m/s glide
+        turnSpeed: { default: 3.2 }    // rad/s yaw — ~0.3s for a 90° turn
+      },
       init: function () {
         this.rig = document.getElementById('rig');
-        this.target = null;
+        this.state = 'idle';           // 'idle' | 'turning' | 'gliding'
+        this.target = null;            // THREE.Vector3 — clamped destination
+        this.targetYaw = 0;            // radians
         this.el.addEventListener('click', (e) => {
           const p = e.detail && e.detail.intersection && e.detail.intersection.point;
           if (!p) return;
-          const h = e.detail.intersection.object && e.detail.intersection.object.el;
-          if (h && h.classList && h.classList.contains('clickable')) return;
+          // A-Frame mesh→entity bridge. Stable in 1.5.0. Version-fragile if .el changes.
+          const hitEl = e.detail.intersection.object && e.detail.intersection.object.el;
+          if (hitEl && hitEl.classList && hitEl.classList.contains('clickable')) return;
+          const isClimb = hitEl && hitEl.classList && hitEl.classList.contains('climbable');
           const r = Math.hypot(p.x, p.z);
           const k = r > this.data.radius ? this.data.radius / r : 1;
-          this.target = new THREE.Vector3(p.x * k, 0, p.z * k);
-          const ret = document.getElementById('reticle');
-          if (ret) ret.object3D.position.set(this.target.x, 0.02, this.target.z);
+          const y = isClimb ? p.y : 0;      // floor taps keep y=0; climbable taps carry y
+          this.target = new THREE.Vector3(p.x * k, y, p.z * k);
+          this.targetYaw = Math.atan2(this.target.x, this.target.z);
+          this.state = 'turning';
+          const reticle = document.getElementById('reticle');
+          if (reticle) reticle.object3D.position.set(this.target.x, y + 0.02, this.target.z);
         });
       },
       tick: function (t, dt) {
-        if (!this.target || !this.rig) return;
-        const o = this.rig.object3D;
-        const here = new THREE.Vector3(o.position.x, 0, o.position.z);
-        const to = new THREE.Vector3().subVectors(this.target, here);
-        const dist = to.length();
-        const step = (this.data.speed * dt) / 1000;
-        if (dist <= step) {
-          o.position.set(this.target.x, 0, this.target.z);
-          this.target = null;
+        if (this.state === 'idle' || !this.rig) return;
+        const obj = this.rig.object3D;
+        const seconds = dt / 1000;
+
+        if (this.state === 'turning') {
+          const delta = Math.atan2(
+            Math.sin(this.targetYaw - obj.rotation.y),
+            Math.cos(this.targetYaw - obj.rotation.y)
+          );
+          const step = this.data.turnSpeed * seconds;
+          if (Math.abs(delta) <= step) {
+            obj.rotation.y = this.targetYaw;
+            this.state = 'gliding';
+          } else {
+            obj.rotation.y += Math.sign(delta) * step;
+          }
           return;
         }
-        to.normalize().multiplyScalar(step);
-        o.position.set(here.x + to.x, 0, here.z + to.z);
-      }
-    });
 
-    // SCENE-BUILDER — floor, marker, reticle, desk, chair, lamp, jar, props, rig.
-    AFRAME.registerComponent('scene-builder', {
-      init: function () {
-        const add = (tag, attrs, parent) => {
-          const e = document.createElement(tag);
-          for (const k in attrs) e.setAttribute(k, attrs[k]);
-          (parent || this.el).appendChild(e);
-          return e;
-        };
-
-        add('a-entity', { light: 'type: ambient; color: #4a4038; intensity: 0.8' });
-        add('a-entity', { light: 'type: point; color: #ffb066; intensity: 1.2; distance: 10', position: '0 2 -3' });
-
-        // Floor
-        add('a-circle', { radius: 9, rotation: '-90 0 0', position: '0 0 0', class: 'walkable',
-                          material: 'color: #1d1814; roughness: 0.6; metalness: 0.2' });
-
-        // Reticle
-        add('a-ring', { id: 'reticle', 'radius-inner': 0.08, 'radius-outer': 0.12, rotation: '-90 0 0',
-                        position: '0 0.02 1.6',
-                        material: 'color: #ffe6b0; opacity: 0.7; transparent: true; side: double; depthWrite: false' });
-
-        // Marker at origin — the witness. World stays, body moves.
-        add('a-box', { position: '0 0.3 0', width: 0.4, height: 0.6, depth: 0.4,
-                       material: 'color: #6b2b2b; roughness: 0.9' });
-
-        // Desk
-        add('a-box', { position: '0 0.75 -1.6', width: 1.4, height: 0.06, depth: 0.9,
-                       material: 'color: #3a2a1c; roughness: 0.8' });
-        for (const [x, z] of [[-0.6, -1.6], [0.6, -1.6], [-0.6, -1.2], [0.6, -1.2]]) {
-          add('a-box', { position: `${x} 0.37 ${z}`, width: 0.08, height: 0.75, depth: 0.08,
-                         material: 'color: #2a1e14' });
+        if (this.state === 'gliding') {
+          const here = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z);
+          const to = new THREE.Vector3().subVectors(this.target, here);
+          const dist = to.length();
+          const step = this.data.speed * seconds;
+          if (dist <= step) {
+            obj.position.set(this.target.x, this.target.y, this.target.z);
+            this.state = 'idle';
+            return;
+          }
+          to.normalize().multiplyScalar(step);
+          obj.position.set(here.x + to.x, here.y + to.y, here.z + to.z);
         }
-
-        // Chair — seat, back, four legs
-        add('a-box', { position: '0 0.45 -1.2', width: 0.5, height: 0.05, depth: 0.5,
-                       material: 'color: #2a1e14; roughness: 0.9' });
-        add('a-box', { position: '0 0.7 -1.0', width: 0.5, height: 0.5, depth: 0.05,
-                       material: 'color: #2a1e14; roughness: 0.9' });
-        for (const [x, z] of [[-0.2, -1.4], [0.2, -1.4], [-0.2, -1.0], [0.2, -1.0]]) {
-          add('a-box', { position: `${x} 0.22 ${z}`, width: 0.06, height: 0.44, depth: 0.06,
-                         material: 'color: #2a1e14' });
-        }
-
-        // Lamp
-        const lamp = add('a-entity', { position: '-0.4 0.9 -1.35' });
-        add('a-cylinder', { radius: 0.06, height: 0.18,
-                            material: 'color: #d8b46a; metalness: 0.7; roughness: 0.3' }, lamp);
-        add('a-sphere', { radius: 0.07, position: '0 0.16 0',
-                          material: 'color: #ffcf80; emissive: #ffb060; emissiveIntensity: 1.4' }, lamp);
-        add('a-entity', { light: 'type: point; color: #ffb060; intensity: 1.6; distance: 4',
-                          position: '0 0.16 0' }, lamp);
-
-        // Jar
-        const jar = add('a-entity', { id: 'jar', jar: '', class: 'clickable', position: '0.25 0.82 -1.6',
-          geometry: 'primitive: cylinder; radius: 0.09; height: 0.22',
-          material: 'color: #cfe4ff; opacity: 0.35; transparent: true; roughness: 0.05; metalness: 0.1' });
-        add('a-entity', { geometry: 'primitive: cylinder; radius: 0.1; height: 0.02',
-                          position: '0 0.12 0',
-                          material: 'color: #b8c8e0; metalness: 0.6' }, jar);
-        add('a-text', { value: 'lines: 0', position: '0 0.3 0', align: 'center', width: 1,
-                        color: '#ffe6b0', scale: '0.5 0.5 0.5' }, jar);
-
-        // Pen, paper, book, 4555
-        add('a-cylinder', { radius: 0.008, height: 0.16, rotation: '0 0 80',
-                            position: '0.05 0.79 -1.5', material: 'color: #101010' });
-        add('a-plane', { width: 0.22, height: 0.3, rotation: '-90 0 10',
-                         position: '-0.15 0.785 -1.55', material: 'color: #f3e9c8' });
-        add('a-box', { width: 0.18, height: 0.04, depth: 0.24, position: '0.05 0.79 -1.75',
-                       rotation: '0 12 0', material: 'color: #6b2b2b' });
-        add('a-text', { value: '4555', position: '0 0.79 -1.6', rotation: '-90 0 0', align: 'center',
-                        color: '#c9a86a', width: 2, scale: '0.4 0.4 0.4' });
-
-        // Rig
-        const rig = add('a-entity', { id: 'rig', position: '0 0 1.6' });
-        add('a-entity', { id: 'camera', camera: 'fov: 55',
-                          'look-controls': 'magicWindowTrackingEnabled: false',
-                          position: '0 1.6 0' }, rig);
       }
     });
   </script>
   <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      background: #0a0a0f;
-      touch-action: none;
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
-      -webkit-tap-highlight-color: transparent;
-    }
+    html, body { margin: 0; height: 100%; background: #0a0a0f; touch-action: none; }
   </style>
 </head>
 <body>
   <a-scene
-    scene-builder
-    touch-gate="dragFraction: 0.05"
-    tap-walk="radius: 8.0; speed: 1.6"
+    touch-gate="dragFraction: 0.028"
+    tap-walk="radius: 8.0; speed: 1.6; turnSpeed: 3.2"
+    fog="type: exponential; color: #0a0a0f; density: 0.025"
+    renderer="antialias: true; colorManagement: true"
     background="color: #0a0a0f"
     cursor="rayOrigin: mouse"
-    raycaster="objects: .walkable, .clickable"
-    vr-mode-ui="enabled: true" xr-mode-ui="enabled: true">
+    raycaster="objects: .walkable, .clickable, .climbable"
+    vr-mode-ui="enabled: true"
+    xr-mode-ui="enabled: true">
+
+    <!-- FOG: cell-first = 0.025. At 40m the shelves climb past the fourth band, top beyond the fog. -->
+
+    <!-- Lighting -->
+    <a-entity light="type: ambient; color: #2a1f16; intensity: 0.5"></a-entity>
+    <a-entity light="type: point; color: #ffb066; intensity: 1.2; distance: 12"
+              position="0 2.0 -4"></a-entity>
+    <a-entity light="type: directional; color: #cfe4ff; intensity: 0.3"
+              position="1 20 2"></a-entity>
+
+    <!-- TOWER SHELL — three panels, gap between each for the arch bays. -->
+    <a-entity rotation="0 90 0"
+              geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165"
+              material="color: #4a4038; roughness: 0.95; side: double"
+              position="0 20 0"></a-entity>
+    <a-entity rotation="0 210 0"
+              geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165"
+              material="color: #4a4038; roughness: 0.95; side: double"
+              position="0 20 0"></a-entity>
+    <a-entity rotation="0 330 0"
+              geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165"
+              material="color: #4a4038; roughness: 0.95; side: double"
+              position="0 20 0"></a-entity>
+
+    <!-- Void planes behind each arch -->
+    <a-plane width="6" height="40" rotation="0 0 0" position="0 20 9.2"
+             material="color: #05070c; side: double; fog: false"></a-plane>
+    <a-plane width="6" height="40" rotation="0 120 0"
+             position="-7.97 20 -4.6"
+             material="color: #05070c; side: double; fog: false"></a-plane>
+    <a-plane width="6" height="40" rotation="0 240 0"
+             position="7.97 20 -4.6"
+             material="color: #05070c; side: double; fog: false"></a-plane>
+
+    <!-- Floor -->
+    <a-circle radius="9.0" rotation="-90 0 0" position="0 0.01 0" class="walkable"
+              material="color: #1d1814; roughness: 0.4; metalness: 0.2"></a-circle>
+
+    <!-- Reticle -->
+    <a-ring id="reticle" radius-inner="0.08" radius-outer="0.12"
+            rotation="-90 0 0" position="0 0.02 1.6"
+            material="color: #ffe6b0; opacity: 0.55; transparent: true;
+                      side: double; depthWrite: false"></a-ring>
+
+    <!-- FIREPLACE MASS -->
+    <a-entity>
+      <a-box width="3.4" height="3.0" depth="1.2"
+             position="0 1.5 -7.4"
+             material="color: #3a342c; roughness: 1"></a-box>
+      <a-box width="1.8" height="1.6" depth="0.4"
+             position="0 0.8 -6.7"
+             material="color: #15110c; roughness: 1"></a-box>
+    </a-entity>
+
+    <!-- SPIRAL STAIRCASE — floor to tier 1. Steps carry .climbable. -->
+    <a-entity id="spiral">
+      <a-cylinder radius="0.15" height="4" position="5.6 2 -4.8"
+                  material="color: #3a342c; roughness: 1"></a-cylinder>
+    </a-entity>
+
+    <!-- TIER RINGS — 9 rings at 4m spacing. Each ring and its railing carry .climbable. -->
+    <a-entity id="tiers">
+      <a-entity position="0 4 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+      <a-entity position="0 8 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+      <a-entity position="0 12 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+      <a-entity position="0 16 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+      <a-entity position="0 20 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+      <a-entity position="0 24 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+      <a-entity position="0 28 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+      <a-entity position="0 32 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+      <a-entity position="0 36 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+    </a-entity>
+
+    <!-- LANTERN COLLAR -->
+    <a-cylinder radius="1.5" height="1.2" open-ended="true" position="0 39.4 0"
+                material="color: #3a342c; roughness: 1; side: double"></a-cylinder>
+
+    <!-- COLUMN OF LIGHT -->
+    <a-cylinder radius="0.35" height="40" position="0 20 0"
+                material="color: #ffe6b0; opacity: 0.07; transparent: true;
+                          blending: additive; side: double; depthWrite: false"></a-cylinder>
+    <a-circle radius="1.6" rotation="-90 0 0" position="0 0.02 -1.6"
+              material="color: #ffe6b0; opacity: 0.14; transparent: true;
+                        blending: additive; depthWrite: false"></a-circle>
+
+    <!-- DESK — v4.2 coordinates. -->
+    <a-box position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9"
+           material="color: #3a2a1c; roughness: 0.8"></a-box>
+    <a-box position="-0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+    <a-box position=" 0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+    <a-box position="-0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+    <a-box position=" 0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+    <a-box position="0 0.45 -1.6" width="0.5" height="0.05" depth="0.5" material="color: #2a1e14"></a-box>
+    <a-box position="0 0.7 -1.6" width="0.5" height="0.5" depth="0.05" material="color: #2a1e14"></a-box>
+
+    <!-- Lamp -->
+    <a-entity position="-0.4 0.9 -1.35">
+      <a-cylinder radius="0.06" height="0.18" material="color: #d8b46a; metalness: 0.7; roughness: 0.3"></a-cylinder>
+      <a-sphere radius="0.07" position="0 0.16 0"
+                material="color: #ffcf80; emissive: #ffb060; emissiveIntensity: 1.4"></a-sphere>
+      <a-entity light="type: point; color: #ffb060; intensity: 1.6; distance: 5"
+                position="0 0.16 0"></a-entity>
+    </a-entity>
+
+    <!-- The jar -->
+    <a-entity id="jar" jar class="clickable" position="0.25 0.82 -1.6"
+              geometry="primitive: cylinder; radius: 0.09; height: 0.22"
+              material="color: #cfe4ff; opacity: 0.35; transparent: true; roughness: 0.05; metalness: 0.1">
+      <a-entity geometry="primitive: cylinder; radius: 0.1; height: 0.02" position="0 0.12 0"
+                material="color: #b8c8e0; metalness: 0.6"></a-entity>
+      <a-text value="lines: 0" position="0 0.3 0" align="center" width="1"
+              color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
+    </a-entity>
+
+    <!-- Pen, paper, book -->
+    <a-cylinder radius="0.008" height="0.16" rotation="0 0 80"
+                position="0.05 0.79 -1.5" material="color: #101010"></a-cylinder>
+    <a-plane width="0.22" height="0.3" rotation="-90 0 10"
+             position="-0.15 0.785 -1.55" material="color: #f3e9c8"></a-plane>
+    <a-box width="0.18" height="0.04" depth="0.24"
+           position="0.05 0.79 -1.75" rotation="0 12 0" material="color: #6b2b2b"></a-box>
+
+    <!-- 4555 on the desk -->
+    <a-text value="4555" position="0 0.79 -1.6" rotation="-90 0 0" align="center"
+            color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
+
+    <!-- Rig — camera at eye height, FOV 55 -->
+    <a-entity id="rig" position="0 0 1.6">
+      <a-entity id="camera" camera="fov: 55" look-controls position="0 1.6 0"></a-entity>
+      <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
+      <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
+    </a-entity>
   </a-scene>
+
+  <!-- v5-detail — reserved for v6. The skin: fire, glow, books, clock, dove, sea, sky, stone. -->
+
+  <script>
+    // SPIRAL STAIRCASE — 24 steps, 4m rise. Steps carry .climbable.
+    (function buildSpiral() {
+      const spiral = document.getElementById('spiral');
+      const steps = 24;
+      const cx = 5.6, cz = -4.8;
+      for (let i = 0; i < steps; i++) {
+        const t = i / steps;
+        const angle = t * Math.PI * 3;
+        const r = 1.4 - t * 0.9;
+        const x = cx + Math.cos(angle) * r;
+        const z = cz + Math.sin(angle) * r;
+        const y = (i + 1) * (4 / steps);
+        const step = document.createElement('a-box');
+        step.setAttribute('class', 'climbable');
+        step.setAttribute('width', 0.9);
+        step.setAttribute('height', 0.05);
+        step.setAttribute('depth', 0.35);
+        step.setAttribute('position', `${x} ${y} ${z}`);
+        step.setAttribute('rotation', `0 ${-angle * 180 / Math.PI} 0`);
+        step.setAttribute('material', 'color: #3a342c; roughness: 1');
+        spiral.appendChild(step);
+      }
+    })();
+  </script>
+
+  <!--
+    GEOMETRY COUNT (v5.1):
+      Tower panels: 3. Void planes: 3. Floor: 1. Reticle: 1. Fireplace: 2.
+      Spiral: 1 post + 24 steps = 25. Tier rings: 9 × (a-ring + a-torus) = 18.
+      Collar: 1. Beam: 1 + 1 (spot). Desk + chair + props: 14. Camera/controllers: 3.
+      Total: 72 meshes. If the phone chokes, this is the count. Named, not hidden.
+  -->
 </body>
-</html>
+      </html>
