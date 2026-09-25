@@ -1,13 +1,12 @@
-<!-- lighthouse.html — v5.2k — 2026-09-24 — pitch fix, slower ladders, lamp guard, table collision. -->
+<!-- lighthouse.html — v5.2l — 2026-09-24 — jar fix, ladder gate widened, crisp turn, tier rings back. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v5.2k)</title>
+  <title>4555 — Lighthouse (v5.2l)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
-    // JAR — local diary.
     AFRAME.registerComponent('jar', {
       init: function () {
         this.textEl = this.el.querySelector('a-text');
@@ -33,7 +32,6 @@
           p.setAttribute('rotation', '-90 0 ' + Math.random()*360);
           this.el.appendChild(p);
         };
-        this.el.addEventListener('click', write);
         this.el.addEventListener('tap-jar', write);
       },
       render: function () {
@@ -41,13 +39,15 @@
       }
     });
 
-    // TOUCH-GATE — drag vs tap, two-finger vertical, manual raycast for taps.
-    // v5.2k: any .clickable blocks the walk. Table zone clamps the target.
     AFRAME.registerComponent('touch-gate', {
-      schema: { dragFraction: { default: 0.028 }, doubleTapMs: { default: 300 }, longPressMs: { default: 500 } },
+      schema: { dragFraction: { default: 0.028 }, doubleTapMs: { default: 280 },
+                doubleTapRadius: { default: 50 }, longPressMs: { default: 700 } },
       init: function () {
         this.start = null; this.startTime = 0; this.moved = false;
         this.touchCount = 0; this.twoFinger = false; this.twoFingerStartY = 0;
+        this.lastTapTime = 0; this.lastTapScreen = null;
+        this.pendingWalk = null;
+
         this.el.addEventListener('touchstart', (e) => {
           this.touchCount = e.touches.length;
           if (e.touches.length === 2) {
@@ -76,12 +76,33 @@
           setTimeout(() => { this.moved = false; }, 0);
 
           if (wasTwo && !wasMoved && elapsed < this.data.doubleTapMs) {
+            // Two-finger vertical — gated to ladder proximity in tap-walk.
             this.el.emit(startY < innerHeight/2 ? 'vertical-up' : 'vertical-down', {}, false);
             return;
           }
-          if (!wasTwo && !wasMoved && elapsed < this.data.longPressMs && t) {
-            this.tap(t.clientX, t.clientY);
+          if (wasTwo || wasMoved || elapsed >= this.data.longPressMs || !t) return;
+
+          const now = Date.now();
+          const near = this.lastTapScreen &&
+            Math.hypot(t.clientX - this.lastTapScreen.x, t.clientY - this.lastTapScreen.y)
+              < this.data.doubleTapRadius;
+          const fast = (now - this.lastTapTime) < this.data.doubleTapMs;
+
+          if (near && fast) {
+            if (this.pendingWalk) { clearTimeout(this.pendingWalk); this.pendingWalk = null; }
+            this.lastTapTime = 0; this.lastTapScreen = null;
+            this.el.emit('walk-forward', {}, false);
+            return;
           }
+
+          this.lastTapTime = now;
+          this.lastTapScreen = { x: t.clientX, y: t.clientY };
+          const cx = t.clientX, cy = t.clientY;
+          if (this.pendingWalk) clearTimeout(this.pendingWalk);
+          this.pendingWalk = setTimeout(() => {
+            this.pendingWalk = null;
+            this.tap(cx, cy);
+          }, this.data.doubleTapMs);
         }, true);
       },
       tap: function (cx, cy) {
@@ -95,37 +116,39 @@
         const rc = new THREE.Raycaster();
         rc.setFromCamera(ndc, cam);
 
-        // Any .clickable object in the scene blocks the walk.
-        const clickables = document.querySelectorAll('.clickable');
-        for (const el of clickables) {
-          if (rc.intersectObject(el.object3D, true).length > 0) {
-            if (el.id === 'jar') el.emit('tap-jar');
-            return;
-          }
+        const clickables = Array.from(document.querySelectorAll('.clickable'));
+        const objs = clickables.map(el => el.object3D);
+        const hits = rc.intersectObjects(objs, true);
+        if (hits.length > 0) {
+          // Nearest hit wins — walk up the tree to the .clickable root.
+          hits.sort((a, b) => a.distance - b.distance);
+          let target = hits[0].object.el;
+          while (target && !target.classList.contains('clickable')) target = target.parentElement;
+          if (target && target.id === 'jar') target.emit('tap-jar');
+          return;
         }
 
-        // Floor: intersect y=0 plane.
+        // Climbable? — tier rings and ladders. Tap = climb to that y.
+        const climbables = Array.from(document.querySelectorAll('.climbable'));
+        const cObjs = climbables.map(el => el.object3D);
+        const cHits = rc.intersectObjects(cObjs, true);
+        if (cHits.length > 0) {
+          cHits.sort((a, b) => a.distance - b.distance);
+          const p = cHits[0].point;
+          scene.emit('tap-climb', { x: p.x, y: p.y, z: p.z }, false);
+          return;
+        }
+
         const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
         const point = new THREE.Vector3();
-        let dest;
-        if (rc.ray.intersectPlane(plane, point) && point.distanceTo(rc.ray.origin) < 30) {
-          dest = { x: point.x, z: point.z };
-        } else {
-          const dir = rc.ray.direction.clone(); dir.y = 0;
-          if (dir.lengthSq() < 1e-6) return;
-          dir.normalize();
-          const rig = document.getElementById('rig');
-          const from = rig ? rig.object3D.position : { x: 0, z: 0 };
-          dest = { x: from.x + dir.x * 2.5, z: from.z + dir.z * 2.5 };
-        }
+        if (!rc.ray.intersectPlane(plane, point)) return;
+        if (point.distanceTo(rc.ray.origin) > 30) return;
+        let dest = { x: point.x, z: point.z };
 
-        // Table collision — AABB around desk + chair.
         const BX_MIN = -0.9, BX_MAX = 0.9, BZ_MIN = -2.3, BZ_MAX = -0.7;
         if (dest.x > BX_MIN && dest.x < BX_MAX && dest.z > BZ_MIN && dest.z < BZ_MAX) {
-          const dl = Math.abs(dest.x - BX_MIN);
-          const dr = Math.abs(BX_MAX - dest.x);
-          const dt = Math.abs(dest.z - BZ_MIN);
-          const db = Math.abs(BZ_MAX - dest.z);
+          const dl = Math.abs(dest.x - BX_MIN), dr = Math.abs(BX_MAX - dest.x);
+          const dt = Math.abs(dest.z - BZ_MIN), db = Math.abs(BZ_MAX - dest.z);
           const m = Math.min(dl, dr, dt, db);
           if (m === dl) dest.x = BX_MIN;
           else if (m === dr) dest.x = BX_MAX;
@@ -133,7 +156,6 @@
           else dest.z = BZ_MAX;
         }
 
-        // Clamp to walkable radius.
         const r = Math.hypot(dest.x, dest.z);
         const maxR = 8.0;
         if (r > maxR) { dest.x *= maxR / r; dest.z *= maxR / r; }
@@ -142,58 +164,53 @@
       }
     });
 
-    // LOOK — touch-only. v5.2k: grabs the real THREE camera from the camera component.
     AFRAME.registerComponent('look', {
-      schema: { sensitivity: { default: 0.008 }, limit: { default: 1.48 }, dragThreshold: { default: 15 } },
+      schema: { sensitivity: { default: 0.008 }, limit: { default: 1.48 }, dragThreshold: { default: 18 } },
       init: function () {
         this.yaw = 0; this.pitch = 0;
         this.start = null; this.last = null; this.dragging = false;
-
+        const self = this;
         const getCam = () => {
-          const c = this.el.components.camera && this.el.components.camera.camera;
-          return c || this.el.object3D;
+          const c = self.el.components.camera && self.el.components.camera.camera;
+          return c || self.el.object3D;
         };
-
-        const onStart = (e) => {
+        this.onStart = (e) => {
           const t = e.touches[0]; if (!t) return;
-          this.start = { x: t.clientX, y: t.clientY };
-          this.last  = { x: t.clientX, y: t.clientY };
-          this.dragging = false;
+          self.start = { x: t.clientX, y: t.clientY };
+          self.last  = { x: t.clientX, y: t.clientY };
+          self.dragging = false;
         };
-        const onMove = (e) => {
-          const t = e.touches[0]; if (!t || !this.start) return;
-          if (!this.dragging) {
-            const d = Math.hypot(t.clientX - this.start.x, t.clientY - this.start.y);
-            if (d < this.data.dragThreshold) return;
-            this.dragging = true;
-            this.last = { x: t.clientX, y: t.clientY };
+        this.onMove = (e) => {
+          const t = e.touches[0]; if (!t || !self.start) return;
+          if (!self.dragging) {
+            const d = Math.hypot(t.clientX - self.start.x, t.clientY - self.start.y);
+            if (d < self.data.dragThreshold) return;
+            self.dragging = true;
+            self.last = { x: t.clientX, y: t.clientY };
             return;
           }
-          const dx = t.clientX - this.last.x, dy = t.clientY - this.last.y;
-          this.last = { x: t.clientX, y: t.clientY };
-          this.yaw   -= dx * this.data.sensitivity;
-          this.pitch -= dy * this.data.sensitivity;
-          if (this.pitch >  this.data.limit) this.pitch =  this.data.limit;
-          if (this.pitch < -this.data.limit) this.pitch = -this.data.limit;
+          const dx = t.clientX - self.last.x, dy = t.clientY - self.last.y;
+          self.last = { x: t.clientX, y: t.clientY };
+          self.yaw   -= dx * self.data.sensitivity;
+          self.pitch -= dy * self.data.sensitivity;
+          if (self.pitch >  self.data.limit) self.pitch =  self.data.limit;
+          if (self.pitch < -self.data.limit) self.pitch = -self.data.limit;
           const cam = getCam();
           cam.rotation.order = 'YXZ';
-          cam.rotation.y = this.yaw;
-          cam.rotation.x = this.pitch;
+          cam.rotation.y = self.yaw;
+          cam.rotation.x = self.pitch;
           cam.rotation.z = 0;
         };
-        const onEnd = () => { this.start = null; this.last = null; this.dragging = false; };
-
-        // Listen on both the scene and the document — one of them always fires.
-        this.el.sceneEl.addEventListener('touchstart', onStart, true);
-        this.el.sceneEl.addEventListener('touchmove', onMove, true);
-        this.el.sceneEl.addEventListener('touchend', onEnd, true);
-        document.addEventListener('touchstart', onStart, { capture: true, passive: true });
-        document.addEventListener('touchmove', onMove, { capture: true, passive: true });
-        document.addEventListener('touchend', onEnd, { capture: true, passive: true });
+        this.onEnd = () => { self.start = null; self.last = null; self.dragging = false; };
+        this.el.sceneEl.addEventListener('touchstart', this.onStart, true);
+        this.el.sceneEl.addEventListener('touchmove', this.onMove, true);
+        this.el.sceneEl.addEventListener('touchend', this.onEnd, true);
+        document.addEventListener('touchstart', this.onStart, { capture: true, passive: true });
+        document.addEventListener('touchmove', this.onMove, { capture: true, passive: true });
+        document.addEventListener('touchend', this.onEnd, { capture: true, passive: true });
       }
     });
 
-    // LADDER-RAIL — two ladders, slower still.
     AFRAME.registerComponent('ladder-rail', {
       schema: { angularSpeed: { default: 0.008 }, radius: { default: 8.5 }, height: { default: 40 } },
       init: function () {
@@ -210,29 +227,67 @@
       }
     });
 
-    // TAP-WALK — three states.
+    // TAP-WALK — crisp turn (fast) then glide (slow). Two-finger vertical only near a ladder.
     AFRAME.registerComponent('tap-walk', {
-      schema: { radius: { default: 8.0 }, speed: { default: 0.6 }, turnSpeed: { default: 1.0 },
-                tierMeters: { default: 4.0 }, ladderReach: { default: 2.5 } },
+      schema: { radius: { default: 8.0 }, speed: { default: 0.45 }, turnSpeed: { default: 2.5 },
+                tierMeters: { default: 4.0 }, ladderReach: { default: 3.0 },
+                forwardMeters: { default: 2.0 } },
       init: function () {
         this.rig = document.getElementById('rig');
         this.state = 'idle'; this.target = null; this.targetYaw = 0;
+
         this.el.addEventListener('tap-walk', (e) => {
-          const x = e.detail.x, z = e.detail.z;
-          this.target = new THREE.Vector3(x, 0, z);
-          this.targetYaw = Math.atan2(x, z);
+          if (!this.rig) return;
+          const tx = e.detail.x, tz = e.detail.z;
+          this.target = new THREE.Vector3(tx, 0, tz);
+          const o = this.rig.object3D.position;
+          const dx = tx - o.x, dz = tz - o.z;
+          this.targetYaw = Math.atan2(dx, dz);
           this.state = 'turning';
           const ret = document.getElementById('reticle');
-          if (ret) ret.object3D.position.set(x, 0.02, z);
+          if (ret) ret.object3D.position.set(tx, 0.02, tz);
         });
+
+        this.el.addEventListener('tap-climb', (e) => {
+          if (!this.rig) return;
+          const o = this.rig.object3D.position;
+          this.target = new THREE.Vector3(o.x, e.detail.y, o.z);
+          this.targetYaw = o.rotation.y;
+          this.state = 'gliding';
+          const ret = document.getElementById('reticle');
+          if (ret) ret.object3D.position.set(o.x, e.detail.y + 0.02, o.z);
+        });
+
+        this.el.addEventListener('walk-forward', () => {
+          if (!this.rig || this.state !== 'idle') return;
+          const o = this.rig.object3D;
+          const yaw = o.rotation.y;
+          const dx = Math.sin(yaw) * this.data.forwardMeters;
+          const dz = Math.cos(yaw) * this.data.forwardMeters;
+          let tx = o.position.x + dx, tz = o.position.z + dz;
+          const r = Math.hypot(tx, tz);
+          if (r > this.data.radius) { tx *= this.data.radius / r; tz *= this.data.radius / r; }
+          const BX_MIN = -0.9, BX_MAX = 0.9, BZ_MIN = -2.3, BZ_MAX = -0.7;
+          if (tx > BX_MIN && tx < BX_MAX && tz > BZ_MIN && tz < BZ_MAX) return;
+          this.target = new THREE.Vector3(tx, o.position.y, tz);
+          this.targetYaw = yaw;
+          this.state = 'gliding';
+        });
+
         this.el.addEventListener('vertical-up', () => {
-          if (!this.rig || !this.nearLadder()) return;
+          if (!this.rig || this.state !== 'idle') return;
+          if (!this.nearLadder()) {
+            const hud = document.getElementById('hud');
+            if (hud) { hud.setAttribute('text', 'value', 'walk to a ladder'); setTimeout(() => hud.setAttribute('text', 'value', ''), 1200); }
+            return;
+          }
           const o = this.rig.object3D;
           this.target = new THREE.Vector3(o.position.x, Math.min(o.position.y + this.data.tierMeters, 36), o.position.z);
           this.targetYaw = o.rotation.y; this.state = 'gliding';
         });
         this.el.addEventListener('vertical-down', () => {
-          if (!this.rig || !this.nearLadder()) return;
+          if (!this.rig || this.state !== 'idle') return;
+          if (!this.nearLadder()) return;
           const o = this.rig.object3D;
           this.target = new THREE.Vector3(o.position.x, Math.max(0, o.position.y - this.data.tierMeters), o.position.z);
           this.targetYaw = o.rotation.y; this.state = 'gliding';
@@ -279,9 +334,9 @@
 </head>
 <body>
   <a-scene
-    touch-gate="dragFraction: 0.028; doubleTapMs: 300; longPressMs: 500"
+    touch-gate="dragFraction: 0.028; doubleTapMs: 280; doubleTapRadius: 50; longPressMs: 700"
     ladder-rail="angularSpeed: 0.008; radius: 8.5; height: 40"
-    tap-walk="radius: 8.0; speed: 0.6; turnSpeed: 1.0; tierMeters: 4.0; ladderReach: 2.5"
+    tap-walk="radius: 8.0; speed: 0.45; turnSpeed: 2.5; tierMeters: 4.0; ladderReach: 3.0; forwardMeters: 2.0"
     fog="type: exponential; color: #0a0a0f; density: 0.025"
     renderer="antialias: true; colorManagement: true"
     background="color: #0a0a0f"
@@ -303,18 +358,21 @@
 
     <a-ring id="reticle" radius-inner="0.08" radius-outer="0.12" rotation="-90 0 0" position="0 0.02 1.6" material="color: #ffe6b0; opacity: 0.55; transparent: true; side: double; depthWrite: false"></a-ring>
 
+    <a-text id="hud" value="" position="0 2.4 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
+
     <a-box width="3.4" height="3.0" depth="1.2" position="0 1.5 -7.4" material="color: #3a342c; roughness: 1"></a-box>
     <a-box width="1.8" height="1.6" depth="0.4" position="0 0.8 -6.7" material="color: #15110c; roughness: 1"></a-box>
 
-    <a-ring position="0 4 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
-    <a-ring position="0 8 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
-    <a-ring position="0 12 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
-    <a-ring position="0 16 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
-    <a-ring position="0 20 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
-    <a-ring position="0 24 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
-    <a-ring position="0 28 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
-    <a-ring position="0 32 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
-    <a-ring position="0 36 0" radius-inner="8.4" radius-outer="8.6" rotation="-90 0 0" material="color: #2a241c; roughness: 1; side: double"></a-ring>
+    <!-- Tier rings — .climbable. Single tap = climb to that tier. -->
+    <a-entity position="0 4 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+    <a-entity position="0 8 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+    <a-entity position="0 12 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+    <a-entity position="0 16 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+    <a-entity position="0 20 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+    <a-entity position="0 24 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+    <a-entity position="0 28 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+    <a-entity position="0 32 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+    <a-entity position="0 36 0"><a-ring class="climbable" radius-inner="5.5" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.5" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
 
     <a-entity id="ladder-a" class="climbable" position="0 20 8.5" material="color: #3a342c" geometry="primitive: box; width: 0.3; height: 40; depth: 0.15"></a-entity>
     <a-entity id="ladder-b" class="climbable" position="0 20 -8.5" material="color: #3a342c" geometry="primitive: box; width: 0.3; height: 40; depth: 0.15"></a-entity>
@@ -344,8 +402,8 @@
     </a-entity>
 
     <a-entity id="jar" jar class="clickable" position="0.25 0.82 -1.6" geometry="primitive: cylinder; radius: 0.09; height: 0.22" material="color: #cfe4ff; opacity: 0.35; transparent: true; roughness: 0.05; metalness: 0.1">
-      <a-entity geometry="primitive: cylinder; radius: 0.1; height: 0.02" position="0 0.12 0" material="color: #b8c8e0; metalness: 0.6"></a-entity>
-      <a-text value="entries: 0" position="0 0.3 0" align="center" width="1" color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
+      <a-entity class="clickable" geometry="primitive: cylinder; radius: 0.1; height: 0.02" position="0 0.12 0" material="color: #b8c8e0; metalness: 0.6"></a-entity>
+      <a-text class="clickable" value="entries: 0" position="0 0.3 0" align="center" width="1" color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
     </a-entity>
 
     <a-cylinder class="clickable" radius="0.008" height="0.16" rotation="0 0 80" position="0.05 0.79 -1.5" material="color: #101010"></a-cylinder>
@@ -355,10 +413,8 @@
 
     <a-entity id="rig" position="0 0 1.6">
       <a-entity id="camera" camera="fov: 70"
-                look="sensitivity: 0.008; limit: 1.48; dragThreshold: 15"
+                look="sensitivity: 0.008; limit: 1.48; dragThreshold: 18"
                 position="0 1.6 0"></a-entity>
-      <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
-      <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
     </a-entity>
   </a-scene>
 </body>
