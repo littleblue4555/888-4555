@@ -1,10 +1,10 @@
-<!-- lighthouse.html — v5.2o — 2026-09-24 — hold-and-release walk. Lean cue. -->
+<!-- lighthouse.html — v5.2p — 2026-09-24 — forward is forward. Sign fix. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v5.2o)</title>
+  <title>4555 — Lighthouse (v5.2p)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
     AFRAME.registerComponent('jar', {
@@ -39,7 +39,6 @@
       }
     });
 
-    // TOUCH-GATE — hold (100ms) = walk. Drag (18px) = look. Two-finger = tier climb. Tap = props.
     AFRAME.registerComponent('touch-gate', {
       schema: {
         dragPx:       { default: 18 },
@@ -152,11 +151,10 @@
       }
     });
 
-    // LOOK — drag to look. Lean offset applied on top of pitch when walking.
     AFRAME.registerComponent('look', {
       schema: { sensitivity: { default: 0.008 }, limit: { default: 1.48 }, dragThreshold: { default: 18 } },
       init: function () {
-        this.yaw = 0; this.pitch = 0; this.lean = 0;      // lean: radians, forward tilt while walking
+        this.yaw = 0; this.pitch = 0; this.lean = 0;
         this.leanTarget = 0;
         this.start = null; this.last = null; this.dragging = false;
         const self = this;
@@ -203,7 +201,7 @@
         document.addEventListener('touchmove', this.onMove, { capture: true, passive: true });
         document.addEventListener('touchend', this.onEnd, { capture: true, passive: true });
 
-        this.el.sceneEl.addEventListener('walk-start', () => { this.leanTarget = -0.035; });  // ~2° forward
+        this.el.sceneEl.addEventListener('walk-start', () => { this.leanTarget = -0.035; });
         this.el.sceneEl.addEventListener('walk-stop',  () => { this.leanTarget = 0; });
       },
       tick: function (t, dt) {
@@ -234,11 +232,11 @@
       }
     });
 
-    // TAP-WALK — hold to walk forward. Release stops. Continuous. Tier climb on two-finger tap.
+    // TAP-WALK — hold to walk forward (fixed sign). Release stops. Tier climb on two-finger tap.
     AFRAME.registerComponent('tap-walk', {
       schema: {
         radius:      { default: 8.0 },
-        walkSpeed:   { default: 1.1 },     // m/s — steady human-ish
+        walkSpeed:   { default: 1.1 },
         tierMeters:  { default: 4.0 },
         ladderReach: { default: 3.0 },
         climbTime:   { default: 0.9 }
@@ -303,8 +301,9 @@
         if (this.walking) {
           const cam = document.getElementById('camera');
           const yaw = cam && cam.object3D ? cam.object3D.rotation.y : 0;
-          const dx = Math.sin(yaw) * this.data.walkSpeed * s;
-          const dz = Math.cos(yaw) * this.data.walkSpeed * s;
+          // A-Frame camera looks down -Z. Forward is -sin/-cos, not +sin/+cos.
+          const dx = -Math.sin(yaw) * this.data.walkSpeed * s;
+          const dz = -Math.cos(yaw) * this.data.walkSpeed * s;
           let nx = o.position.x + dx;
           let nz = o.position.z + dz;
 
@@ -312,11 +311,11 @@
             const BX_MIN = -0.9, BX_MAX = 0.9, BZ_MIN = -2.3, BZ_MAX = -0.7;
             if (nx > BX_MIN && nx < BX_MAX && nz > BZ_MIN && nz < BZ_MAX) {
               const dl = Math.abs(nx - BX_MIN), dr = Math.abs(BX_MAX - nx);
-              const dt = Math.abs(nz - BZ_MIN), db = Math.abs(BZ_MAX - nz);
-              const m = Math.min(dl, dr, dt, db);
+              const dt2 = Math.abs(nz - BZ_MIN), db = Math.abs(BZ_MAX - nz);
+              const m = Math.min(dl, dr, dt2, db);
               if (m === dl) nx = BX_MIN;
               else if (m === dr) nx = BX_MAX;
-              else if (m === dt) nz = BZ_MIN;
+              else if (m === dt2) nz = BZ_MIN;
               else nz = BZ_MAX;
             }
           }
@@ -359,8 +358,6 @@
     <a-plane width="6" height="40" rotation="0 240 0" position="7.97 20 -4.6" material="color: #05070c; side: double; fog: false"></a-plane>
 
     <a-circle radius="9.0" rotation="-90 0 0" position="0 0.01 0" class="walkable" material="color: #1d1814; roughness: 0.4; metalness: 0.2"></a-circle>
-
-    <a-text id="hud" value="" position="0 2.4 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
 
     <a-box width="3.4" height="3.0" depth="1.2" position="0 1.5 -7.4" material="color: #3a342c; roughness: 1"></a-box>
     <a-box width="1.8" height="1.6" depth="0.4" position="0 0.8 -6.7" material="color: #15110c; roughness: 1"></a-box>
