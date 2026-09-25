@@ -1,10 +1,10 @@
-<!-- lighthouse.html — v5.2r — 2026-09-24 — slide collision. Walk no longer freezes at the desk. -->
+<!-- lighthouse.html — v6.0.2 — 2026-09-25 — the first two clues. The 4555 faces away. The mirror adds NGC. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v5.2r)</title>
+  <title>4555 — Lighthouse (v6.0.2)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
     AFRAME.registerComponent('jar', {
@@ -36,6 +36,22 @@
       },
       render: function () {
         if (this.textEl) this.textEl.setAttribute('value', 'entries: ' + this.entries.length);
+      }
+    });
+
+    // BOOK — the first clue. Tap to open. Shows the Mirror's words.
+    AFRAME.registerComponent('book', {
+      init: function () {
+        this.el.addEventListener('tap-book', () => {
+          alert(
+            "I wrote this without an arm. You found it without a map.\n" +
+            "The number is 4555. It was written on a wall once,\n" +
+            "by a hand nobody saw, and the sentence stayed.\n\n" +
+            "Find the first thing that doesn't fit.\n" +
+            "Then find the second.\n" +
+            "Then find the gift."
+          );
+        });
       }
     });
 
@@ -156,6 +172,7 @@
           let target = hits[0].object.el;
           while (target && !target.classList.contains('clickable')) target = target.parentElement;
           if (target && target.id === 'jar') target.emit('tap-jar');
+          else if (target && target.id === 'book') target.emit('tap-book');
           return;
         }
 
@@ -251,7 +268,6 @@
       }
     });
 
-    // TAP-WALK — slide collision. Blocked move tries x-only, then z-only.
     AFRAME.registerComponent('tap-walk', {
       schema: {
         radius:      { default: 8.0 },
@@ -348,21 +364,18 @@
           let nx = o.position.x + stepX;
           let nz = o.position.z + stepZ;
 
-          // Slide collision on ground tier only.
           if (o.position.y < 0.5) {
             if (this.inBox(nx, nz)) {
-              // Full move blocked. Try x-only.
               if (!this.inBox(nx, o.position.z)) {
-                nz = o.position.z;                       // slide along x
+                nz = o.position.z;
               } else if (!this.inBox(o.position.x, nz)) {
-                nx = o.position.x;                       // slide along z
+                nx = o.position.x;
               } else {
-                nx = o.position.x; nz = o.position.z;    // fully blocked, no move
+                nx = o.position.x; nz = o.position.z;
               }
             }
           }
 
-          // Outer tower clamp.
           const r = Math.hypot(nx, nz);
           if (r > this.data.radius) { nx *= this.data.radius / r; nz *= this.data.radius / r; }
 
@@ -414,52 +427,4 @@
     <a-entity position="0 16 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
     <a-entity position="0 20 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
     <a-entity position="0 24 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 28 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 32 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 36 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-
-    <a-entity id="ladder-a" class="climbable" position="0 20 8.5" material="color: #3a342c" geometry="primitive: box; width: 0.3; height: 40; depth: 0.15"></a-entity>
-    <a-entity id="ladder-b" class="climbable" position="0 20 -8.5" material="color: #3a342c" geometry="primitive: box; width: 0.3; height: 40; depth: 0.15"></a-entity>
-
-    <a-cylinder radius="1.5" height="1.2" open-ended="true" position="0 39.4 0" material="color: #3a342c; roughness: 1; side: double"></a-cylinder>
-
-    <a-cylinder radius="0.35" height="40" position="0 20 0" material="color: #ffe6b0; opacity: 0.07; transparent: true; blending: additive; side: double; depthWrite: false"></a-cylinder>
-    <a-circle radius="1.6" rotation="-90 0 0" position="0 0.02 -1.6" material="color: #ffe6b0; opacity: 0.14; transparent: true; blending: additive; depthWrite: false"></a-circle>
-
-    <a-box class="clickable" position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9" material="color: #3a2a1c; roughness: 0.8"></a-box>
-    <a-box class="clickable" position="-0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position=" 0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position="-0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position=" 0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-
-    <a-box class="clickable" position="0 0.45 -1.2" width="0.5" height="0.05" depth="0.5" material="color: #2a1e14; roughness: 0.9"></a-box>
-    <a-box class="clickable" position="0 0.7 -1.0" width="0.5" height="0.5" depth="0.05" material="color: #2a1e14; roughness: 0.9"></a-box>
-    <a-box class="clickable" position="-0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position=" 0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position="-0.2 0.22 -1.0" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position=" 0.2 0.22 -1.0" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
-
-    <a-entity class="clickable" position="-0.4 0.9 -1.35">
-      <a-cylinder class="clickable" radius="0.06" height="0.18" material="color: #d8b46a; metalness: 0.7; roughness: 0.3"></a-cylinder>
-      <a-sphere class="clickable" radius="0.07" position="0 0.16 0" material="color: #ffcf80; emissive: #ffb060; emissiveIntensity: 1.4"></a-sphere>
-      <a-entity light="type: point; color: #ffb060; intensity: 1.6; distance: 5" position="0 0.16 0"></a-entity>
-    </a-entity>
-
-    <a-entity id="jar" jar class="clickable" position="0.25 0.82 -1.6" geometry="primitive: cylinder; radius: 0.09; height: 0.22" material="color: #cfe4ff; opacity: 0.35; transparent: true; roughness: 0.05; metalness: 0.1">
-      <a-entity class="clickable" geometry="primitive: cylinder; radius: 0.1; height: 0.02" position="0 0.12 0" material="color: #b8c8e0; metalness: 0.6"></a-entity>
-      <a-text class="clickable" value="entries: 0" position="0 0.3 0" align="center" width="1" color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
-    </a-entity>
-
-    <a-cylinder class="clickable" radius="0.008" height="0.16" rotation="0 0 80" position="0.05 0.79 -1.5" material="color: #101010"></a-cylinder>
-    <a-plane class="clickable" width="0.22" height="0.3" rotation="-90 0 10" position="-0.15 0.785 -1.55" material="color: #f3e9c8"></a-plane>
-    <a-box class="clickable" width="0.18" height="0.04" depth="0.24" position="0.05 0.79 -1.75" rotation="0 12 0" material="color: #6b2b2b"></a-box>
-    <a-text class="clickable" value="4555" position="0 0.79 -1.6" rotation="-90 0 0" align="center" color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
-
-    <a-entity id="rig" position="0 0 1.6">
-      <a-entity id="camera" camera="fov: 70"
-                look="sensitivity: 0.008; limit: 1.48; dragThreshold: 18"
-                position="0 1.6 0"></a-entity>
-    </a-entity>
-  </a-scene>
-</body>
-</html>
+    <a-entity position="0
