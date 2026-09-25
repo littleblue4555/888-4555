@@ -1,10 +1,10 @@
-<!-- lighthouse.html — v5.2q — 2026-09-24 — walk direction fixed (world-space forward), Android hold hardened. -->
+<!-- lighthouse.html — v5.2r — 2026-09-24 — slide collision. Walk no longer freezes at the desk. -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v5.2q)</title>
+  <title>4555 — Lighthouse (v5.2r)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script>
     AFRAME.registerComponent('jar', {
@@ -251,8 +251,7 @@
       }
     });
 
-    // TAP-WALK — walk uses camera's WORLD-SPACE forward vector. Not entity rotation.
-    // Up needs a ladder. Down works anywhere.
+    // TAP-WALK — slide collision. Blocked move tries x-only, then z-only.
     AFRAME.registerComponent('tap-walk', {
       schema: {
         radius:      { default: 8.0 },
@@ -298,11 +297,10 @@
           this.climbTo   = new THREE.Vector3(o.x, Math.min(o.y + this.data.tierMeters, 36), o.z);
           this.climbT = 0;
         });
-        // Down works anywhere — no ladder needed.
         this.el.addEventListener('vertical-down', () => {
           if (!this.rig || this.climbFrom) return;
           const o = this.rig.object3D.position;
-          if (o.y < 0.5) return;   // already on ground
+          if (o.y < 0.5) return;
           this.climbFrom = new THREE.Vector3(o.x, o.y, o.z);
           this.climbTo   = new THREE.Vector3(o.x, Math.max(0, o.y - this.data.tierMeters), o.z);
           this.climbT = 0;
@@ -317,6 +315,10 @@
           if (Math.hypot(p.x - o.x, p.z - o.z) < this.data.ladderReach) return true;
         }
         return false;
+      },
+      inBox: function (x, z) {
+        const BX_MIN = -0.8, BX_MAX = 0.8, BZ_MIN = -2.1, BZ_MAX = -1.1;
+        return x > BX_MIN && x < BX_MAX && z > BZ_MIN && z < BZ_MAX;
       },
       tick: function (t, dt) {
         if (!this.rig) return;
@@ -333,33 +335,37 @@
         }
 
         if (this.walking) {
-          // Read the camera's true world-space forward vector. Same source look writes to.
           const camEl = document.getElementById('camera');
           const camObj = (camEl.components.camera && camEl.components.camera.camera) || camEl.object3D;
           const dir = new THREE.Vector3();
           camObj.getWorldDirection(dir);
           dir.y = 0;
-          if (dir.lengthSq() < 1e-6) return;   // looking straight up/down — no horizontal heading
+          if (dir.lengthSq() < 1e-6) return;
           dir.normalize();
 
-          let nx = o.position.x + dir.x * this.data.walkSpeed * s;
-          let nz = o.position.z + dir.z * this.data.walkSpeed * s;
+          const stepX = dir.x * this.data.walkSpeed * s;
+          const stepZ = dir.z * this.data.walkSpeed * s;
+          let nx = o.position.x + stepX;
+          let nz = o.position.z + stepZ;
 
+          // Slide collision on ground tier only.
           if (o.position.y < 0.5) {
-            const BX_MIN = -0.9, BX_MAX = 0.9, BZ_MIN = -2.3, BZ_MAX = -0.7;
-            if (nx > BX_MIN && nx < BX_MAX && nz > BZ_MIN && nz < BZ_MAX) {
-              const dl = Math.abs(nx - BX_MIN), dr = Math.abs(BX_MAX - nx);
-              const dt2 = Math.abs(nz - BZ_MIN), db = Math.abs(BZ_MAX - nz);
-              const m = Math.min(dl, dr, dt2, db);
-              if (m === dl) nx = BX_MIN;
-              else if (m === dr) nx = BX_MAX;
-              else if (m === dt2) nz = BZ_MIN;
-              else nz = BZ_MAX;
+            if (this.inBox(nx, nz)) {
+              // Full move blocked. Try x-only.
+              if (!this.inBox(nx, o.position.z)) {
+                nz = o.position.z;                       // slide along x
+              } else if (!this.inBox(o.position.x, nz)) {
+                nx = o.position.x;                       // slide along z
+              } else {
+                nx = o.position.x; nz = o.position.z;    // fully blocked, no move
+              }
             }
           }
 
+          // Outer tower clamp.
           const r = Math.hypot(nx, nz);
           if (r > this.data.radius) { nx *= this.data.radius / r; nz *= this.data.radius / r; }
+
           o.position.set(nx, o.position.y, nz);
         }
       }
@@ -397,7 +403,6 @@
 
     <a-circle radius="9.0" rotation="-90 0 0" position="0 0.01 0" class="walkable" material="color: #1d1814; roughness: 0.4; metalness: 0.2"></a-circle>
 
-    <!-- HUD — small text high up so you can see it while walking -->
     <a-text id="hud" value="" position="0 2.4 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
 
     <a-box width="3.4" height="3.0" depth="1.2" position="0 1.5 -7.4" material="color: #3a342c; roughness: 1"></a-box>
