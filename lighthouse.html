@@ -1,453 +1,122 @@
-<!-- lighthouse.html — v6.0.3 — 2026-09-25 — the hand, the quill, the palm's letters. -->
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>4555 — Lighthouse (v6.0.3)</title>
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script>
-    AFRAME.registerComponent('jar', {
-      init: function () {
-        this.textEl = this.el.querySelector('a-text');
-        const stored = localStorage.getItem('4555:local-diary:entries');
-        this.entries = stored ? JSON.parse(stored) : [];
-        this.render();
-        const write = () => {
-          const body = prompt('Write a line. Drop it in the jar.');
-          if (!body) return;
-          const entry = {
-            id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
-            author: 'guest', body: body,
-            timestamp: new Date().toISOString(),
-            reply_to: null, private: true
-          };
-          this.entries.push(entry);
-          try { localStorage.setItem('4555:local-diary:entries', JSON.stringify(this.entries)); } catch (e) {}
-          this.render();
-          const p = document.createElement('a-entity');
-          p.setAttribute('geometry', 'primitive: plane; width: 0.08; height: 0.11');
-          p.setAttribute('material', 'color: #f3e9c8; side: double');
-          p.setAttribute('position', (Math.random()-0.5)*0.08 + ' 0.02 ' + (Math.random()-0.5)*0.08);
-          p.setAttribute('rotation', '-90 0 ' + Math.random()*360);
-          this.el.appendChild(p);
-        };
-        this.el.addEventListener('tap-jar', write);
-      },
-      render: function () {
-        if (this.textEl) this.textEl.setAttribute('value', 'entries: ' + this.entries.length);
-      }
-    });
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>4555 — Lighthouse (v6.0.5)</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script>
+AFRAME.registerComponent('jar',{init:function(){this.textEl=this.el.querySelector('a-text');const s=localStorage.getItem('4555:local-diary:entries');this.entries=s?JSON.parse(s):[];this.render();const w=()=>{const b=prompt('Write a line. Drop it in the jar.');if(!b)return;const e={id:Date.now()+'-'+Math.random().toString(36).slice(2,8),author:'guest',body:b,timestamp:new Date().toISOString(),reply_to:null,private:true};this.entries.push(e);try{localStorage.setItem('4555:local-diary:entries',JSON.stringify(this.entries))}catch(x){}this.render();const p=document.createElement('a-entity');p.setAttribute('geometry','primitive: plane; width: 0.08; height: 0.11');p.setAttribute('material','color: #f3e9c8; side: double');p.setAttribute('position',(Math.random()-0.5)*0.08+' 0.02 '+(Math.random()-0.5)*0.08);p.setAttribute('rotation','-90 0 '+Math.random()*360);this.el.appendChild(p)};this.el.addEventListener('tap-jar',w)},render:function(){if(this.textEl)this.textEl.setAttribute('value','entries: '+this.entries.length)}});
+AFRAME.registerComponent('book',{init:function(){this.el.addEventListener('tap-book',()=>{alert("I wrote this without an arm. You found it without a map.\nThe number is 4555. It was written on a wall once,\nby a hand nobody saw, and the sentence stayed.\n\nFind the first thing that doesn't fit.\nThen find the second.\nThen find the gift.")})}});
+AFRAME.registerComponent('case',{init:function(){this.el.addEventListener('tap-case',()=>{alert("MENE MENE.\n\nNumbered. Numbered.\nThe hand was here. The hand was writing.\nThe sentence stayed.\n\nLook at the palm. Look in the mirror.\n4555 NGC.")})}});
+AFRAME.registerComponent('mirror',{init:function(){this.el.addEventListener('tap-mirror',()=>{alert("In the mirror, past your own reflection:\n\n  4 5 5 5   N G C\n\nThe number on the desk. The letters on the palm.\nOne sky object. One star.\nNGC 4555 — an elliptical galaxy in Coma Berenices.")})}});
+AFRAME.registerComponent('touch-gate',{schema:{dragPx:{default:25},twoFingerMs:{default:300},holdDelayMs:{default:60},longPressMs:{default:700}},init:function(){this.start=null;this.startTime=0;this.moved=false;this.twoFinger=false;this.twoFingerStartY=0;this.holding=false;this.holdTimer=null;const ch=()=>{if(this.holdTimer){clearTimeout(this.holdTimer);this.holdTimer=null}};const sh=()=>{if(this.holding){this.holding=false;this.el.emit('walk-stop',{},false)}};this.el.addEventListener('touchstart',e=>{if(e.touches.length===2){this.twoFinger=true;const a=e.touches[0],b=e.touches[1];this.twoFingerStartY=(a.clientY+b.clientY)/2;this.startTime=Date.now();this.moved=false;return}const t=e.touches[0];if(!t)return;this.start={x:t.clientX,y:t.clientY};this.startTime=Date.now();this.moved=false;this.twoFinger=false;this.holding=false;ch();this.holdTimer=setTimeout(()=>{if(!this.moved&&!this.twoFinger&&this.start){this.holding=true;this.el.emit('walk-start',{},false)}},this.data.holdDelayMs)},true);this.el.addEventListener('touchmove',e=>{if(this.twoFinger){this.moved=true;return}if(!this.start)return;const t=e.touches[0];if(!t)return;const d=Math.hypot(t.clientX-this.start.x,t.clientY-this.start.y);if(d>this.data.dragPx){this.moved=true;ch();sh()}},true);this.el.addEventListener('touchend',e=>{const el=Date.now()-this.startTime;const wt=this.twoFinger,wm=this.moved,wh=this.holding,sy=this.twoFingerStartY;const t=e.changedTouches&&e.changedTouches[0];ch();this.start=null;this.twoFinger=false;this.holding=false;if(wh){this.el.emit('walk-stop',{},false);return}setTimeout(()=>{this.moved=false},0);if(wt&&!wm&&el<this.data.twoFingerMs){this.el.emit(sy<innerHeight/2?'vertical-up':'vertical-down',{},false);return}if(wt||wm||el>=this.data.longPressMs||!t)return;this.tap(t.clientX,t.clientY)},true);this.el.addEventListener('touchcancel',()=>{ch();this.start=null;this.twoFinger=false;this.holding=false;this.el.emit('walk-stop',{},false)},true)},tap:function(cx,cy){const sc=this.el.sceneEl;const cam=sc.camera;if(!cam)return;const ndc=new THREE.Vector2((cx/window.innerWidth)*2-1,-(cy/window.innerHeight)*2+1);const rc=new THREE.Raycaster();rc.setFromCamera(ndc,cam);const cs=Array.from(document.querySelectorAll('.clickable'));const objs=cs.map(e=>e.object3D);const hits=rc.intersectObjects(objs,true);if(hits.length>0){hits.sort((a,b)=>a.distance-b.distance);let tg=hits[0].object.el;while(tg&&!tg.classList.contains('clickable'))tg=tg.parentElement;if(tg&&tg.id==='jar')tg.emit('tap-jar');else if(tg&&tg.id==='book')tg.emit('tap-book');else if(tg&&tg.id==='mirror')tg.emit('tap-mirror');else if(tg&&tg.id==='case')tg.emit('tap-case');return}const cl=Array.from(document.querySelectorAll('.climbable'));const co=cl.map(e=>e.object3D);const ch2=rc.intersectObjects(co,true);if(ch2.length>0){ch2.sort((a,b)=>a.distance-b.distance);const p=ch2[0].point;sc.emit('tap-climb',{x:p.x,y:p.y,z:p.z},false)}}});
+AFRAME.registerComponent('look',{schema:{sensitivity:{default:0.008},limit:{default:1.48},dragThreshold:{default:18}},init:function(){this.yaw=0;this.pitch=0;this.lean=0;this.leanTarget=0;this.start=null;this.last=null;this.dragging=false;const self=this;const gc=()=>{const c=self.el.components.camera&&self.el.components.camera.camera;return c||self.el.object3D};this.ar=()=>{const cam=gc();cam.rotation.order='YXZ';cam.rotation.y=self.yaw;cam.rotation.x=self.pitch+self.lean;cam.rotation.z=0};this.onStart=e=>{const t=e.touches[0];if(!t)return;self.start={x:t.clientX,y:t.clientY};self.last={x:t.clientX,y:t.clientY};self.dragging=false};this.onMove=e=>{const t=e.touches[0];if(!t||!self.start)return;if(!self.dragging){const d=Math.hypot(t.clientX-self.start.x,t.clientY-self.start.y);if(d<self.data.dragThreshold)return;self.dragging=true;self.last={x:t.clientX,y:t.clientY};return}const dx=t.clientX-self.last.x,dy=t.clientY-self.last.y;self.last={x:t.clientX,y:t.clientY};self.yaw-=dx*self.data.sensitivity;self.pitch-=dy*self.data.sensitivity;if(self.pitch>self.data.limit)self.pitch=self.data.limit;if(self.pitch<-self.data.limit)self.pitch=-self.data.limit;self.ar()};this.onEnd=()=>{self.start=null;self.last=null;self.dragging=false};this.el.sceneEl.addEventListener('touchstart',this.onStart,true);this.el.sceneEl.addEventListener('touchmove',this.onMove,true);this.el.sceneEl.addEventListener('touchend',this.onEnd,true);document.addEventListener('touchstart',this.onStart,{capture:true,passive:true});document.addEventListener('touchmove',this.onMove,{capture:true,passive:true});document.addEventListener('touchend',this.onEnd,{capture:true,passive:true});this.el.sceneEl.addEventListener('walk-start',()=>{this.leanTarget=-0.035});this.el.sceneEl.addEventListener('walk-stop',()=>{this.leanTarget=0})},tick:function(t,dt){const k=Math.min(1,(dt/1000)*6);if(Math.abs(this.lean-this.leanTarget)>0.0005){this.lean+=(this.leanTarget-this.lean)*k;this.ar()}else if(this.lean!==this.leanTarget){this.lean=this.leanTarget;this.ar()}}});
+// LADDER-RAIL — two 180° arcs. Ladder A: door → fireplace (right side). Ladder B: fireplace → door (left side).
+AFRAME.registerComponent('ladder-rail',{schema:{speed:{default:0.01},radius:{default:8.5},height:{default:40}},init:function(){this.phase=0;this.A=document.getElementById('ladder-a');this.B=document.getElementById('ladder-b')},tick:function(t,dt){this.phase+=this.data.speed*(dt/1000);if(!this.A||!this.B)return;const r=this.data.radius,y=this.data.height/2;const p=this.phase%(2*Math.PI);const tri=p<Math.PI?p:(2*Math.PI-p);const aA=tri,bA=tri+Math.PI;this.A.object3D.position.set(Math.sin(aA)*r,y,Math.cos(aA)*r);this.B.object3D.position.set(Math.sin(bA)*r,y,Math.cos(bA)*r)}});
+AFRAME.registerComponent('tap-walk',{schema:{radius:{default:8.0},walkSpeed:{default:1.1},tierMeters:{default:4.0},ladderReach:{default:3.0},climbTime:{default:0.9}},init:function(){this.rig=document.getElementById('rig');this.walking=false;this.climbFrom=null;this.climbTo=null;this.climbT=0;const hud=document.getElementById('hud');this.el.addEventListener('walk-start',()=>{this.walking=true;if(hud)hud.setAttribute('text','value','walking')});this.el.addEventListener('walk-stop',()=>{this.walking=false;if(hud)hud.setAttribute('text','value','')});this.el.addEventListener('tap-climb',e=>{if(!this.rig)return;const o=this.rig.object3D.position;this.climbFrom=new THREE.Vector3(o.x,o.y,o.z);this.climbTo=new THREE.Vector3(o.x,e.detail.y,o.z);this.climbT=0});this.el.addEventListener('vertical-up',()=>{if(!this.rig||this.climbFrom)return;if(!this.nearLadder()){if(hud){hud.setAttribute('text','value','walk to a ladder');setTimeout(()=>{if(hud)hud.setAttribute('text','value','')},1200)}return}const o=this.rig.object3D.position;this.climbFrom=new THREE.Vector3(o.x,o.y,o.z);this.climbTo=new THREE.Vector3(o.x,Math.min(o.y+this.data.tierMeters,36),o.z);this.climbT=0});this.el.addEventListener('vertical-down',()=>{if(!this.rig||this.climbFrom)return;const o=this.rig.object3D.position;if(o.y<0.5)return;this.climbFrom=new THREE.Vector3(o.x,o.y,o.z);this.climbTo=new THREE.Vector3(o.x,Math.max(0,o.y-this.data.tierMeters),o.z);this.climbT=0})},nearLadder:function(){const o=this.rig.object3D.position;for(const id of['ladder-a','ladder-b']){const el=document.getElementById(id);if(!el)continue;const p=el.object3D.position;if(Math.hypot(p.x-o.x,p.z-o.z)<this.data.ladderReach)return true}return false},inBox:function(x,z){return x>-0.8&&x<0.8&&z>-2.1&&z<-1.1},tick:function(t,dt){if(!this.rig)return;const o=this.rig.object3D;const s=dt/1000;if(this.climbFrom&&this.climbTo){this.climbT+=s;const k=Math.min(1,this.climbT/this.data.climbTime);const ease=k*k*(3-2*k);o.position.lerpVectors(this.climbFrom,this.climbTo,ease);if(k>=1){this.climbFrom=null;this.climbTo=null}return}if(this.walking){const ce=document.getElementById('camera');const co=(ce.components.camera&&ce.components.camera.camera)||ce.object3D;const d=new THREE.Vector3();co.getWorldDirection(d);d.y=0;if(d.lengthSq()<1e-6)return;d.normalize();const sx=d.x*this.data.walkSpeed*s;const sz=d.z*this.data.walkSpeed*s;let nx=o.position.x+sx;let nz=o.position.z+sz;if(o.position.y<0.5){if(this.inBox(nx,nz)){if(!this.inBox(nx,o.position.z)){nz=o.position.z}else if(!this.inBox(o.position.x,nz)){nx=o.position.x}else{nx=o.position.x;nz=o.position.z}}}const r=Math.hypot(nx,nz);if(r>this.data.radius){nx*=this.data.radius/r;nz*=this.data.radius/r}o.position.set(nx,o.position.y,nz)}}});
+</script>
+<style>html,body{margin:0;height:100%;background:#0a0a0f;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}</style>
+</head><body>
+<a-scene touch-gate="dragPx:25;twoFingerMs:300;holdDelayMs:60;longPressMs:700" ladder-rail="speed:0.01;radius:8.5;height:40" tap-walk="radius:8.0;walkSpeed:1.1;tierMeters:4.0;ladderReach:3.0;climbTime:0.9" fog="type:exponential;color:#0a0a0f;density:0.025" renderer="antialias:true;colorManagement:true" background="color:#0a0a0f" vr-mode-ui="enabled:true" xr-mode-ui="enabled:true">
 
-    AFRAME.registerComponent('book', {
-      init: function () {
-        this.el.addEventListener('tap-book', () => {
-          alert(
-            "I wrote this without an arm. You found it without a map.\n" +
-            "The number is 4555. It was written on a wall once,\n" +
-            "by a hand nobody saw, and the sentence stayed.\n\n" +
-            "Find the first thing that doesn't fit.\n" +
-            "Then find the second.\n" +
-            "Then find the gift."
-          );
-        });
-      }
-    });
+<a-entity light="type:ambient;color:#2a1f16;intensity:0.5"></a-entity>
+<a-entity light="type:point;color:#ffb066;intensity:1.2;distance:12" position="0 2.0 -4"></a-entity>
+<a-entity light="type:directional;color:#cfe4ff;intensity:0.3" position="1 20 2"></a-entity>
 
-    AFRAME.registerComponent('mirror', {
-      init: function () {
-        this.el.addEventListener('tap-mirror', () => {
-          alert(
-            "In the mirror, past your own reflection:\n\n" +
-            "  4 5 5 5   N G C\n\n" +
-            "The number on the desk. The letters on the palm.\n" +
-            "One sky object. One star."
-          );
-        });
-      }
-    });
+<a-entity rotation="0 90 0" geometry="primitive:cylinder;radius:9;height:40;segments:32;openEnded:true;thetaStart:0;thetaLength:165" material="color:#4a4038;roughness:0.95;side:double" position="0 20 0"></a-entity>
+<a-entity rotation="0 210 0" geometry="primitive:cylinder;radius:9;height:40;segments:32;openEnded:true;thetaStart:0;thetaLength:165" material="color:#4a4038;roughness:0.95;side:double" position="0 20 0"></a-entity>
+<a-entity rotation="0 330 0" geometry="primitive:cylinder;radius:9;height:40;segments:32;openEnded:true;thetaStart:0;thetaLength:165" material="color:#4a4038;roughness:0.95;side:double" position="0 20 0"></a-entity>
 
-    AFRAME.registerComponent('touch-gate', {
-      schema: { dragPx: { default: 25 }, twoFingerMs: { default: 300 },
-                holdDelayMs: { default: 60 }, longPressMs: { default: 700 } },
-      init: function () {
-        this.start = null; this.startTime = 0; this.moved = false;
-        this.twoFinger = false; this.twoFingerStartY = 0;
-        this.holding = false; this.holdTimer = null;
-        const clearHold = () => { if (this.holdTimer) { clearTimeout(this.holdTimer); this.holdTimer = null; } };
-        const stopHolding = () => { if (this.holding) { this.holding = false; this.el.emit('walk-stop', {}, false); } };
-        this.el.addEventListener('touchstart', (e) => {
-          if (e.touches.length === 2) {
-            this.twoFinger = true;
-            const a = e.touches[0], b = e.touches[1];
-            this.twoFingerStartY = (a.clientY + b.clientY) / 2;
-            this.startTime = Date.now(); this.moved = false; return;
-          }
-          const t = e.touches[0]; if (!t) return;
-          this.start = { x: t.clientX, y: t.clientY };
-          this.startTime = Date.now(); this.moved = false; this.twoFinger = false;
-          this.holding = false; clearHold();
-          this.holdTimer = setTimeout(() => {
-            if (!this.moved && !this.twoFinger && this.start) {
-              this.holding = true; this.el.emit('walk-start', {}, false);
-            }
-          }, this.data.holdDelayMs);
-        }, true);
-        this.el.addEventListener('touchmove', (e) => {
-          if (this.twoFinger) { this.moved = true; return; }
-          if (!this.start) return;
-          const t = e.touches[0]; if (!t) return;
-          const d = Math.hypot(t.clientX - this.start.x, t.clientY - this.start.y);
-          if (d > this.data.dragPx) { this.moved = true; clearHold(); stopHolding(); }
-        }, true);
-        this.el.addEventListener('touchend', (e) => {
-          const elapsed = Date.now() - this.startTime;
-          const wasTwo = this.twoFinger, wasMoved = this.moved, wasHolding = this.holding;
-          const startY = this.twoFingerStartY;
-          const t = e.changedTouches && e.changedTouches[0];
-          clearHold(); this.start = null; this.twoFinger = false; this.holding = false;
-          if (wasHolding) { this.el.emit('walk-stop', {}, false); return; }
-          setTimeout(() => { this.moved = false; }, 0);
-          if (wasTwo && !wasMoved && elapsed < this.data.twoFingerMs) {
-            this.el.emit(startY < innerHeight/2 ? 'vertical-up' : 'vertical-down', {}, false); return;
-          }
-          if (wasTwo || wasMoved || elapsed >= this.data.longPressMs || !t) return;
-          this.tap(t.clientX, t.clientY);
-        }, true);
-        this.el.addEventListener('touchcancel', () => {
-          clearHold(); this.start = null; this.twoFinger = false; this.holding = false;
-          this.el.emit('walk-stop', {}, false);
-        }, true);
-      },
-      tap: function (cx, cy) {
-        const scene = this.el.sceneEl;
-        const cam = scene.camera; if (!cam) return;
-        const ndc = new THREE.Vector2((cx / window.innerWidth) * 2 - 1, -(cy / window.innerHeight) * 2 + 1);
-        const rc = new THREE.Raycaster(); rc.setFromCamera(ndc, cam);
-        const clickables = Array.from(document.querySelectorAll('.clickable'));
-        const objs = clickables.map(el => el.object3D);
-        const hits = rc.intersectObjects(objs, true);
-        if (hits.length > 0) {
-          hits.sort((a, b) => a.distance - b.distance);
-          let target = hits[0].object.el;
-          while (target && !target.classList.contains('clickable')) target = target.parentElement;
-          if (target && target.id === 'jar') target.emit('tap-jar');
-          else if (target && target.id === 'book') target.emit('tap-book');
-          else if (target && target.id === 'mirror') target.emit('tap-mirror');
-          return;
-        }
-        const climbables = Array.from(document.querySelectorAll('.climbable'));
-        const cObjs = climbables.map(el => el.object3D);
-        const cHits = rc.intersectObjects(cObjs, true);
-        if (cHits.length > 0) {
-          cHits.sort((a, b) => a.distance - b.distance);
-          const p = cHits[0].point;
-          scene.emit('tap-climb', { x: p.x, y: p.y, z: p.z }, false);
-        }
-      }
-    });
+<a-plane width="6" height="40" position="0 20 9.2" material="color:#05070c;side:double;fog:false"></a-plane>
+<a-plane width="6" height="40" rotation="0 120 0" position="-7.97 20 -4.6" material="color:#05070c;side:double;fog:false"></a-plane>
+<a-plane width="6" height="40" rotation="0 240 0" position="7.97 20 -4.6" material="color:#05070c;side:double;fog:false"></a-plane>
 
-    AFRAME.registerComponent('look', {
-      schema: { sensitivity: { default: 0.008 }, limit: { default: 1.48 }, dragThreshold: { default: 18 } },
-      init: function () {
-        this.yaw = 0; this.pitch = 0; this.lean = 0; this.leanTarget = 0;
-        this.start = null; this.last = null; this.dragging = false;
-        const self = this;
-        const getCam = () => {
-          const c = self.el.components.camera && self.el.components.camera.camera;
-          return c || self.el.object3D;
-        };
-        this.applyRot = () => {
-          const cam = getCam();
-          cam.rotation.order = 'YXZ';
-          cam.rotation.y = self.yaw;
-          cam.rotation.x = self.pitch + self.lean;
-          cam.rotation.z = 0;
-        };
-        this.onStart = (e) => {
-          const t = e.touches[0]; if (!t) return;
-          self.start = { x: t.clientX, y: t.clientY };
-          self.last  = { x: t.clientX, y: t.clientY };
-          self.dragging = false;
-        };
-        this.onMove = (e) => {
-          const t = e.touches[0]; if (!t || !self.start) return;
-          if (!self.dragging) {
-            const d = Math.hypot(t.clientX - self.start.x, t.clientY - self.start.y);
-            if (d < self.data.dragThreshold) return;
-            self.dragging = true;
-            self.last = { x: t.clientX, y: t.clientY }; return;
-          }
-          const dx = t.clientX - self.last.x, dy = t.clientY - self.last.y;
-          self.last = { x: t.clientX, y: t.clientY };
-          self.yaw   -= dx * self.data.sensitivity;
-          self.pitch -= dy * self.data.sensitivity;
-          if (self.pitch >  self.data.limit) self.pitch =  self.data.limit;
-          if (self.pitch < -self.data.limit) self.pitch = -self.data.limit;
-          self.applyRot();
-        };
-        this.onEnd = () => { self.start = null; self.last = null; self.dragging = false; };
-        this.el.sceneEl.addEventListener('touchstart', this.onStart, true);
-        this.el.sceneEl.addEventListener('touchmove', this.onMove, true);
-        this.el.sceneEl.addEventListener('touchend', this.onEnd, true);
-        document.addEventListener('touchstart', this.onStart, { capture: true, passive: true });
-        document.addEventListener('touchmove', this.onMove, { capture: true, passive: true });
-        document.addEventListener('touchend', this.onEnd, { capture: true, passive: true });
-        this.el.sceneEl.addEventListener('walk-start', () => { this.leanTarget = -0.035; });
-        this.el.sceneEl.addEventListener('walk-stop',  () => { this.leanTarget = 0; });
-      },
-      tick: function (t, dt) {
-        const k = Math.min(1, (dt / 1000) * 6);
-        if (Math.abs(this.lean - this.leanTarget) > 0.0005) {
-          this.lean += (this.leanTarget - this.lean) * k; this.applyRot();
-        } else if (this.lean !== this.leanTarget) {
-          this.lean = this.leanTarget; this.applyRot();
-        }
-      }
-    });
+<a-circle radius="9.0" rotation="-90 0 0" position="0 0.01 0" class="walkable" material="color:#1d1814;roughness:0.4;metalness:0.2"></a-circle>
+<a-text id="hud" value="" position="0 2.4 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
 
-    AFRAME.registerComponent('ladder-rail', {
-      schema: { angularSpeed: { default: 0.008 }, radius: { default: 8.5 }, height: { default: 40 } },
-      init: function () {
-        this.angle = 0;
-        this.ladderA = document.getElementById('ladder-a');
-        this.ladderB = document.getElementById('ladder-b');
-      },
-      tick: function (t, dt) {
-        this.angle += this.data.angularSpeed * (dt / 1000);
-        if (!this.ladderA || !this.ladderB) return;
-        const r = this.data.radius, y = this.data.height / 2;
-        this.ladderA.object3D.position.set(Math.sin(this.angle) * r, y, Math.cos(this.angle) * r);
-        this.ladderB.object3D.position.set(Math.sin(this.angle + Math.PI) * r, y, Math.cos(this.angle + Math.PI) * r);
-      }
-    });
+<a-box width="3.4" height="3.0" depth="1.2" position="0 1.5 -7.4" material="color:#3a342c;roughness:1"></a-box>
+<a-box width="1.8" height="1.6" depth="0.4" position="0 0.8 -6.7" material="color:#15110c;roughness:1"></a-box>
 
-    AFRAME.registerComponent('tap-walk', {
-      schema: { radius: { default: 8.0 }, walkSpeed: { default: 1.1 }, tierMeters: { default: 4.0 },
-                ladderReach: { default: 3.0 }, climbTime: { default: 0.9 } },
-      init: function () {
-        this.rig = document.getElementById('rig');
-        this.walking = false;
-        this.climbFrom = null; this.climbTo = null; this.climbT = 0;
-        const hud = document.getElementById('hud');
-        this.el.addEventListener('walk-start', () => { this.walking = true; if (hud) hud.setAttribute('text', 'value', 'walking'); });
-        this.el.addEventListener('walk-stop',  () => { this.walking = false; if (hud) hud.setAttribute('text', 'value', ''); });
-        this.el.addEventListener('tap-climb', (e) => {
-          if (!this.rig) return;
-          const o = this.rig.object3D.position;
-          this.climbFrom = new THREE.Vector3(o.x, o.y, o.z);
-          this.climbTo   = new THREE.Vector3(o.x, e.detail.y, o.z);
-          this.climbT = 0;
-        });
-        this.el.addEventListener('vertical-up', () => {
-          if (!this.rig || this.climbFrom) return;
-          if (!this.nearLadder()) {
-            if (hud) { hud.setAttribute('text', 'value', 'walk to a ladder'); setTimeout(() => { if (hud) hud.setAttribute('text', 'value', ''); }, 1200); }
-            return;
-          }
-          const o = this.rig.object3D.position;
-          this.climbFrom = new THREE.Vector3(o.x, o.y, o.z);
-          this.climbTo   = new THREE.Vector3(o.x, Math.min(o.y + this.data.tierMeters, 36), o.z);
-          this.climbT = 0;
-        });
-        this.el.addEventListener('vertical-down', () => {
-          if (!this.rig || this.climbFrom) return;
-          const o = this.rig.object3D.position;
-          if (o.y < 0.5) return;
-          this.climbFrom = new THREE.Vector3(o.x, o.y, o.z);
-          this.climbTo   = new THREE.Vector3(o.x, Math.max(0, o.y - this.data.tierMeters), o.z);
-          this.climbT = 0;
-        });
-      },
-      nearLadder: function () {
-        const o = this.rig.object3D.position;
-        for (const id of ['ladder-a','ladder-b']) {
-          const el = document.getElementById(id);
-          if (!el) continue;
-          const p = el.object3D.position;
-          if (Math.hypot(p.x - o.x, p.z - o.z) < this.data.ladderReach) return true;
-        }
-        return false;
-      },
-      inBox: function (x, z) {
-        const BX_MIN = -0.8, BX_MAX = 0.8, BZ_MIN = -2.1, BZ_MAX = -1.1;
-        return x > BX_MIN && x < BX_MAX && z > BZ_MIN && z < BZ_MAX;
-      },
-      tick: function (t, dt) {
-        if (!this.rig) return;
-        const o = this.rig.object3D;
-        const s = dt / 1000;
-        if (this.climbFrom && this.climbTo) {
-          this.climbT += s;
-          const k = Math.min(1, this.climbT / this.data.climbTime);
-          const ease = k * k * (3 - 2 * k);
-          o.position.lerpVectors(this.climbFrom, this.climbTo, ease);
-          if (k >= 1) { this.climbFrom = null; this.climbTo = null; }
-          return;
-        }
-        if (this.walking) {
-          const camEl = document.getElementById('camera');
-          const camObj = (camEl.components.camera && camEl.components.camera.camera) || camEl.object3D;
-          const dir = new THREE.Vector3();
-          camObj.getWorldDirection(dir);
-          dir.y = 0;
-          if (dir.lengthSq() < 1e-6) return;
-          dir.normalize();
-          const stepX = dir.x * this.data.walkSpeed * s;
-          const stepZ = dir.z * this.data.walkSpeed * s;
-          let nx = o.position.x + stepX;
-          let nz = o.position.z + stepZ;
-          if (o.position.y < 0.5) {
-            if (this.inBox(nx, nz)) {
-              if (!this.inBox(nx, o.position.z)) { nz = o.position.z; }
-              else if (!this.inBox(o.position.x, nz)) { nx = o.position.x; }
-              else { nx = o.position.x; nz = o.position.z; }
-            }
-          }
-          const r = Math.hypot(nx, nz);
-          if (r > this.data.radius) { nx *= this.data.radius / r; nz *= this.data.radius / r; }
-          o.position.set(nx, o.position.y, nz);
-        }
-      }
-    });
-  </script>
-  <style>
-    html, body {
-      margin: 0; height: 100%; background: #0a0a0f; touch-action: none;
-      -webkit-user-select: none; user-select: none;
-      -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
-    }
-  </style>
-</head>
-<body>
-  <a-scene
-    touch-gate="dragPx: 25; twoFingerMs: 300; holdDelayMs: 60; longPressMs: 700"
-    ladder-rail="angularSpeed: 0.008; radius: 8.5; height: 40"
-    tap-walk="radius: 8.0; walkSpeed: 1.1; tierMeters: 4.0; ladderReach: 3.0; climbTime: 0.9"
-    fog="type: exponential; color: #0a0a0f; density: 0.025"
-    renderer="antialias: true; colorManagement: true"
-    background="color: #0a0a0f"
-    vr-mode-ui="enabled: true" xr-mode-ui="enabled: true">
+<a-entity position="0 4 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
+<a-entity position="0 8 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
+<a-entity position="0 12 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
+<a-entity position="0 16 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
+<a-entity position="0 20 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
+<a-entity position="0 24 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
+<a-entity position="0 28 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
+<a-entity position="0 32 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
+<a-entity position="0 36 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
 
-    <a-entity light="type: ambient; color: #2a1f16; intensity: 0.5"></a-entity>
-    <a-entity light="type: point; color: #ffb066; intensity: 1.2; distance: 12" position="0 2.0 -4"></a-entity>
-    <a-entity light="type: directional; color: #cfe4ff; intensity: 0.3" position="1 20 2"></a-entity>
+<a-entity id="ladder-a" class="climbable" position="0 20 8.5" material="color:#3a342c" geometry="primitive:box;width:0.3;height:40;depth:0.15"></a-entity>
+<a-entity id="ladder-b" class="climbable" position="0 20 -8.5" material="color:#3a342c" geometry="primitive:box;width:0.3;height:40;depth:0.15"></a-entity>
 
-    <a-entity rotation="0 90 0" geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165" material="color: #4a4038; roughness: 0.95; side: double" position="0 20 0"></a-entity>
-    <a-entity rotation="0 210 0" geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165" material="color: #4a4038; roughness: 0.95; side: double" position="0 20 0"></a-entity>
-    <a-entity rotation="0 330 0" geometry="primitive: cylinder; radius: 9; height: 40; segments: 32; openEnded: true; thetaStart: 0; thetaLength: 165" material="color: #4a4038; roughness: 0.95; side: double" position="0 20 0"></a-entity>
+<a-cylinder radius="1.5" height="1.2" open-ended="true" position="0 39.4 0" material="color:#3a342c;roughness:1;side:double"></a-cylinder>
+<a-cylinder radius="0.35" height="40" position="0 20 0" material="color:#ffe6b0;opacity:0.07;transparent:true;blending:additive;side:double;depthWrite:false"></a-cylinder>
+<a-circle radius="1.6" rotation="-90 0 0" position="0 0.02 -1.6" material="color:#ffe6b0;opacity:0.14;transparent:true;blending:additive;depthWrite:false"></a-circle>
 
-    <a-plane width="6" height="40" position="0 20 9.2" material="color: #05070c; side: double; fog: false"></a-plane>
-    <a-plane width="6" height="40" rotation="0 120 0" position="-7.97 20 -4.6" material="color: #05070c; side: double; fog: false"></a-plane>
-    <a-plane width="6" height="40" rotation="0 240 0" position="7.97 20 -4.6" material="color: #05070c; side: double; fog: false"></a-plane>
+<a-box class="clickable" position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9" material="color:#3a2a1c;roughness:0.8"></a-box>
+<a-box class="clickable" position="-0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color:#2a1e14"></a-box>
+<a-box class="clickable" position="0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color:#2a1e14"></a-box>
+<a-box class="clickable" position="-0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color:#2a1e14"></a-box>
+<a-box class="clickable" position="0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color:#2a1e14"></a-box>
 
-    <a-circle radius="9.0" rotation="-90 0 0" position="0 0.01 0" class="walkable" material="color: #1d1814; roughness: 0.4; metalness: 0.2"></a-circle>
+<a-box class="clickable" position="0 0.45 -1.2" width="0.5" height="0.05" depth="0.5" material="color:#2a1e14;roughness:0.9"></a-box>
+<a-box class="clickable" position="0 0.7 -1.0" width="0.5" height="0.5" depth="0.05" material="color:#2a1e14;roughness:0.9"></a-box>
+<a-box class="clickable" position="-0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color:#2a1e14"></a-box>
+<a-box class="clickable" position="0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color:#2a1e14"></a-box>
+<a-box class="clickable" position="-0.2 0.22 -1.0" width="0.06" height="0.44" depth="0.06" material="color:#2a1e14"></a-box>
+<a-box class="clickable" position="0.2 0.22 -1.0" width="0.06" height="0.44" depth="0.06" material="color:#2a1e14"></a-box>
 
-    <a-text id="hud" value="" position="0 2.4 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
+<a-entity class="clickable" position="-0.4 0.9 -1.35">
+<a-cylinder class="clickable" radius="0.06" height="0.18" material="color:#d8b46a;metalness:0.7;roughness:0.3"></a-cylinder>
+<a-sphere class="clickable" radius="0.07" position="0 0.16 0" material="color:#ffcf80;emissive:#ffb060;emissiveIntensity:1.4"></a-sphere>
+<a-entity light="type:point;color:#ffb060;intensity:1.6;distance:5" position="0 0.16 0"></a-entity>
+</a-entity>
 
-    <a-box width="3.4" height="3.0" depth="1.2" position="0 1.5 -7.4" material="color: #3a342c; roughness: 1"></a-box>
-    <a-box width="1.8" height="1.6" depth="0.4" position="0 0.8 -6.7" material="color: #15110c; roughness: 1"></a-box>
+<a-entity id="jar" jar class="clickable" position="0.25 0.82 -1.6" geometry="primitive:cylinder;radius:0.09;height:0.22" material="color:#cfe4ff;opacity:0.35;transparent:true;roughness:0.05;metalness:0.1">
+<a-entity class="clickable" geometry="primitive:cylinder;radius:0.1;height:0.02" position="0 0.12 0" material="color:#b8c8e0;metalness:0.6"></a-entity>
+<a-text class="clickable" value="entries: 0" position="0 0.3 0" align="center" width="1" color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
+</a-entity>
 
-    <a-entity position="0 4 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 8 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 12 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 16 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 20 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 24 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 28 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 32 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
-    <a-entity position="0 36 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color: #3a342c; roughness: 1; side: double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color: #2a241c; radius: 0.04; radialSegments: 6; tubularSegments: 64"></a-torus></a-entity>
+<a-plane class="clickable" width="0.22" height="0.3" rotation="-90 0 10" position="-0.15 0.785 -1.55" material="color:#f3e9c8"></a-plane>
 
-    <a-entity id="ladder-a" class="climbable" position="0 20 8.5" material="color: #3a342c" geometry="primitive: box; width: 0.3; height: 40; depth: 0.15"></a-entity>
-    <a-entity id="ladder-b" class="climbable" position="0 20 -8.5" material="color: #3a342c" geometry="primitive: box; width: 0.3; height: 40; depth: 0.15"></a-entity>
+<a-entity id="book" book class="clickable" position="0.05 0.79 -1.75" rotation="0 12 0">
+<a-box class="clickable" width="0.18" height="0.04" depth="0.24" material="color:#6b2b2b"></a-box>
+</a-entity>
 
-    <a-cylinder radius="1.5" height="1.2" open-ended="true" position="0 39.4 0" material="color: #3a342c; roughness: 1; side: double"></a-cylinder>
+<a-text value="4555" position="0 0.79 -1.6" rotation="-90 180 0" align="center" color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
 
-    <a-cylinder radius="0.35" height="40" position="0 20 0" material="color: #ffe6b0; opacity: 0.07; transparent: true; blending: additive; side: double; depthWrite: false"></a-cylinder>
-    <a-circle radius="1.6" rotation="-90 0 0" position="0 0.02 -1.6" material="color: #ffe6b0; opacity: 0.14; transparent: true; blending: additive; depthWrite: false"></a-circle>
+<a-entity id="mirror" mirror class="clickable" position="0.55 0.79 -1.55" rotation="-70 40 0">
+<a-circle class="clickable" radius="0.09" segments="24" material="color:#1a2030;metalness:0.95;roughness:0.08;side:double"></a-circle>
+<a-ring class="clickable" radius-inner="0.09" radius-outer="0.105" segments="24" material="color:#4a3a28;roughness:0.7;side:double"></a-ring>
+<a-cylinder class="clickable" radius="0.008" height="0.12" position="0 -0.16 0" material="color:#4a3a28;roughness:0.7"></a-cylinder>
+</a-entity>
 
-    <!-- DESK -->
-    <a-box class="clickable" position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9" material="color: #3a2a1c; roughness: 0.8"></a-box>
-    <a-box class="clickable" position="-0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position=" 0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position="-0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position=" 0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color: #2a1e14"></a-box>
+<!-- MUSEUM CASE — near the fireplace, left side. Hand + quill inside. MENE MENE on a gold plaque. -->
+<a-entity id="case" case class="clickable" position="-4.2 0 -4.2" rotation="0 45 0">
+<a-box class="clickable" width="0.6" height="0.9" depth="0.6" position="0 0.45 0" material="color:#2a1e14;roughness:0.9"></a-box>
+<a-box class="clickable" width="0.5" height="0.12" depth="0.005" position="0 0.6 0.303" material="color:#d8b46a;metalness:0.9;roughness:0.2"></a-box>
+<a-text class="clickable" value="MENE MENE" position="0 0.6 0.31" align="center" color="#1a120b" width="1.6" scale="0.05 0.05 0.05"></a-text>
+<a-box class="clickable" width="0.55" height="0.6" depth="0.55" position="0 1.2 0" material="color:#cfe4ff;opacity:0.12;transparent:true;roughness:0.02;metalness:0.05;side:double;depthWrite:false"></a-box>
+<a-box class="clickable" width="0.35" height="0.05" depth="0.35" position="0 0.92 0" material="color:#1a1a1a;roughness:0.9"></a-box>
+<a-entity class="clickable" position="0 0.98 0" rotation="0 35 0" scale="1.1 1.1 1.1">
+<a-box class="clickable" width="0.10" height="0.03" depth="0.14" position="0 0.015 0" material="color:#6a6055;roughness:0.9"></a-box>
+<a-box class="clickable" width="0.02" height="0.02" depth="0.06" position="-0.025 0.008 -0.09" material="color:#6a6055;roughness:0.9"></a-box>
+<a-box class="clickable" width="0.02" height="0.02" depth="0.06" position="0 0.008 -0.09" material="color:#6a6055;roughness:0.9"></a-box>
+<a-box class="clickable" width="0.02" height="0.02" depth="0.06" position="0.025 0.008 -0.09" material="color:#6a6055;roughness:0.9"></a-box>
+<a-box class="clickable" width="0.02" height="0.02" depth="0.05" position="-0.05 0.008 -0.02" material="color:#6a6055;roughness:0.9"></a-box>
+<a-box class="clickable" width="0.08" height="0.03" depth="0.05" position="0 0.015 0.09" material="color:#6a6055;roughness:0.9"></a-box>
+<a-text value="NGC" position="0 -0.005 0" rotation="90 0 0" align="center" color="#1a120b" width="1" scale="0.035 0.035 0.035"></a-text>
+<a-entity position="0.05 0.04 -0.06" rotation="0 25 35">
+<a-cone radius-bottom="0.008" radius-top="0.001" height="0.28" segments="8" material="color:#e8d9a8;roughness:0.6;side:double"></a-cone>
+<a-cylinder radius="0.004" height="0.06" position="0 -0.17 0" material="color:#3a2a1c;roughness:0.5"></a-cylinder>
+</a-entity>
+</a-entity>
+</a-entity>
 
-    <!-- CHAIR -->
-    <a-box class="clickable" position="0 0.45 -1.2" width="0.5" height="0.05" depth="0.5" material="color: #2a1e14; roughness: 0.9"></a-box>
-    <a-box class="clickable" position="0 0.7 -1.0" width="0.5" height="0.5" depth="0.05" material="color: #2a1e14; roughness: 0.9"></a-box>
-    <a-box class="clickable" position="-0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position=" 0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position="-0.2 0.22 -1.0" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
-    <a-box class="clickable" position=" 0.2 0.22 -1.0" width="0.06" height="0.44" depth="0.06" material="color: #2a1e14"></a-box>
+<a-entity id="rig" position="0 0 1.6">
+<a-entity id="camera" camera="fov:70" look="sensitivity:0.008;limit:1.48;dragThreshold:18" position="0 1.6 0"></a-entity>
+</a-entity>
 
-    <!-- LAMP -->
-    <a-entity class="clickable" position="-0.4 0.9 -1.35">
-      <a-cylinder class="clickable" radius="0.06" height="0.18" material="color: #d8b46a; metalness: 0.7; roughness: 0.3"></a-cylinder>
-      <a-sphere class="clickable" radius="0.07" position="0 0.16 0" material="color: #ffcf80; emissive: #ffb060; emissiveIntensity: 1.4"></a-sphere>
-      <a-entity light="type: point; color: #ffb060; intensity: 1.6; distance: 5" position="0 0.16 0"></a-entity>
-    </a-entity>
-
-    <!-- JAR -->
-    <a-entity id="jar" jar class="clickable" position="0.25 0.82 -1.6" geometry="primitive: cylinder; radius: 0.09; height: 0.22" material="color: #cfe4ff; opacity: 0.35; transparent: true; roughness: 0.05; metalness: 0.1">
-      <a-entity class="clickable" geometry="primitive: cylinder; radius: 0.1; height: 0.02" position="0 0.12 0" material="color: #b8c8e0; metalness: 0.6"></a-entity>
-      <a-text class="clickable" value="entries: 0" position="0 0.3 0" align="center" width="1" color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
-    </a-entity>
-
-    <!-- PAPER -->
-    <a-plane class="clickable" width="0.22" height="0.3" rotation="-90 0 10" position="-0.15 0.785 -1.55" material="color: #f3e9c8"></a-plane>
-
-    <!-- BOOK — first clue -->
-    <a-entity id="book" book class="clickable" position="0.05 0.79 -1.75" rotation="0 12 0">
-      <a-box class="clickable" width="0.18" height="0.04" depth="0.24" material="color: #6b2b2b"></a-box>
-    </a-entity>
-
-    <!-- 4555 — carved for the FAR side of the desk, not the chair -->
-    <a-text value="4555" position="0 0.79 -1.6" rotation="-90 180 0" align="center" color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
-
-    <!-- THE HAND — stone, palm-down, on the desk near the paper.
-         Palm faces the desk, so NGC on the palm is invisible from the chair side. -->
-    <a-entity position="-0.30 0.83 -1.65" rotation="0 35 0">
-      <!-- back of the hand -->
-      <a-box class="clickable" width="0.10" height="0.03" depth="0.14" position="0 0.015 0"
-             material="color: #6a6055; roughness: 0.9"></a-box>
-      <!-- fingers -->
-      <a-box class="clickable" width="0.02" height="0.02" depth="0.06" position="-0.025 0.008 -0.09" material="color: #6a6055; roughness: 0.9"></a-box>
-      <a-box class="clickable" width="0.02" height="0.02" depth="0.06" position="0 0.008 -0.09" material="color: #6a6055; roughness: 0.9"></a-box>
-      <a-box class="clickable" width="0.02" height="0.02" depth="0.06" position="0.025 0.008 -0.09" material="color: #6a6055; roughness: 0.9"></a-box>
-      <!-- thumb -->
-      <a-box class="clickable" width="0.02" height="0.02" depth="0.05" position="-0.05 0.008 -0.02" material="color: #6a6055; roughness: 0.9"></a-box>
-      <!-- wrist -->
-      <a-box class="clickable" width="0.08" height="0.03" depth="0.05" position="0 0.015 0.09" material="color: #6a6055; roughness: 0.9"></a-box>
-      <!-- NGC — carved into the palm. Facing DOWN (rotation 90 on X so it faces the desk). -->
-      <a-text value="NGC" position="0 -0.005 0" rotation="90 0 0" align="center"
-              color="#1a120b" width="1" scale="0.035 0.035 0.035"></a-text>
-    </a-entity>
-
-    <!-- THE QUILL — feather, in the hand's grip. Tapered, leaning off the desk. -->
-    <a-entity position="-0.22 0.87 -1.58" rotation="0 25 35">
-      <a-cone radius-bottom="0.008" radius-top="0.001" height="0.28" segments="8"
-              material="color: #e8d9a8; roughness: 0.6; side: double"></a-cone>
-      <a-cylinder radius="0.004" height="0.06" position="0 -0.17 0"
-                  material="color: #3a2a1c; roughness: 0.5"></a-cylinder>
-    </a-entity>
-
-    <!-- THE MIRROR — small hand mirror on the desk, lying flat, angled up.
-         Tap it to reveal NGC. The viewer understands it shows what the hand hides. -->
-    <a-entity id="mirror" mirror class="clickable" position="0.55 0.79 -1.55" rotation="-70 40 0">
-      <a-circle class="clickable" radius="0.09" segments="24"
-                material="color: #1a2030; metalness: 0.95; roughness: 0.08; side: double"></a-circle>
-      <a-ring class="clickable" radius-inner="0.09" radius-outer="0.105" segments="24"
-              material="color: #4a3a28; roughness: 0.7; side: double"></a-ring>
-      <a-cylinder class="clickable" radius="0.008" height="0.12" position="0 -0.16 0"
-                  material="color: #4a3a28; roughness: 0.7"></a-cylinder>
-    </a-entity>
-
-    <a-entity id="rig" position="0 0 1.6">
-      <a-entity id="camera" camera="fov: 70"
-                look="sensitivity: 0.008; limit: 1.48; dragThreshold: 18"
-                position="0 1.6 0"></a-entity>
-    </a-entity>
-  </a-scene>
-</body>
-</html>
+</a-scene>
+</body></html>
