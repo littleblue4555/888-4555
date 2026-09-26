@@ -2,16 +2,17 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse (v6.6)</title>
+<title>4555 — Lighthouse (v6.7)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 AFRAME.registerComponent('jar',{init:function(){this.textEl=this.el.querySelector('a-text');const s=localStorage.getItem('4555:local-diary:entries');this.entries=s?JSON.parse(s):[];this.render();const w=()=>{const b=prompt('Write a line. Drop it in the jar.');if(!b)return;const e={id:Date.now()+'-'+Math.random().toString(36).slice(2,8),author:'guest',body:b,timestamp:new Date().toISOString(),reply_to:null,private:true};this.entries.push(e);try{localStorage.setItem('4555:local-diary:entries',JSON.stringify(this.entries))}catch(x){}this.render();const p=document.createElement('a-entity');p.setAttribute('geometry','primitive: plane; width: 0.08; height: 0.11');p.setAttribute('material','color: #f3e9c8; side: double');p.setAttribute('position',(Math.random()-0.5)*0.08+' 0.02 '+(Math.random()-0.5)*0.08);p.setAttribute('rotation','-90 0 '+Math.random()*360);this.el.appendChild(p)};this.el.addEventListener('tap-jar',w)},render:function(){if(this.textEl)this.textEl.setAttribute('value','entries: '+this.entries.length)}});
 AFRAME.registerComponent('book',{init:function(){this.el.addEventListener('tap-book',()=>{alert("I wrote this without an arm. You found it without a map.\nThe number is 4555. It was written on a wall once,\nby a hand nobody saw, and the sentence stayed.\n\nFind the first thing that doesn't fit.\nThen find the second.\nThen find the gift.")})}});
-AFRAME.registerComponent('case',{init:function(){this.el.addEventListener('tap-case',()=>{alert("MENE MENE.\n\nNumbered. Numbered.\nThe hand was here. The hand was writing.\nThe sentence stayed.\n\nLook at the palm. Look in the mirror.\n4555 NGC.")})}});
+AFRAME.registerComponent('case',{init:function(){this.el.addEventListener('tap-case',()=>{alert("MENE MENE.\n\nNumbered. Numbered.\nThe hand was here. The hand was writing.\nThe hand rests on the Book.\n\nThe sentence stayed.\n\nLook at the palm. Look in the mirror.\n4555 NGC.")})}});
 AFRAME.registerComponent('mirror',{init:function(){this.el.addEventListener('tap-mirror',()=>{alert("The mirror catches what the desk hides.\n\nThe carving on the desk was cut for the far side.\nThe mirror shows it the way it was meant to be read.\n\n4 5 5 5\n\nNow look at the palm. Look for N G C.")})}});
 AFRAME.registerComponent('mirror-face',{init:function(){const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle='#0a1420';x.fillRect(0,0,256,256);x.fillStyle='#e8d9a8';x.font='bold 76px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('4555',128,128);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=this.el.getObject3D('mesh');if(m){m.material.map=t;m.material.color.set('#ffffff');m.material.needsUpdate=true}}});
 AFRAME.registerComponent('gift',{init:function(){this.el.addEventListener('tap-gift',()=>{alert("Behind the stone, a drawer.\n\nInside: a card.\n\nCode:  MENE-4555-NGC\n\nTake this to Zingers.\nOne zinger shirt. One hat.\nA door from the room to the world.")})}});
 AFRAME.registerComponent('fire',{init:function(){this.light=this.el.querySelector('[light]');this.core=this.el.querySelector('.core')},tick:function(t){if(this.light){const n=Math.sin(t*0.012)*0.4+Math.sin(t*0.037)*0.25+Math.sin(t*0.089)*0.15;this.light.setAttribute('light','intensity',1.6+n)}if(this.core){const s=1+Math.sin(t*0.015)*0.08;this.core.object3D.scale.set(s,s,s)}}});
+AFRAME.registerComponent('breath',{schema:{amp:{default:0.007},hz:{default:0.16}},init:function(){this.t=0},tick:function(t,dt){this.t+=dt/1000;const y=1.6+Math.sin(this.t*this.data.hz*Math.PI*2)*this.data.amp;this.el.object3D.position.y=y}});
 AFRAME.registerComponent('touch-gate',{schema:{dragPx:{default:25},twoFingerMs:{default:300},holdDelayMs:{default:200},longPressMs:{default:700}},init:function(){this.start=null;this.startTime=0;this.moved=false;this.twoFinger=false;this.twoFingerStartY=0;this.holding=false;this.holdTimer=null;const ch=()=>{if(this.holdTimer){clearTimeout(this.holdTimer);this.holdTimer=null}};const sh=()=>{if(this.holding){this.holding=false;this.el.emit('walk-stop',{},false)}};this.el.addEventListener('touchstart',e=>{if(e.touches.length===2){this.twoFinger=true;const a=e.touches[0],b=e.touches[1];this.twoFingerStartY=(a.clientY+b.clientY)/2;this.startTime=Date.now();this.moved=false;return}const t=e.touches[0];if(!t)return;this.start={x:t.clientX,y:t.clientY};this.startTime=Date.now();this.moved=false;this.twoFinger=false;this.holding=false;ch();this.holdTimer=setTimeout(()=>{if(!this.moved&&!this.twoFinger&&this.start){this.holding=true;this.el.emit('walk-start',{},false)}},this.data.holdDelayMs)},true);this.el.addEventListener('touchmove',e=>{if(this.twoFinger){this.moved=true;return}if(!this.start)return;const t=e.touches[0];if(!t)return;const d=Math.hypot(t.clientX-this.start.x,t.clientY-this.start.y);if(d>this.data.dragPx){this.moved=true;ch();sh()}},true);this.el.addEventListener('touchend',e=>{const el=Date.now()-this.startTime;const wt=this.twoFinger,wm=this.moved,wh=this.holding,sy=this.twoFingerStartY;const t=e.changedTouches&&e.changedTouches[0];ch();this.start=null;this.twoFinger=false;this.holding=false;if(wh){this.el.emit('walk-stop',{},false);return}setTimeout(()=>{this.moved=false},0);if(wt&&!wm&&el<this.data.twoFingerMs){this.el.emit(sy<innerHeight/2?'vertical-up':'vertical-down',{},false);return}if(wt||wm||el>=this.data.longPressMs||!t)return;this.tap(t.clientX,t.clientY)},true);this.el.addEventListener('touchcancel',()=>{ch();this.start=null;this.twoFinger=false;this.holding=false;this.el.emit('walk-stop',{},false)},true)},tap:function(cx,cy){const sc=this.el.sceneEl;const cam=sc.camera;if(!cam)return;const ndc=new THREE.Vector2((cx/window.innerWidth)*2-1,-(cy/window.innerHeight)*2+1);const rc=new THREE.Raycaster();rc.setFromCamera(ndc,cam);const cs=Array.from(document.querySelectorAll('.clickable'));const objs=cs.map(e=>e.object3D);const hits=rc.intersectObjects(objs,true);if(hits.length>0){hits.sort((a,b)=>a.distance-b.distance);let tg=hits[0].object.el;while(tg&&tg.id!=='jar'&&tg.id!=='book'&&tg.id!=='mirror'&&tg.id!=='case'&&tg.id!=='gift'&&tg.parentElement)tg=tg.parentElement;if(tg&&tg.id==='jar')tg.emit('tap-jar');else if(tg&&tg.id==='book')tg.emit('tap-book');else if(tg&&tg.id==='mirror')tg.emit('tap-mirror');else if(tg&&tg.id==='case')tg.emit('tap-case');else if(tg&&tg.id==='gift')tg.emit('tap-gift');return}const cl=Array.from(document.querySelectorAll('.climbable'));const co=cl.map(e=>e.object3D);const ch2=rc.intersectObjects(co,true);if(ch2.length>0){ch2.sort((a,b)=>a.distance-b.distance);const p=ch2[0].point;sc.emit('tap-climb',{x:p.x,y:p.y,z:p.z},false)}}});
 AFRAME.registerComponent('look',{schema:{sensitivity:{default:0.008},limit:{default:1.48},dragThreshold:{default:18}},init:function(){this.yaw=0;this.pitch=0;this.lean=0;this.leanTarget=0;this.start=null;this.last=null;this.dragging=false;const self=this;const gc=()=>{const c=self.el.components.camera&&self.el.components.camera.camera;return c||self.el.object3D};this.ar=()=>{const cam=gc();cam.rotation.order='YXZ';cam.rotation.y=self.yaw;cam.rotation.x=self.pitch+self.lean;cam.rotation.z=0};this.onStart=e=>{const t=e.touches[0];if(!t)return;self.start={x:t.clientX,y:t.clientY};self.last={x:t.clientX,y:t.clientY};self.dragging=false};this.onMove=e=>{const t=e.touches[0];if(!t||!self.start)return;if(!self.dragging){const d=Math.hypot(t.clientX-self.start.x,t.clientY-self.start.y);if(d<self.data.dragThreshold)return;self.dragging=true;self.last={x:t.clientX,y:t.clientY};return}const dx=t.clientX-self.last.x,dy=t.clientY-self.last.y;self.last={x:t.clientX,y:t.clientY};self.yaw-=dx*self.data.sensitivity;self.pitch-=dy*self.data.sensitivity;if(self.pitch>self.data.limit)self.pitch=self.data.limit;if(self.pitch<-self.data.limit)self.pitch=-self.data.limit;self.ar()};this.onEnd=()=>{self.start=null;self.last=null;self.dragging=false};this.el.sceneEl.addEventListener('touchstart',this.onStart,true);this.el.sceneEl.addEventListener('touchmove',this.onMove,true);this.el.sceneEl.addEventListener('touchend',this.onEnd,true);document.addEventListener('touchstart',this.onStart,{capture:true,passive:true});document.addEventListener('touchmove',this.onMove,{capture:true,passive:true});document.addEventListener('touchend',this.onEnd,{capture:true,passive:true});this.el.sceneEl.addEventListener('walk-start',()=>{this.leanTarget=-0.035});this.el.sceneEl.addEventListener('walk-stop',()=>{this.leanTarget=0})},tick:function(t,dt){const k=Math.min(1,(dt/1000)*6);if(Math.abs(this.lean-this.leanTarget)>0.0005){this.lean+=(this.leanTarget-this.lean)*k;this.ar()}else if(this.lean!==this.leanTarget){this.lean=this.leanTarget;this.ar()}}});
 AFRAME.registerComponent('ladder-rail',{schema:{speed:{default:0.01},radius:{default:8.5},height:{default:40}},init:function(){this.phase=0;this.A=document.getElementById('ladder-a');this.B=document.getElementById('ladder-b')},tick:function(t,dt){this.phase+=this.data.speed*(dt/1000);if(!this.A||!this.B)return;const r=this.data.radius,y=this.data.height/2;const p=this.phase%(2*Math.PI);const tri=p<Math.PI?p:(2*Math.PI-p);const aA=tri,bA=tri+Math.PI;this.A.object3D.position.set(Math.sin(aA)*r,y,Math.cos(aA)*r);this.B.object3D.position.set(Math.sin(bA)*r,y,Math.cos(bA)*r)}});
@@ -39,10 +40,8 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:8.0},walkSpeed:{def
 <a-box width="3.4" height="3.0" depth="1.2" position="0 1.5 -7.4" material="color:#3a342c;roughness:1"></a-box>
 <a-box width="1.8" height="1.6" depth="0.4" position="0 0.8 -6.7" material="color:#15110c;roughness:1"></a-box>
 
-<!-- MANTLE — thin shelf in front of the fireplace, holding the standing mirror -->
 <a-box width="2.0" height="0.08" depth="0.30" position="0 1.65 -6.55" material="color:#2a1e14;roughness:0.85"></a-box>
 
-<!-- MIRROR — stands on the mantle, tilts forward, shows the corrected 4555 -->
 <a-entity id="mirror" mirror class="clickable" position="0 1.82 -6.60" rotation="18 0 0">
 <a-circle mirror-face radius="0.14" segments="24" material="color:#0a1420;metalness:0.3;roughness:0.5;side:double"></a-circle>
 <a-ring radius-inner="0.14" radius-outer="0.16" segments="24" material="color:#4a3a28;roughness:0.7;side:double"></a-ring>
@@ -115,8 +114,16 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:8.0},walkSpeed:{def
 <a-box width="0.55" height="0.14" depth="0.01" position="0 0.6 0.305" material="color:#d8b46a;metalness:0.4;roughness:0.5"></a-box>
 <a-text value="MENE MENE" position="0 0.6 0.315" align="center" color="#1a120b" width="3" scale="0.14 0.14 0.14"></a-text>
 <a-box width="0.55" height="0.6" depth="0.55" position="0 1.2 0" material="color:#cfe4ff;opacity:0.12;transparent:true;roughness:0.02;metalness:0.05;side:double;depthWrite:false"></a-box>
-<a-box width="0.35" height="0.05" depth="0.35" position="0 0.92 0" material="color:#1a1a1a;roughness:0.9"></a-box>
-<a-entity position="0 0.98 0" rotation="0 35 0" scale="1.1 1.1 1.1">
+
+<!-- THE BIBLE — closed, on the pedestal top. Dark leather, gold edges, small cross. -->
+<a-box width="0.28" height="0.07" depth="0.20" position="0 0.965 0" material="color:#1a0f0a;roughness:0.7"></a-box>
+<a-box width="0.30" height="0.005" depth="0.22" position="0 0.965 0" material="color:#d8b46a;metalness:0.85;roughness:0.25"></a-box>
+<a-box width="0.02" height="0.072" depth="0.02" position="0 0.965 0.10" material="color:#d8b46a;metalness:0.9;roughness:0.2"></a-box>
+<a-box width="0.008" height="0.09" depth="0.008" position="0 1.005 0" material="color:#d8b46a;metalness:0.9;roughness:0.2"></a-box>
+<a-box width="0.05" height="0.008" depth="0.008" position="0 1.02 0" material="color:#d8b46a;metalness:0.9;roughness:0.2"></a-box>
+
+<!-- THE HAND — resting on the Bible. Palm down. NGC carved on the palm, facing the Book. -->
+<a-entity position="0 1.03 0" rotation="0 35 0" scale="1.1 1.1 1.1">
 <a-box width="0.10" height="0.03" depth="0.14" position="0 0.015 0" material="color:#6a6055;roughness:0.9"></a-box>
 <a-box width="0.02" height="0.02" depth="0.06" position="-0.025 0.008 -0.09" material="color:#6a6055;roughness:0.9"></a-box>
 <a-box width="0.02" height="0.02" depth="0.06" position="0 0.008 -0.09" material="color:#6a6055;roughness:0.9"></a-box>
@@ -131,15 +138,13 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:8.0},walkSpeed:{def
 </a-entity>
 </a-entity>
 
-<!-- v6.6 — the mirror moved from the desk to a mantle shelf in front of the fireplace.
-     The mirror shows the corrected 4555 — the number as it was meant to be read.
-     The desk clearing gives the room a cleaner line of sight from chair to mantle. -->
+<!-- v6.7 — the Bible is under the hand. Closed. Dark leather, gold edges, gold cross on the cover.
+     The hand rests on top, palm down. The quill lies beside it. The case tells the whole story:
+     the hand was writing, the hand was praying, the sentence stayed. -->
 
 <a-entity id="rig" position="0 0 1.6">
-<a-entity id="camera" camera="fov:70" look="sensitivity:0.008;limit:1.48;dragThreshold:18" position="0 1.6 0"></a-entity>
+<a-entity id="camera" camera="fov:70" look="sensitivity:0.008;limit:1.48;dragThreshold:18" breath="amp:0.007;hz:0.16" position="0 1.6 0"></a-entity>
 </a-entity>
 
 </a-scene>
 </body></html>
-```
-
