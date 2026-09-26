@@ -84,10 +84,9 @@
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x05050a);
 
-        // FIXED: Moved camera back to z=14 to see the whole foreground
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.set(0, 1.6, 14); 
-        camera.lookAt(0, 1.5, -2);
+        camera.position.set(0, 1.6, 12); 
+        camera.lookAt(0, 4, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -288,209 +287,40 @@
         railRing2.position.set(0, 17, 0);
         scene.add(railRing2);
 
-        // --- THE GRAND FIREPLACE (The Foundation) ---
-        const hearth = new THREE.Mesh(new THREE.BoxGeometry(7, 5, 4), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 1.0 }));
-        hearth.position.set(0, 2.5, 0); 
-        scene.add(hearth);
+        // --- THE HEARTH & CHIMNEY ---
+        const hearth = new THREE.Mesh(new THREE.BoxGeometry(5, 4, 3), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 1.0 }));
+        hearth.position.set(0, 2, 0); scene.add(hearth);
 
-        const firebox = new THREE.Mesh(new THREE.BoxGeometry(4, 3.5, 2.5), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
-        firebox.position.set(0, 1.75, 1.3); 
-        scene.add(firebox);
+        const firebox = new THREE.Mesh(new THREE.BoxGeometry(3, 2.5, 2), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
+        firebox.position.set(0, 1.25, 1.1); scene.add(firebox);
 
-        const mantel = new THREE.Mesh(new THREE.BoxGeometry(8, 0.5, 5), new THREE.MeshStandardMaterial({ color: 0x5a4e40, roughness: 1.0 }));
-        mantel.position.set(0, 5.25, 0);
-        scene.add(mantel);
+        const fire = new THREE.Mesh(new THREE.ConeGeometry(1, 1.5, 8), new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.8 }));
+        fire.position.set(0, 0.75, 1.2); scene.add(fire);
 
-        // The Logs
-        const logGeo = new THREE.CylinderGeometry(0.3, 0.3, 2, 8);
-        const logMat = new THREE.MeshStandardMaterial({ color: 0x4a2e15 });
-        const log1 = new THREE.Mesh(logGeo, logMat);
-        log1.rotation.z = Math.PI / 2;
-        log1.position.set(0, 0.5, 1.4);
-        scene.add(log1);
-        const log2 = new THREE.Mesh(logGeo, logMat);
-        log2.rotation.z = Math.PI / 2;
-        log2.rotation.y = Math.PI / 4;
-        log2.position.set(0, 0.8, 1.4);
-        scene.add(log2);
+        const fireLight = new THREE.PointLight(0xff5500, 2.0, 15);
+        fireLight.position.set(0, 1.5, 1.5); scene.add(fireLight);
 
-        // The Fire
-        const fire = new THREE.Mesh(new THREE.ConeGeometry(1.5, 2, 8), new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.8 }));
-        fire.position.set(0, 1.5, 1.4);
-        scene.add(fire);
-
-        const fireLight = new THREE.PointLight(0xff5500, 2.5, 20);
-        fireLight.position.set(0, 2.0, 1.5);
-        scene.add(fireLight);
-
-        // --- THE LIGHTHOUSE SPINE ---
         const pillar = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 26, 32), new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 1.0 }));
-        pillar.position.set(0, 17, 0); 
-        scene.add(pillar);
+        pillar.position.set(0, 17, 0); scene.add(pillar);
 
-        // --- THE LANTERN ROOM (The Crown) ---
-        const lanternGlass = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 4, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0x88aaff, transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
-        lanternGlass.position.set(0, 32, 0);
-        scene.add(lanternGlass);
+        // --- 6. TABLE, CHAIR, AND LAMP ---
+        const table = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.1, 32), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 }));
+        table.position.set(0, 0.8, -3); scene.add(table);
 
-        const lanternRoof = new THREE.Mesh(new THREE.ConeGeometry(3.5, 2, 16), new THREE.MeshStandardMaterial({ color: 0x2a2a2a }));
-        lanternRoof.position.set(0, 35, 0);
-        scene.add(lanternRoof);
-
-        const beaconLight = new THREE.PointLight(0xffdd55, 5.0, 100);
-        beaconLight.position.set(0, 32, 0);
-        scene.add(beaconLight);
-
-        const beaconBulb = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffdd55 }));
-        beaconBulb.position.set(0, 32, 0);
-        scene.add(beaconBulb);
-
-        // --- THE GRAND SPIRAL STAIRCASE ---
-        const stepMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.9 });
-        const stepCount = 60;
-        const stepHeight = 0.5;
-        const stepAngle = (Math.PI * 2) / 20; 
-        const innerRadius = 1.5; 
-        const outerRadius = 6.0; 
-        const stairWidth = outerRadius - innerRadius;
-        const stairCenterRadius = innerRadius + (stairWidth / 2);
-
-        for (let i = 0; i < stepCount; i++) {
-            const step = new THREE.Mesh(new THREE.BoxGeometry(stairWidth, 0.1, 1.2), stepMat);
-            const angle = i * stepAngle;
-            const y = i * stepHeight + 2; 
-            step.position.set(Math.cos(angle) * stairCenterRadius, y, Math.sin(angle) * stairCenterRadius);
-            step.rotation.y = -angle; 
-            scene.add(step);
-        }
-
-        // ==========================================
-        // THE FOREFRONT: THE DESK, CHAIR, AND LANTERN
-        // ==========================================
-        
-        // 1. The Wooden Desk
-        const deskWidth = 4.0;
-        const deskDepth = 2.5;
-        const deskHeight = 0.1;
-        const deskY = 0.8;
-        
-        const canvas = document.createElement('canvas');
-        canvas.width = 512; canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-        
-        ctx.fillStyle = '#6b4c2a';
-        ctx.fillRect(0, 0, 512, 512);
-        
-        ctx.strokeStyle = '#4a3218';
-        ctx.lineWidth = 2;
-        for (let i = 0; i < 50; i++) {
-            ctx.beginPath();
-            ctx.moveTo(0, Math.random() * 512);
-            ctx.bezierCurveTo(150, Math.random() * 512, 350, Math.random() * 512, 512, Math.random() * 512);
-            ctx.stroke();
-        }
-        
-        ctx.fillStyle = '#3a2210';
-        ctx.font = 'bold 120px serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('4555', 256, 256);
-        
-        const deskTexture = new THREE.CanvasTexture(canvas);
-        
-        const deskSideMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.9 });
-        const deskTopMat = new THREE.MeshStandardMaterial({ map: deskTexture, roughness: 0.8 });
-        const deskMats = [deskSideMat, deskSideMat, deskTopMat, deskSideMat, deskSideMat, deskSideMat];
-        
-        const desk = new THREE.Mesh(new THREE.BoxGeometry(deskWidth, deskHeight, deskDepth), deskMats);
-        desk.position.set(0, deskY, -2); 
-        scene.add(desk);
-        
-        const deskLegGeo = new THREE.CylinderGeometry(0.15, 0.2, deskY, 8);
-        const deskLegMat = new THREE.MeshStandardMaterial({ color: 0x4a2e15 });
-        [[-1.8, deskY/2, -3.1], [1.8, deskY/2, -3.1], [-1.8, deskY/2, -0.9], [1.8, deskY/2, -0.9]].forEach(pos => {
-            const leg = new THREE.Mesh(deskLegGeo, deskLegMat);
-            leg.position.set(pos[0], pos[1], pos[2]);
-            scene.add(leg);
+        const legGeo = new THREE.BoxGeometry(0.1, 0.8, 0.1);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
+        [[-1, 0.4, -3.8], [1, 0.4, -3.8], [-1, 0.4, -2.2], [1, 0.4, -2.2]].forEach(pos => {
+            const leg = new THREE.Mesh(legGeo, legMat); leg.position.set(pos[0], pos[1], pos[2]); scene.add(leg);
         });
 
-        // 2. The Chair
-        const chairGroup = new THREE.Group();
-        chairGroup.position.set(0, 0, -1.2); 
-        
-        const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.1, 0.8), new THREE.MeshStandardMaterial({ color: 0x3a2210 }));
-        chairSeat.position.set(0, 0.5, 0);
-        chairGroup.add(chairSeat);
-        
-        const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.0, 0.1), new THREE.MeshStandardMaterial({ color: 0x3a2210 }));
-        chairBack.position.set(0, 1.0, 0.35);
-        chairGroup.add(chairBack);
-        
-        const chairLegGeo = new THREE.BoxGeometry(0.1, 0.5, 0.1);
-        const chairLegMat = new THREE.MeshStandardMaterial({ color: 0x2a1a08 });
-        [[-0.35, 0.25, -0.35], [0.35, 0.25, -0.35], [-0.35, 0.25, 0.35], [0.35, 0.25, 0.35]].forEach(pos => {
-            const leg = new THREE.Mesh(chairLegGeo, chairLegMat);
-            leg.position.set(pos[0], pos[1], pos[2]);
-            chairGroup.add(leg);
-        });
-        
-        const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x8b4513 }));
-        cushion.position.set(0, 0.55, 0);
-        chairGroup.add(cushion);
-        
-        scene.add(chairGroup);
+        const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x4a2e15 }));
+        chairSeat.position.set(0, 0.5, -1.5); scene.add(chairSeat);
+        const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.1), new THREE.MeshStandardMaterial({ color: 0x4a2e15 }));
+        chairBack.position.set(0, 0.8, -1.8); scene.add(chairBack);
 
-        // 3. The Lantern
-        const lanternGroup = new THREE.Group();
-        lanternGroup.position.set(-1.2, deskY + 0.05, -2); 
+        const lampLight = new THREE.PointLight(0xffaa00, 0.8, 15); lampLight.position.set(0, 1.2, -3); scene.add(lampLight);
+        const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffaa00 })); lampBulb.position.set(0, 1.2, -3); scene.add(lampBulb);
         
-        const lanternBase = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 0.4, 16), new THREE.MeshStandardMaterial({ color: 0xaa8800, metalness: 0.8, roughness: 0.2 }));
-        lanternBase.position.set(0, 0.2, 0);
-        lanternGroup.add(lanternBase);
-        
-        const lanternGlass = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.4, 16), new THREE.MeshStandardMaterial({ color: 0xffdd55, transparent: true, opacity: 0.3 }));
-        lanternGlass.position.set(0, 0.6, 0);
-        lanternGroup.add(lanternGlass);
-        
-        const lanternLight = new THREE.PointLight(0xffaa00, 1.5, 10);
-        lanternLight.position.set(0, 0.6, 0);
-        lanternGroup.add(lanternLight);
-        
-        const lanternTop = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.2, 16), new THREE.MeshStandardMaterial({ color: 0xaa8800, metalness: 0.8, roughness: 0.2 }));
-        lanternTop.position.set(0, 0.9, 0);
-        lanternGroup.add(lanternTop);
-        
-        scene.add(lanternGroup);
-
-        // 4. The Glass Jar
-        const jarGroup = new THREE.Group();
-        jarGroup.position.set(1.2, deskY + 0.05, -2.2); 
-        
-        const jarGlass = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.5, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.2, side: THREE.DoubleSide }));
-        jarGlass.position.set(0, 0.25, 0);
-        jarGroup.add(jarGlass);
-        
-        const jarLight = new THREE.PointLight(0x88ccff, 0.5, 3);
-        jarLight.position.set(0, 0.25, 0);
-        jarGroup.add(jarLight);
-        
-        const jarLid = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.05, 16), new THREE.MeshStandardMaterial({ color: 0x555555 }));
-        jarLid.position.set(0, 0.5, 0);
-        jarGroup.add(jarLid);
-        
-        scene.add(jarGroup);
-
-        // 5. The Book and Paper
-        const book = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.4), new THREE.MeshStandardMaterial({ color: 0x8b0000 }));
-        book.position.set(0.5, deskY + 0.1, -1.8);
-        scene.add(book);
-        
-        const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.3), new THREE.MeshStandardMaterial({ color: 0xffffee, side: THREE.DoubleSide }));
-        paper.rotation.x = -Math.PI / 2;
-        paper.position.set(0.5, deskY + 0.06, -1.8);
-        scene.add(paper);
-
-        // --- 6. MAIN LIGHTING ---
         scene.add(new THREE.AmbientLight(0x555555, 0.8));
 
         // --- 7. THE SWITCH ---
@@ -529,14 +359,8 @@
             const delta = Math.min(clock.getDelta(), 0.1); 
 
             winkleMat.opacity = 0.3 + 0.7 * Math.sin(time * 1.5);
-            
-            fireLight.intensity = 2.5 + Math.sin(time * 2) * 0.5;
-            fire.scale.y = 1.0 + Math.sin(time * 3) * 0.15;
-            fire.scale.x = 1.0 + Math.sin(time * 4) * 0.05;
-
-            lanternLight.intensity = 1.5 + Math.sin(time * 5) * 0.2;
-            
-            beaconLight.intensity = 5.0 + Math.sin(time * 1) * 1.0;
+            fireLight.intensity = 2.0 + Math.sin(time * 2) * 0.3;
+            fire.scale.y = 1.0 + Math.sin(time * 3) * 0.1;
 
             controls.enabled = !renderer.xr.isPresenting;
             tinyKeeper.visible = renderer.xr.isPresenting;
@@ -570,26 +394,24 @@
                 camPos.z = Math.sin(angle) * 15.0;
             }
 
-            if (distFromCenter < 7.0) {
+            if (distFromCenter < 6.5) {
                 const angle = Math.atan2(camPos.z, camPos.x);
-                camPos.x = Math.cos(angle) * 7.0;
-                camPos.z = Math.sin(angle) * 7.0;
+                camPos.x = Math.cos(angle) * 6.5;
+                camPos.z = Math.sin(angle) * 6.5;
             }
 
-            const deskZ = -2;
-            const deskHalfWidth = 2.0;
-            const deskHalfDepth = 1.25;
-            if (Math.abs(camPos.x) < deskHalfWidth + 0.5 && Math.abs(camPos.z - deskZ) < deskHalfDepth + 0.5) {
-                if (camPos.z > deskZ) camPos.z = deskZ + deskHalfDepth + 0.5;
-                else camPos.z = deskZ - deskHalfDepth - 0.5;
+            const dx = camPos.x - 0; const dz = camPos.z - (-3);
+            if (Math.sqrt(dx*dx + dz*dz) < 2.0) {
+                const angle = Math.atan2(dz, dx);
+                camPos.x = 0 + Math.cos(angle) * 2.0; camPos.z = -3 + Math.sin(angle) * 2.0;
             }
 
             if (roomState.chatEnabled) {
-                lanternLight.intensity = 2.0 + 0.5 * Math.sin(time * 3);
-                lanternGlass.material.color.setHex(0xffdd55);
+                lampLight.intensity = 1.5 + 0.5 * Math.sin(time * 3);
+                lampBulb.material.color.setHex(0xffdd55);
             } else {
-                lanternLight.intensity = 1.5;
-                lanternGlass.material.color.setHex(0xffaa00);
+                lampLight.intensity = 0.8;
+                lampBulb.material.color.setHex(0xffaa00);
             }
 
             if (isMobile) {
@@ -615,4 +437,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
