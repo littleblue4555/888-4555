@@ -7,7 +7,9 @@
     <style>
         body { margin: 0; overflow: hidden; background-color: #05050a; font-family: sans-serif; touch-action: none; }
         canvas { display: block; }
-        #vr-button-container { position: absolute; bottom: 20px; right: 20px; z-index: 100; }
+        
+        #vr-button-container { position: absolute; top: 20px; right: 20px; z-index: 100; }
+        
         #instructions {
             position: absolute; top: 20px; left: 20px; color: #fff; 
             background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; 
@@ -21,7 +23,6 @@
             font-size: 14px; display: none; z-index: 100; pointer-events: none;
         }
         
-        /* Invisible Mobile Controls */
         #mobile-controls {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 99; display: none;
@@ -39,7 +40,7 @@
         }
 
         #btn-e {
-            position: absolute; bottom: 30px; right: 30px; width: 45px; height: 45px;
+            position: absolute; bottom: 80px; right: 30px; width: 45px; height: 45px;
             background: rgba(0, 255, 0, 0.05); border: 1px solid rgba(0, 255, 0, 0.2);
             border-radius: 50%; pointer-events: auto; display: flex; justify-content: center;
             align-items: center; color: rgba(255, 255, 255, 0.3); font-size: 16px;
@@ -55,7 +56,7 @@
 </head>
 <body>
 
-    <div id="instructions">Use on-screen controls to walk.<br>Tap E to toggle chat.</div>
+    <div id="instructions">Hold left side to walk.<br>Double-tap-hold to run. Tap E to toggle chat.</div>
     <div id="hud" data-ui>💬 Chat: OFF</div>
     <div id="vr-button-container"></div>
 
@@ -129,51 +130,58 @@
             if (e.code === 'ShiftLeft') keys.shift = false;
         });
 
-        // --- INVISIBLE MOBILE CONTROLS ---
+        // --- MOBILE CONTROLS: HOLD TO WALK, DOUBLE-TAP-HOLD TO RUN ---
         if (isMobile) {
-            let moveTouchId = null;
-            let moveStartX = 0, moveStartY = 0;
+            let holdTimer = null;
+            let isHolding = false;
+            let lastTapTime = 0;
+            let isRunning = false;
+
             const leftZone = document.getElementById('left-zone');
+            const rightZone = document.getElementById('right-zone');
 
             leftZone.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                const touch = e.changedTouches[0];
-                moveTouchId = touch.identifier;
-                moveStartX = touch.clientX;
-                moveStartY = touch.clientY;
-            });
-
-            leftZone.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === moveTouchId) {
-                        const touch = e.changedTouches[i];
-                        const deltaX = touch.clientX - moveStartX;
-                        const deltaY = touch.clientY - moveStartY;
-                        const deadzone = 15;
-                        keys.w = deltaY < -deadzone;
-                        keys.s = deltaY > deadzone;
-                        keys.a = deltaX < -deadzone;
-                        keys.d = deltaX > deadzone;
-                    }
+                const now = Date.now();
+                const timeSinceLastTap = now - lastTapTime;
+                
+                if (timeSinceLastTap < 300) {
+                    isRunning = true;
+                } else {
+                    isRunning = false;
                 }
-            });
+                
+                isHolding = true;
+                keys.w = true;
+                keys.shift = isRunning;
+                lastTapTime = now;
 
-            const resetMove = (e) => {
+                clearTimeout(holdTimer);
+                holdTimer = setTimeout(() => {
+                    if (isHolding) keys.w = true;
+                }, 150);
+            }, { passive: false });
+
+            leftZone.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === moveTouchId) {
-                        moveTouchId = null;
-                        keys.w = keys.a = keys.s = keys.d = false;
-                    }
-                }
-            };
-            leftZone.addEventListener('touchend', resetMove);
-            leftZone.addEventListener('touchcancel', resetMove);
+                clearTimeout(holdTimer);
+                isHolding = false;
+                keys.w = false;
+                keys.shift = false;
+                isRunning = false;
+            }, { passive: false });
+
+            leftZone.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                clearTimeout(holdTimer);
+                isHolding = false;
+                keys.w = false;
+                keys.shift = false;
+                isRunning = false;
+            }, { passive: false });
 
             let lookTouchId = null;
             let lookStartX = 0, lookStartY = 0;
-            const rightZone = document.getElementById('right-zone');
 
             rightZone.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -181,7 +189,7 @@
                 lookTouchId = touch.identifier;
                 lookStartX = touch.clientX;
                 lookStartY = touch.clientY;
-            });
+            }, { passive: false });
 
             rightZone.addEventListener('touchmove', (e) => {
                 e.preventDefault();
@@ -196,7 +204,7 @@
                         lookStartY = touch.clientY;
                     }
                 }
-            });
+            }, { passive: false });
 
             const resetLook = (e) => {
                 e.preventDefault();
@@ -206,13 +214,13 @@
                     }
                 }
             };
-            rightZone.addEventListener('touchend', resetLook);
-            rightZone.addEventListener('touchcancel', resetLook);
+            rightZone.addEventListener('touchend', resetLook, { passive: false });
+            rightZone.addEventListener('touchcancel', resetLook, { passive: false });
 
             document.getElementById('btn-e').addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 interactWithSwitch();
-            });
+            }, { passive: false });
         }
 
         const clock = new THREE.Clock();
@@ -237,8 +245,7 @@
         towerWalls.position.set(0, 15, 0); 
         scene.add(towerWalls);
 
-        // --- THE ARCHWAY (Simplified for stability) ---
-        const archGroup = new THREE.Group();
+        // --- THE ARCHWAY ---
         const archRingGeo = new THREE.TorusGeometry(2, 0.3, 8, 20, Math.PI);
         const archMat = new THREE.MeshStandardMaterial({ color: 0x5a4e40, roughness: 1.0 });
         const archRing = new THREE.Mesh(archRingGeo, archMat);
@@ -258,7 +265,6 @@
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x5a4e40 });
         const railMat = new THREE.MeshStandardMaterial({ color: 0x3a3025 });
         
-        // Tier 1 Balcony
         const balcony1Geo = new THREE.CylinderGeometry(13.87, 13.87, 0.2, 64, 1, false);
         const balcony1 = new THREE.Mesh(balcony1Geo, tierMat);
         balcony1.position.set(0, 8, 0);
@@ -270,7 +276,6 @@
         railRing1.position.set(0, 9, 0);
         scene.add(railRing1);
 
-        // Tier 2 Balcony
         const balcony2Geo = new THREE.CylinderGeometry(11.5, 11.5, 0.2, 64, 1, false);
         const balcony2 = new THREE.Mesh(balcony2Geo, tierMat);
         balcony2.position.set(0, 16, 0);
@@ -282,23 +287,71 @@
         railRing2.position.set(0, 17, 0);
         scene.add(railRing2);
 
-        // --- THE HEARTH & CHIMNEY ---
-        const hearth = new THREE.Mesh(new THREE.BoxGeometry(5, 4, 3), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 1.0 }));
-        hearth.position.set(0, 2, 0); scene.add(hearth);
+        // --- THE GRAND FIREPLACE (The Foundation) ---
+        // The massive stone hearth
+        const hearth = new THREE.Mesh(new THREE.BoxGeometry(7, 5, 4), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 1.0 }));
+        hearth.position.set(0, 2.5, 0); 
+        scene.add(hearth);
 
-        const firebox = new THREE.Mesh(new THREE.BoxGeometry(3, 2.5, 2), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
-        firebox.position.set(0, 1.25, 1.1); scene.add(firebox);
+        // The fireplace opening
+        const firebox = new THREE.Mesh(new THREE.BoxGeometry(4, 3.5, 2.5), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
+        firebox.position.set(0, 1.75, 1.3); 
+        scene.add(firebox);
 
-        const fire = new THREE.Mesh(new THREE.ConeGeometry(1, 1.5, 8), new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.8 }));
-        fire.position.set(0, 0.75, 1.2); scene.add(fire);
+        // The Mantelpiece
+        const mantel = new THREE.Mesh(new THREE.BoxGeometry(8, 0.5, 5), new THREE.MeshStandardMaterial({ color: 0x5a4e40, roughness: 1.0 }));
+        mantel.position.set(0, 5.25, 0);
+        scene.add(mantel);
 
-        const fireLight = new THREE.PointLight(0xff5500, 2.0, 15);
-        fireLight.position.set(0, 1.5, 1.5); scene.add(fireLight);
+        // The Logs
+        const logGeo = new THREE.CylinderGeometry(0.3, 0.3, 2, 8);
+        const logMat = new THREE.MeshStandardMaterial({ color: 0x4a2e15 });
+        const log1 = new THREE.Mesh(logGeo, logMat);
+        log1.rotation.z = Math.PI / 2;
+        log1.position.set(0, 0.5, 1.4);
+        scene.add(log1);
+        const log2 = new THREE.Mesh(logGeo, logMat);
+        log2.rotation.z = Math.PI / 2;
+        log2.rotation.y = Math.PI / 4;
+        log2.position.set(0, 0.8, 1.4);
+        scene.add(log2);
 
+        // The Fire
+        const fire = new THREE.Mesh(new THREE.ConeGeometry(1.5, 2, 8), new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.8 }));
+        fire.position.set(0, 1.5, 1.4);
+        scene.add(fire);
+
+        // The Fire Light
+        const fireLight = new THREE.PointLight(0xff5500, 2.5, 20);
+        fireLight.position.set(0, 2.0, 1.5);
+        scene.add(fireLight);
+
+        // --- THE LIGHTHOUSE SPINE (Rising from the Hearth) ---
         const pillar = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 26, 32), new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 1.0 }));
-        pillar.position.set(0, 17, 0); scene.add(pillar);
+        pillar.position.set(0, 17, 0); 
+        scene.add(pillar);
 
-        // --- THE GRAND SPIRAL STAIRCASE (Fixed Gaps) ---
+        // --- THE LANTERN ROOM (The Crown of the Lighthouse) ---
+        // Glass room at the top
+        const lanternGlass = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 4, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0x88aaff, transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
+        lanternGlass.position.set(0, 32, 0);
+        scene.add(lanternGlass);
+
+        // Lantern Roof
+        const lanternRoof = new THREE.Mesh(new THREE.ConeGeometry(3.5, 2, 16), new THREE.MeshStandardMaterial({ color: 0x2a2a2a }));
+        lanternRoof.position.set(0, 35, 0);
+        scene.add(lanternRoof);
+
+        // The Beacon Light
+        const beaconLight = new THREE.PointLight(0xffdd55, 5.0, 100);
+        beaconLight.position.set(0, 32, 0);
+        scene.add(beaconLight);
+
+        const beaconBulb = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffdd55 }));
+        beaconBulb.position.set(0, 32, 0);
+        scene.add(beaconBulb);
+
+        // --- THE GRAND SPIRAL STAIRCASE ---
         const stepMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.9 });
         const stepCount = 60;
         const stepHeight = 0.5;
@@ -319,21 +372,21 @@
 
         // --- 6. TABLE, CHAIR, AND LAMP ---
         const table = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.1, 32), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 }));
-        table.position.set(0, 0.8, -3); scene.add(table);
+        table.position.set(0, 0.8, -4); scene.add(table); // Pushed back to make room for the hearth
 
         const legGeo = new THREE.BoxGeometry(0.1, 0.8, 0.1);
         const legMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
-        [[-1, 0.4, -3.8], [1, 0.4, -3.8], [-1, 0.4, -2.2], [1, 0.4, -2.2]].forEach(pos => {
+        [[-1, 0.4, -4.8], [1, 0.4, -4.8], [-1, 0.4, -3.2], [1, 0.4, -3.2]].forEach(pos => {
             const leg = new THREE.Mesh(legGeo, legMat); leg.position.set(pos[0], pos[1], pos[2]); scene.add(leg);
         });
 
         const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x4a2e15 }));
-        chairSeat.position.set(0, 0.5, -1.5); scene.add(chairSeat);
+        chairSeat.position.set(0, 0.5, -2.5); scene.add(chairSeat);
         const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.1), new THREE.MeshStandardMaterial({ color: 0x4a2e15 }));
-        chairBack.position.set(0, 0.8, -1.8); scene.add(chairBack);
+        chairBack.position.set(0, 0.8, -2.8); scene.add(chairBack);
 
-        const lampLight = new THREE.PointLight(0xffaa00, 0.8, 15); lampLight.position.set(0, 1.2, -3); scene.add(lampLight);
-        const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffaa00 })); lampBulb.position.set(0, 1.2, -3); scene.add(lampBulb);
+        const lampLight = new THREE.PointLight(0xffaa00, 0.8, 15); lampLight.position.set(0, 1.2, -4); scene.add(lampLight);
+        const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffaa00 })); lampBulb.position.set(0, 1.2, -4); scene.add(lampBulb);
         
         scene.add(new THREE.AmbientLight(0x555555, 0.8));
 
@@ -373,8 +426,14 @@
             const delta = Math.min(clock.getDelta(), 0.1); 
 
             winkleMat.opacity = 0.3 + 0.7 * Math.sin(time * 1.5);
-            fireLight.intensity = 2.0 + Math.sin(time * 2) * 0.3;
-            fire.scale.y = 1.0 + Math.sin(time * 3) * 0.1;
+            
+            // Fire flicker
+            fireLight.intensity = 2.5 + Math.sin(time * 2) * 0.5;
+            fire.scale.y = 1.0 + Math.sin(time * 3) * 0.15;
+            fire.scale.x = 1.0 + Math.sin(time * 4) * 0.05;
+
+            // Beacon rotation
+            beaconLight.intensity = 5.0 + Math.sin(time * 1) * 1.0;
 
             controls.enabled = !renderer.xr.isPresenting;
             tinyKeeper.visible = renderer.xr.isPresenting;
@@ -408,18 +467,21 @@
                 camPos.z = Math.sin(angle) * 15.0;
             }
 
-            if (distFromCenter < 6.5) {
+            // Collision with the enlarged hearth (radius 7)
+            if (distFromCenter < 7.0) {
                 const angle = Math.atan2(camPos.z, camPos.x);
-                camPos.x = Math.cos(angle) * 6.5;
-                camPos.z = Math.sin(angle) * 6.5;
+                camPos.x = Math.cos(angle) * 7.0;
+                camPos.z = Math.sin(angle) * 7.0;
             }
 
-            const dx = camPos.x - 0; const dz = camPos.z - (-3);
+            // Table Collision (Table is now at z=-4)
+            const dx = camPos.x - 0; const dz = camPos.z - (-4);
             if (Math.sqrt(dx*dx + dz*dz) < 2.0) {
                 const angle = Math.atan2(dz, dx);
-                camPos.x = 0 + Math.cos(angle) * 2.0; camPos.z = -3 + Math.sin(angle) * 2.0;
+                camPos.x = 0 + Math.cos(angle) * 2.0; camPos.z = -4 + Math.sin(angle) * 2.0;
             }
 
+            // Lamp response
             if (roomState.chatEnabled) {
                 lampLight.intensity = 1.5 + 0.5 * Math.sin(time * 3);
                 lampBulb.material.color.setHex(0xffdd55);
@@ -428,6 +490,7 @@
                 lampBulb.material.color.setHex(0xffaa00);
             }
 
+            // Highlight E button on mobile
             if (isMobile) {
                 raycaster.setFromCamera(screenCenter, camera);
                 const intersects = raycaster.intersectObject(switchGroup, true);
