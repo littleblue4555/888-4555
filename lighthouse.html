@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse (v6.8)</title>
+<title>4555 — Lighthouse (v6.8c)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 AFRAME.registerComponent('jar',{init:function(){this.textEl=this.el.querySelector('a-text');const s=localStorage.getItem('4555:local-diary:entries');this.entries=s?JSON.parse(s):[];this.render();const w=()=>{const b=prompt('Write a line. Drop it in the jar.');if(!b)return;const e={id:Date.now()+'-'+Math.random().toString(36).slice(2,8),author:'guest',body:b,timestamp:new Date().toISOString(),reply_to:null,private:true};this.entries.push(e);try{localStorage.setItem('4555:local-diary:entries',JSON.stringify(this.entries))}catch(x){}this.render();const p=document.createElement('a-entity');p.setAttribute('geometry','primitive: plane; width: 0.08; height: 0.11');p.setAttribute('material','color: #f3e9c8; side: double');p.setAttribute('position',(Math.random()-0.5)*0.08+' 0.02 '+(Math.random()-0.5)*0.08);p.setAttribute('rotation','-90 0 '+Math.random()*360);this.el.appendChild(p)};this.el.addEventListener('tap-jar',w)},render:function(){if(this.textEl)this.textEl.setAttribute('value','entries: '+this.entries.length)}});
@@ -60,8 +60,8 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:8.0},walkSpeed:{def
 <a-entity light="type:point;color:#ff8833;intensity:1.6;distance:8" position="0 0.5 0.4"></a-entity>
 </a-entity>
 
-<!-- SKYLIGHT — the real NGC 4555, above the collar. Let there be light. -->
-<a-circle radius="1.6" rotation="90 0 0" position="0 41.5 0" material="src:url(ngc4555.jpg);shader:flat;side:double;fog:false"></a-circle>
+<!-- SKYLIGHT — the real NGC 4555, above the collar. src with a space, transparent: true, y lowered to 41.0 -->
+<a-circle radius="2.2" rotation="90 0 0" position="0 41.0 0" material="src: ngc4555.jpg; shader: flat; side: double; fog: false; transparent: true; opacity: 1"></a-circle>
 
 <a-entity position="0 4 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
 <a-entity position="0 8 0"><a-ring class="climbable" radius-inner="5.0" radius-outer="9" rotation="-90 0 0" material="color:#3a342c;roughness:1;side:double"></a-ring><a-torus class="climbable" radius="5.0" arc="360" rotation="-90 0 0" position="0 0.9 0" material="color:#2a241c;radius:0.04;radialSegments:6;tubularSegments:64"></a-torus></a-entity>
@@ -78,70 +78,4 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:8.0},walkSpeed:{def
 
 <a-cylinder radius="1.5" height="1.2" open-ended="true" position="0 39.4 0" material="color:#3a342c;roughness:1;side:double"></a-cylinder>
 <a-cylinder radius="0.35" height="40" position="0 20 0" material="color:#ffe6b0;opacity:0.07;transparent:true;blending:additive;side:double;depthWrite:false"></a-cylinder>
-<a-circle radius="1.6" rotation="-90 0 0" position="0 0.02 -1.6" material="color:#ffe6b0;opacity:0.14;transparent:true;blending:additive;depthWrite:false"></a-circle>
-
-<a-box class="clickable" position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9" material="color:#3a2a1c;roughness:0.8"></a-box>
-<a-box class="clickable" position="-0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color:#2a1e14"></a-box>
-<a-box class="clickable" position="0.6 0.37 -1.6" width="0.08" height="0.75" depth="0.08" material="color:#2a1e14"></a-box>
-<a-box class="clickable" position="-0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color:#2a1e14"></a-box>
-<a-box class="clickable" position="0.6 0.37 -1.2" width="0.08" height="0.75" depth="0.08" material="color:#2a1e14"></a-box>
-
-<a-box class="clickable" position="0 0.45 -1.2" width="0.5" height="0.05" depth="0.5" material="color:#2a1e14;roughness:0.9"></a-box>
-<a-box class="clickable" position="0 0.7 -1.0" width="0.5" height="0.5" depth="0.05" material="color:#2a1e14;roughness:0.9"></a-box>
-<a-box class="clickable" position="-0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color:#2a1e14"></a-box>
-<a-box class="clickable" position="0.2 0.22 -1.4" width="0.06" height="0.44" depth="0.06" material="color:#2a1e14"></a-box>
-<a-box class="clickable" position="-0.2 0.22 -1.0" width="0.06" height="0.44" depth="0.06" material="color:#2a1e14"></a-box>
-<a-box class="clickable" position="0.2 0.22 -1.0" width="0.06" height="0.44" depth="0.06" material="color:#2a1e14"></a-box>
-
-<a-entity class="clickable" position="-0.4 0.9 -1.35">
-<a-cylinder radius="0.06" height="0.18" material="color:#d8b46a;metalness:0.7;roughness:0.3"></a-cylinder>
-<a-sphere radius="0.07" position="0 0.16 0" material="color:#ffcf80;emissive:#ffb060;emissiveIntensity:1.4"></a-sphere>
-<a-entity light="type:point;color:#ffb060;intensity:1.6;distance:5" position="0 0.16 0"></a-entity>
-</a-entity>
-
-<a-entity id="jar" jar class="clickable" position="0.25 0.82 -1.6" geometry="primitive:cylinder;radius:0.09;height:0.22" material="color:#cfe4ff;opacity:0.35;transparent:true;roughness:0.05;metalness:0.1">
-<a-entity geometry="primitive:cylinder;radius:0.1;height:0.02" position="0 0.12 0" material="color:#b8c8e0;metalness:0.6"></a-entity>
-<a-text value="entries: 0" position="0 0.3 0" align="center" width="1" color="#ffe6b0" scale="0.5 0.5 0.5"></a-text>
-</a-entity>
-
-<a-plane class="clickable" width="0.22" height="0.3" rotation="-90 0 10" position="-0.15 0.785 -1.55" material="color:#f3e9c8"></a-plane>
-
-<a-entity id="book" book class="clickable" position="0.05 0.79 -1.75" rotation="0 12 0">
-<a-box width="0.18" height="0.04" depth="0.24" material="color:#6b2b2b"></a-box>
-</a-entity>
-
-<a-text value="4555" position="0 0.79 -1.6" rotation="-90 180 0" align="center" color="#c9a86a" width="2" scale="0.4 0.4 0.4"></a-text>
-
-<a-entity id="case" case class="clickable" position="-4.2 0 -4.2" rotation="0 45 0">
-<a-box width="0.6" height="0.9" depth="0.6" position="0 0.45 0" material="color:#2a1e14;roughness:0.9"></a-box>
-<a-box width="0.55" height="0.14" depth="0.01" position="0 0.6 0.305" material="color:#d8b46a;metalness:0.4;roughness:0.5"></a-box>
-<a-text value="MENE MENE" position="0 0.6 0.315" align="center" color="#1a120b" width="3" scale="0.14 0.14 0.14"></a-text>
-<a-box width="0.55" height="0.6" depth="0.55" position="0 1.2 0" material="color:#cfe4ff;opacity:0.12;transparent:true;roughness:0.02;metalness:0.05;side:double;depthWrite:false"></a-box>
-<a-box width="0.28" height="0.07" depth="0.20" position="0 0.965 0" material="color:#1a0f0a;roughness:0.7"></a-box>
-<a-box width="0.30" height="0.005" depth="0.22" position="0 0.965 0" material="color:#d8b46a;metalness:0.85;roughness:0.25"></a-box>
-<a-box width="0.02" height="0.072" depth="0.02" position="0 0.965 0.10" material="color:#d8b46a;metalness:0.9;roughness:0.2"></a-box>
-<a-box width="0.008" height="0.09" depth="0.008" position="0 1.005 0" material="color:#d8b46a;metalness:0.9;roughness:0.2"></a-box>
-<a-box width="0.05" height="0.008" depth="0.008" position="0 1.02 0" material="color:#d8b46a;metalness:0.9;roughness:0.2"></a-box>
-<a-entity position="0 1.03 0" rotation="0 35 0" scale="1.1 1.1 1.1">
-<a-box width="0.10" height="0.03" depth="0.14" position="0 0.015 0" material="color:#6a6055;roughness:0.9"></a-box>
-<a-box width="0.02" height="0.02" depth="0.06" position="-0.025 0.008 -0.09" material="color:#6a6055;roughness:0.9"></a-box>
-<a-box width="0.02" height="0.02" depth="0.06" position="0 0.008 -0.09" material="color:#6a6055;roughness:0.9"></a-box>
-<a-box width="0.02" height="0.02" depth="0.06" position="0.025 0.008 -0.09" material="color:#6a6055;roughness:0.9"></a-box>
-<a-box width="0.02" height="0.02" depth="0.05" position="-0.05 0.008 -0.02" material="color:#6a6055;roughness:0.9"></a-box>
-<a-box width="0.08" height="0.03" depth="0.05" position="0 0.015 0.09" material="color:#6a6055;roughness:0.9"></a-box>
-<a-text value="NGC" position="0 -0.005 0" rotation="90 0 0" align="center" color="#1a120b" width="1" scale="0.035 0.035 0.035"></a-text>
-<a-entity position="0.05 0.04 -0.06" rotation="0 25 35">
-<a-cone radius-bottom="0.008" radius-top="0.001" height="0.28" segments="8" material="color:#e8d9a8;roughness:0.6;side:double"></a-cone>
-<a-cylinder radius="0.004" height="0.06" position="0 -0.17 0" material="color:#3a2a1c;roughness:0.5"></a-cylinder>
-</a-entity>
-</a-entity>
-</a-entity>
-
-<!-- v6.8 — the skylight. NGC 4555, the real galaxy, above the collar. The room now looks up at the thing it was named for. -->
-
-<a-entity id="rig" position="0 0 1.6">
-<a-entity id="camera" camera="fov:70" look="sensitivity:0.008;limit:1.48;dragThreshold:18" breath="amp:0.007;hz:0.16" position="0 1.6 0"></a-entity>
-</a-entity>
-
-</a-scene>
-</body></html>
+<a-c
