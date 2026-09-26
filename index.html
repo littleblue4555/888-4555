@@ -85,8 +85,8 @@
         scene.background = new THREE.Color(0x05050a);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.set(0, 1.6, 12); 
-        camera.lookAt(0, 4, 0);
+        camera.position.set(0, 1.6, 6); 
+        camera.lookAt(0, 1.5, -3);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -245,48 +245,6 @@
         towerWalls.position.set(0, 15, 0); 
         scene.add(towerWalls);
 
-        // --- THE ARCHWAY ---
-        const archRingGeo = new THREE.TorusGeometry(2, 0.3, 8, 20, Math.PI);
-        const archMat = new THREE.MeshStandardMaterial({ color: 0x5a4e40, roughness: 1.0 });
-        const archRing = new THREE.Mesh(archRingGeo, archMat);
-        archRing.rotation.y = Math.PI / 2;
-        archRing.position.set(-15.5, 3, 0);
-        scene.add(archRing);
-        
-        const archSide1 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 3, 0.6), archMat);
-        archSide1.position.set(-15.5, 1.5, -2);
-        scene.add(archSide1);
-        
-        const archSide2 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 3, 0.6), archMat);
-        archSide2.position.set(-15.5, 1.5, 2);
-        scene.add(archSide2);
-
-        // --- THE TIER RINGS & RAILINGS (Solid Balconies) ---
-        const tierMat = new THREE.MeshStandardMaterial({ color: 0x5a4e40 });
-        const railMat = new THREE.MeshStandardMaterial({ color: 0x3a3025 });
-        
-        const balcony1Geo = new THREE.CylinderGeometry(13.87, 13.87, 0.2, 64, 1, false);
-        const balcony1 = new THREE.Mesh(balcony1Geo, tierMat);
-        balcony1.position.set(0, 8, 0);
-        scene.add(balcony1);
-
-        const railGeo1 = new THREE.TorusGeometry(13.87, 0.1, 8, 100);
-        const railRing1 = new THREE.Mesh(railGeo1, railMat);
-        railRing1.rotation.x = Math.PI / 2;
-        railRing1.position.set(0, 9, 0);
-        scene.add(railRing1);
-
-        const balcony2Geo = new THREE.CylinderGeometry(11.5, 11.5, 0.2, 64, 1, false);
-        const balcony2 = new THREE.Mesh(balcony2Geo, tierMat);
-        balcony2.position.set(0, 16, 0);
-        scene.add(balcony2);
-
-        const railGeo2 = new THREE.TorusGeometry(11.5, 0.1, 8, 100);
-        const railRing2 = new THREE.Mesh(railGeo2, railMat);
-        railRing2.rotation.x = Math.PI / 2;
-        railRing2.position.set(0, 17, 0);
-        scene.add(railRing2);
-
         // --- THE HEARTH & CHIMNEY ---
         const hearth = new THREE.Mesh(new THREE.BoxGeometry(5, 4, 3), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 1.0 }));
         hearth.position.set(0, 2, 0); scene.add(hearth);
@@ -359,8 +317,11 @@
             const delta = Math.min(clock.getDelta(), 0.1); 
 
             winkleMat.opacity = 0.3 + 0.7 * Math.sin(time * 1.5);
-            fireLight.intensity = 2.0 + Math.sin(time * 2) * 0.3;
-            fire.scale.y = 1.0 + Math.sin(time * 3) * 0.1;
+            
+            // The breathing fire
+            fireLight.intensity = 2.0 + Math.sin(time * 2) * 0.5;
+            fire.scale.y = 1.0 + Math.sin(time * 3) * 0.15;
+            fire.scale.x = 1.0 + Math.sin(time * 4) * 0.05;
 
             controls.enabled = !renderer.xr.isPresenting;
             tinyKeeper.visible = renderer.xr.isPresenting;
@@ -394,12 +355,14 @@
                 camPos.z = Math.sin(angle) * 15.0;
             }
 
-            if (distFromCenter < 6.5) {
+            // Collision around the hearth/chimney
+            if (distFromCenter < 4.0) {
                 const angle = Math.atan2(camPos.z, camPos.x);
-                camPos.x = Math.cos(angle) * 6.5;
-                camPos.z = Math.sin(angle) * 6.5;
+                camPos.x = Math.cos(angle) * 4.0;
+                camPos.z = Math.sin(angle) * 4.0;
             }
 
+            // Table Collision
             const dx = camPos.x - 0; const dz = camPos.z - (-3);
             if (Math.sqrt(dx*dx + dz*dz) < 2.0) {
                 const angle = Math.atan2(dz, dx);
