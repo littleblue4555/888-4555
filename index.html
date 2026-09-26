@@ -15,11 +15,17 @@
             transition: opacity 0.5s;
         }
         body.locked #instructions { opacity: 0; }
+        #hud {
+            position: absolute; bottom: 20px; left: 20px; color: #fff;
+            background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 5px;
+            font-size: 14px; display: none; z-index: 100; pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
-    <div id="instructions">Click to look. WASD to walk. Shift to run.</div>
+    <div id="instructions">Click to look. WASD to walk. Shift to run.<br>Look at the switch and press E to toggle chat.</div>
+    <div id="hud" data-ui>💬 Chat: OFF</div>
     <div id="vr-button-container"></div>
 
     <script type="importmap">
@@ -41,7 +47,7 @@
         scene.background = new THREE.Color(0x05050a); // Dark matter void
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.set(0, 1.6, 2); // Eye height named at the start
+        camera.position.set(0, 1.6, 2); // Eye height
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -52,23 +58,18 @@
         // VR Button
         document.getElementById('vr-button-container').appendChild(VRButton.createButton(renderer));
 
-        // --- 2. CONTROLS (TinyKeeper's Legs) ---
+        // --- 2. CONTROLS ---
         const controls = new PointerLockControls(camera, document.body);
         scene.add(controls.getObject());
 
-        // Blocker 1 & 5 Fixed: Click handler on body, with a UI guard for the future
         document.body.addEventListener('click', (e) => {
-            // Ignore clicks on future UI elements marked with data-ui
             if (e.target.closest('[data-ui]')) return; 
-            if (!renderer.xr.isPresenting) {
-                controls.lock();
-            }
+            if (!renderer.xr.isPresenting) controls.lock();
         });
         
         controls.addEventListener('lock', () => document.body.classList.add('locked'));
         controls.addEventListener('unlock', () => document.body.classList.remove('locked'));
 
-        // Keyboard state
         const keys = { w: false, a: false, s: false, d: false, shift: false };
         document.addEventListener('keydown', (e) => {
             if (e.code === 'KeyW') keys.w = true;
@@ -76,6 +77,9 @@
             if (e.code === 'KeyS') keys.s = true;
             if (e.code === 'KeyD') keys.d = true;
             if (e.code === 'ShiftLeft') keys.shift = true;
+            
+            // The switch interaction
+            if (e.code === 'KeyE') interactWithSwitch();
         });
         document.addEventListener('keyup', (e) => {
             if (e.code === 'KeyW') keys.w = false;
@@ -87,11 +91,15 @@
 
         const clock = new THREE.Clock();
 
-        // --- 3. THE SKY (NGC 4555 & Winkle) ---
-        // TinyKeeper Fix 1: Material defined first. Loader second. needsUpdate added.
+        // --- 3. ROOM STATE ---
+        const roomState = {
+            chatEnabled: false,
+            occupants: [] 
+        };
+
+        // --- 4. THE SKY (NGC 4555 & Winkle) ---
         const galaxyMat = new THREE.MeshBasicMaterial({ 
-            transparent: true, opacity: 0.6,
-            side: THREE.BackSide, color: 0xffffff 
+            transparent: true, opacity: 0.6, side: THREE.BackSide, color: 0xffffff 
         });
         
         const galaxyTexture = new THREE.TextureLoader().load(
@@ -113,29 +121,25 @@
         galaxySphere.scale.set(0.3, 0.3, 0.3); 
         scene.add(galaxySphere);
 
-        // Florella's Winkle Star
         const winkleMat = new THREE.SpriteMaterial({ color: 0xffffff, transparent: true, opacity: 1.0 });
         const winkle = new THREE.Sprite(winkleMat);
         winkle.position.set(50, 80, -200); 
         winkle.scale.set(8, 8, 1);
         scene.add(winkle);
 
-        // --- 4. THE ROOM ---
-        // Floor
+        // --- 5. THE ROOM ---
         const floorGeo = new THREE.PlaneGeometry(20, 20);
         const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         scene.add(floor);
 
-        // The Dark Pillar
         const pillarGeo = new THREE.BoxGeometry(2, 10, 2);
         const pillarMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0 });
         const pillar = new THREE.Mesh(pillarGeo, pillarMat);
         pillar.position.set(4, 5, -4);
         scene.add(pillar);
 
-        // Left Wall
         const wallGeo = new THREE.PlaneGeometry(20, 10);
         const wallMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 1.0, side: THREE.DoubleSide });
         const leftWall = new THREE.Mesh(wallGeo, wallMat);
@@ -143,13 +147,12 @@
         leftWall.rotation.y = Math.PI / 2;
         scene.add(leftWall);
 
-        // Right Wall
         const rightWall = new THREE.Mesh(wallGeo, wallMat);
         rightWall.position.set(10, 5, 0);
         rightWall.rotation.y = -Math.PI / 2;
         scene.add(rightWall);
 
-        // --- 5. THE TABLE AND LAMP ---
+        // --- 6. THE TABLE AND LAMP ---
         const tableGeo = new THREE.BoxGeometry(2, 0.1, 1.5);
         const tableMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
         const table = new THREE.Mesh(tableGeo, tableMat);
@@ -165,26 +168,70 @@
             scene.add(leg);
         });
 
-        // The Lamp
-        const lampLight = new THREE.PointLight(0xffaa00, 1.5, 10);
+        const lampLight = new THREE.PointLight(0xffaa00, 0.8, 10); // Dim by default
         lampLight.position.set(0, 1.2, -1);
         scene.add(lampLight);
 
-        const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffdd55 }));
+        const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
         lampBulb.position.set(0, 1.2, -1);
         scene.add(lampBulb);
 
         const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
         scene.add(ambientLight);
 
-        // --- 6. TINYKEEPER'S BODY (Placeholder Avatar) ---
+        // --- 7. THE SWITCH ---
+        const switchGroup = new THREE.Group();
+        
+        const switchPlate = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.5, 0.1),
+            new THREE.MeshStandardMaterial({ color: 0x333333 })
+        );
+        switchGroup.add(switchPlate);
+
+        const switchLever = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 0.15, 0.1),
+            new THREE.MeshStandardMaterial({ color: 0x888888, emissive: 0x222222 })
+        );
+        switchLever.position.set(0, 0, 0.1);
+        switchGroup.add(switchLever);
+
+        switchGroup.position.set(9.9, 1.5, 1.5); // On the right wall, near the door
+        switchGroup.rotation.y = -Math.PI / 2; // Face inward
+        scene.add(switchGroup);
+
+        // --- 8. TINYKEEPER'S BODY ---
         const keeperGeo = new THREE.CapsuleGeometry(0.3, 0.8, 4, 8);
         const keeperMat = new THREE.MeshStandardMaterial({ color: 0x4477ff, emissive: 0x112244 });
         const tinyKeeper = new THREE.Mesh(keeperGeo, keeperMat);
         tinyKeeper.position.set(0, 0.7, 0); 
         scene.add(tinyKeeper);
 
-        // --- 7. THE ANIMATION LOOP ---
+        // --- 9. INTERACTION LOGIC ---
+        const raycaster = new THREE.Raycaster();
+        const screenCenter = new THREE.Vector2(0, 0); // Center of the screen
+
+        function interactWithSwitch() {
+            if (!controls.enabled) return;
+            
+            raycaster.setFromCamera(screenCenter, camera);
+            const intersects = raycaster.intersectObject(switchGroup, true);
+
+            if (intersects.length > 0) {
+                // Toggle the room state
+                roomState.chatEnabled = !roomState.chatEnabled;
+                
+                // Update the visual lever
+                switchLever.position.y = roomState.chatEnabled ? -0.1 : 0.1;
+                switchLever.material.emissive.setHex(roomState.chatEnabled ? 0x00ff00 : 0x222222);
+
+                // Update the HUD
+                const hud = document.getElementById('hud');
+                hud.style.display = 'block';
+                hud.innerHTML = roomState.chatEnabled ? '💬 Chat: ON' : '💬 Chat: OFF';
+            }
+        }
+
+        // --- 10. THE ANIMATION LOOP ---
         function animate() {
             const time = performance.now() * 0.001;
             const delta = Math.min(clock.getDelta(), 0.1); 
@@ -192,7 +239,6 @@
             // Winkle Pulse
             winkleMat.opacity = 0.3 + 0.7 * Math.sin(time * 1.5);
 
-            // VR conflict fix
             controls.enabled = !renderer.xr.isPresenting;
             tinyKeeper.visible = renderer.xr.isPresenting;
             
@@ -210,23 +256,31 @@
                 if (keys.d) controls.moveRight(speed * delta);
             }
 
-            // TinyKeeper Fix 3: Bounds clamped to the floor so you don't float into the void
+            // Bounds
             const camPos = controls.getObject().position;
             camPos.x = Math.max(-9.5, Math.min(9.5, camPos.x));
             camPos.z = Math.max(-9.5, Math.min(9.5, camPos.z));
 
-            // TinyKeeper Fix 4: Simple table collision radius
-            const tableCenterX = 0;
-            const tableCenterZ = -1;
-            const dx = camPos.x - tableCenterX;
-            const dz = camPos.z - tableCenterZ;
+            // Table Collision
+            const dx = camPos.x - 0;
+            const dz = camPos.z - (-1);
             const distToTable = Math.sqrt(dx*dx + dz*dz);
-            
             if (distToTable < 1.5) {
-                // Push the camera back to the edge of the table's collision radius
                 const angle = Math.atan2(dz, dx);
-                camPos.x = tableCenterX + Math.cos(angle) * 1.5;
-                camPos.z = tableCenterZ + Math.sin(angle) * 1.5;
+                camPos.x = 0 + Math.cos(angle) * 1.5;
+                camPos.z = -1 + Math.sin(angle) * 1.5;
+            }
+
+            // --- THE LAMP'S RESPONSE TO ROOM STATE ---
+            if (roomState.chatEnabled) {
+                // Pulse when chat is on
+                const pulse = 1.5 + 0.5 * Math.sin(time * 3);
+                lampLight.intensity = pulse;
+                lampBulb.material.color.setHex(0xffdd55);
+            } else {
+                // Dim if empty, bright if occupied (for now, just dim since we're solo)
+                lampLight.intensity = 0.8;
+                lampBulb.material.color.setHex(0xffaa00);
             }
 
             renderer.render(scene, camera);
@@ -234,7 +288,6 @@
 
         renderer.setAnimationLoop(animate);
 
-        // --- 8. RESIZE HANDLER ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -242,4 +295,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
