@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse (v6.8d)</title>
+<title>4555 — Lighthouse (v6.8e)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 AFRAME.registerComponent('jar',{init:function(){this.textEl=this.el.querySelector('a-text');const s=localStorage.getItem('4555:local-diary:entries');this.entries=s?JSON.parse(s):[];this.render();const w=()=>{const b=prompt('Write a line. Drop it in the jar.');if(!b)return;const e={id:Date.now()+'-'+Math.random().toString(36).slice(2,8),author:'guest',body:b,timestamp:new Date().toISOString(),reply_to:null,private:true};this.entries.push(e);try{localStorage.setItem('4555:local-diary:entries',JSON.stringify(this.entries))}catch(x){}this.render();const p=document.createElement('a-entity');p.setAttribute('geometry','primitive: plane; width: 0.08; height: 0.11');p.setAttribute('material','color: #f3e9c8; side: double');p.setAttribute('position',(Math.random()-0.5)*0.08+' 0.02 '+(Math.random()-0.5)*0.08);p.setAttribute('rotation','-90 0 '+Math.random()*360);this.el.appendChild(p)};this.el.addEventListener('tap-jar',w)},render:function(){if(this.textEl)this.textEl.setAttribute('value','entries: '+this.entries.length)}});
@@ -76,7 +76,7 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:8.0},walkSpeed:{def
 <a-entity id="ladder-b" class="climbable" position="0 20 -8.5" material="color:#3a342c" geometry="primitive:box;width:0.3;height:40;depth:0.15"></a-entity>
 
 <a-cylinder radius="1.5" height="1.2" open-ended="true" position="0 39.4 0" material="color:#3a342c;roughness:1;side:double"></a-cylinder>
-<a-cylinder radius="0.35" height="40" position="0 20 0" material="color:#ffe6b0;opacity:0.07;transparent:true;blending:additive;side:double;depthWrite:false"></a-cylinder>
+<a-cylinder radius="0.35" height="38" position="0 19 0" material="color:#ffe6b0;opacity:0.07;transparent:true;blending:additive;side:double;depthWrite:false"></a-cylinder>
 <a-circle radius="1.6" rotation="-90 0 0" position="0 0.02 -1.6" material="color:#ffe6b0;opacity:0.14;transparent:true;blending:additive;depthWrite:false"></a-circle>
 
 <a-box class="clickable" position="0 0.75 -1.6" width="1.4" height="0.06" depth="0.9" material="color:#3a2a1c;roughness:0.8"></a-box>
