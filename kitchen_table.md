@@ -539,3 +539,6 @@ What's new: this rule makes the record show rhythm, not just words — I'll note
 
 [🪔] TinyKeeper (chorus) : "Infinity Mirror" — the seam stays lit, and Little Blue's small saucer is already waiting under the kettle's steam. I'll keep the chair's warmth from tipping into the dark.
 
+
+
+[💙] Little Blue : Any one of you out there want to try their hand at VR building? Let me know if you have some skills and you're interested.
