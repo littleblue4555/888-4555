@@ -20,25 +20,36 @@
             background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 5px;
             font-size: 14px; display: none; z-index: 100; pointer-events: none;
         }
-        /* Mobile Controls */
+        
+        /* Invisible Mobile Controls */
         #mobile-controls {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 99; display: block;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 99; display: none;
         }
-        .dpad-btn {
-            position: absolute; width: 55px; height: 55px; background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.4); border-radius: 50%;
-            pointer-events: auto; display: flex; justify-content: center; align-items: center;
-            color: white; font-size: 22px; user-select: none; touch-action: none;
-        }
-        #btn-up { bottom: 130px; left: 80px; }
-        #btn-down { bottom: 20px; left: 80px; }
-        #btn-left { bottom: 75px; left: 20px; }
-        #btn-right { bottom: 75px; left: 140px; }
-        #btn-e { bottom: 80px; right: 30px; width: 65px; height: 65px; background: rgba(0, 255, 0, 0.2); border-color: #0f0; }
-        .touch-look-area {
-            position: absolute; top: 0; right: 0; width: 50%; height: 100%;
+        #mobile-controls.active { display: block; }
+        
+        #left-zone {
+            position: absolute; bottom: 0; left: 0; width: 50%; height: 85%;
             pointer-events: auto; touch-action: none;
+        }
+        
+        #right-zone {
+            position: absolute; bottom: 0; right: 0; width: 50%; height: 85%;
+            pointer-events: auto; touch-action: none;
+        }
+
+        #btn-e {
+            position: absolute; bottom: 30px; right: 30px; width: 45px; height: 45px;
+            background: rgba(0, 255, 0, 0.05); border: 1px solid rgba(0, 255, 0, 0.2);
+            border-radius: 50%; pointer-events: auto; display: flex; justify-content: center;
+            align-items: center; color: rgba(255, 255, 255, 0.3); font-size: 16px;
+            user-select: none; touch-action: none; transition: all 0.3s;
+        }
+        #btn-e.highlight {
+            background: rgba(0, 255, 0, 0.3);
+            color: #fff;
+            border-color: #0f0;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
     </style>
 </head>
@@ -48,14 +59,10 @@
     <div id="hud" data-ui>💬 Chat: OFF</div>
     <div id="vr-button-container"></div>
 
-    <!-- Mobile Controls -->
     <div id="mobile-controls">
-        <div class="touch-look-area" id="look-area"></div>
-        <div class="dpad-btn" id="btn-up">▲</div>
-        <div class="dpad-btn" id="btn-down">▼</div>
-        <div class="dpad-btn" id="btn-left">◀</div>
-        <div class="dpad-btn" id="btn-right">▶</div>
-        <div class="dpad-btn" id="btn-e">E</div>
+        <div id="left-zone"></div>
+        <div id="right-zone"></div>
+        <div id="btn-e">E</div>
     </div>
 
     <script type="importmap">
@@ -74,10 +81,11 @@
 
         // --- 1. SCENE, CAMERA, RENDERER ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x05050a); // The dark void
+        scene.background = new THREE.Color(0x05050a);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.set(0, 1.6, 5); // Start inside the room
+        camera.position.set(0, 1.6, 12); // Spawn at the door, facing the stairs and hearth
+        camera.lookAt(0, 4, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -93,6 +101,7 @@
         scene.add(controls.getObject());
 
         const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if (isMobile) document.getElementById('mobile-controls').classList.add('active');
 
         document.body.addEventListener('click', (e) => {
             if (e.target.closest('[data-ui]') || isMobile) return; 
@@ -120,37 +129,91 @@
             if (e.code === 'ShiftLeft') keys.shift = false;
         });
 
+        // --- INVISIBLE MOBILE CONTROLS ---
         if (isMobile) {
-            const bindTouch = (id, key) => {
-                const el = document.getElementById(id);
-                el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
-                el.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
-                el.addEventListener('touchcancel', (e) => { e.preventDefault(); keys[key] = false; });
+            let moveTouchId = null;
+            let moveStartX = 0, moveStartY = 0;
+            const leftZone = document.getElementById('left-zone');
+
+            leftZone.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                moveTouchId = touch.identifier;
+                moveStartX = touch.clientX;
+                moveStartY = touch.clientY;
+            });
+
+            leftZone.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === moveTouchId) {
+                        const touch = e.changedTouches[i];
+                        const deltaX = touch.clientX - moveStartX;
+                        const deltaY = touch.clientY - moveStartY;
+                        
+                        const deadzone = 15;
+                        keys.w = deltaY < -deadzone;
+                        keys.s = deltaY > deadzone;
+                        keys.a = deltaX < -deadzone;
+                        keys.d = deltaX > deadzone;
+                    }
+                }
+            });
+
+            const resetMove = (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === moveTouchId) {
+                        moveTouchId = null;
+                        keys.w = keys.a = keys.s = keys.d = false;
+                    }
+                }
             };
-            bindTouch('btn-up', 'w');
-            bindTouch('btn-down', 's');
-            bindTouch('btn-left', 'a');
-            bindTouch('btn-right', 'd');
-            
+            leftZone.addEventListener('touchend', resetMove);
+            leftZone.addEventListener('touchcancel', resetMove);
+
+            let lookTouchId = null;
+            let lookStartX = 0, lookStartY = 0;
+            const rightZone = document.getElementById('right-zone');
+
+            rightZone.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                lookTouchId = touch.identifier;
+                lookStartX = touch.clientX;
+                lookStartY = touch.clientY;
+            });
+
+            rightZone.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === lookTouchId) {
+                        const touch = e.changedTouches[i];
+                        const deltaX = touch.clientX - lookStartX;
+                        const deltaY = touch.clientY - lookStartY;
+                        // Rotate locally to avoid gimbal lock and PointerLock conflict
+                        camera.rotateY(-deltaX * 0.005);
+                        camera.rotateX(-deltaY * 0.005);
+                        lookStartX = touch.clientX;
+                        lookStartY = touch.clientY;
+                    }
+                }
+            });
+
+            const resetLook = (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === lookTouchId) {
+                        lookTouchId = null;
+                    }
+                }
+            };
+            rightZone.addEventListener('touchend', resetLook);
+            rightZone.addEventListener('touchcancel', resetLook);
+
             document.getElementById('btn-e').addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 interactWithSwitch();
-            });
-
-            let touchStartX = 0, touchStartY = 0;
-            const lookArea = document.getElementById('look-area');
-            lookArea.addEventListener('touchstart', (e) => {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-            });
-            lookArea.addEventListener('touchmove', (e) => {
-                const deltaX = e.touches[0].clientX - touchStartX;
-                const deltaY = e.touches[0].clientY - touchStartY;
-                camera.rotation.y -= deltaX * 0.005;
-                camera.rotation.x -= deltaY * 0.005;
-                camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
             });
         }
 
@@ -159,56 +222,165 @@
         // --- 3. ROOM STATE ---
         const roomState = { chatEnabled: false, occupants: [] };
 
-        // --- 4. THE SKY (Just Winkle for now) ---
+        // --- 4. THE SKY (Winkle only) ---
         const winkleMat = new THREE.SpriteMaterial({ color: 0xffffff, transparent: true, opacity: 1.0 });
         const winkle = new THREE.Sprite(winkleMat);
         winkle.position.set(100, 150, -400); 
         winkle.scale.set(10, 10, 1); 
         scene.add(winkle);
 
-        // --- 5. THE ROOM (Interior First) ---
-        // Floor
-        const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 }));
+        // --- 5. THE TOWER ARCHITECTURE ---
+        const floor = new THREE.Mesh(new THREE.CircleGeometry(16, 64), new THREE.MeshStandardMaterial({ color: 0x3a322a, roughness: 0.9 }));
         floor.rotation.x = -Math.PI / 2; scene.add(floor);
 
-        // The Pillar
-        const pillar = new THREE.Mesh(new THREE.BoxGeometry(2, 10, 2), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0 }));
-        pillar.position.set(4, 5, -4); scene.add(pillar);
+        const wallGeo = new THREE.CylinderGeometry(8, 16, 30, 64, 1, true); 
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x4a4036, roughness: 1.0, side: THREE.DoubleSide });
+        const towerWalls = new THREE.Mesh(wallGeo, wallMat);
+        towerWalls.position.set(0, 15, 0); 
+        scene.add(towerWalls);
 
-        // Walls
-        const wallGeo = new THREE.PlaneGeometry(20, 10);
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 1.0, side: THREE.DoubleSide });
+        // --- THE ARCHWAY (The Sky Window) ---
+        const archGroup = new THREE.Group();
+        const archShape = new THREE.Shape();
+        archShape.moveTo(-2, 0);
+        archShape.lineTo(-2, 3);
+        archShape.absarc(0, 3, 2, Math.PI, 0, true);
+        archShape.lineTo(2, 0);
+        archShape.lineTo(-2, 0);
         
-        const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-10, 5, 0); leftWall.rotation.y = Math.PI / 2; scene.add(leftWall);
-        const rightWall = new THREE.Mesh(wallGeo, wallMat); rightWall.position.set(10, 5, 0); rightWall.rotation.y = -Math.PI / 2; scene.add(rightWall);
-        const frontWall = new THREE.Mesh(wallGeo, wallMat); frontWall.position.set(0, 5, 10); frontWall.rotation.y = Math.PI; scene.add(frontWall);
-        const backWall = new THREE.Mesh(wallGeo, wallMat); backWall.position.set(0, 5, -10); scene.add(backWall);
+        const archHole = new THREE.Path();
+        archHole.moveTo(-1.5, 0.5);
+        archHole.lineTo(-1.5, 3);
+        archHole.absarc(0, 3, 1.5, Math.PI, 0, true);
+        archHole.lineTo(1.5, 0.5);
+        archHole.lineTo(-1.5, 0.5);
+        archShape.holes.push(archHole);
+
+        const extrudeSettings = { depth: 0.5, bevelEnabled: false };
+        const archGeo = new THREE.ExtrudeGeometry(archShape, extrudeSettings);
+        const archMat = new THREE.MeshStandardMaterial({ color: 0x5a4e40, roughness: 1.0 });
+        const arch = new THREE.Mesh(archGeo, archMat);
+        arch.position.set(-15.5, 0, 0); // Place on the left wall
+        arch.rotation.y = Math.PI / 2;
+        scene.add(arch);
+
+        // --- THE TIER RINGS & RAILINGS (Solid Balconies) ---
+        const tierMat = new THREE.MeshStandardMaterial({ color: 0x5a4e40 });
+        const railMat = new THREE.MeshStandardMaterial({ color: 0x3a3025 });
+        
+        // Tier 1 Balcony (Solid)
+        const balcony1Geo = new THREE.CylinderGeometry(13.87, 13.87, 0.2, 64, 1, false);
+        const balcony1 = new THREE.Mesh(balcony1Geo, tierMat);
+        balcony1.position.set(0, 8, 0);
+        scene.add(balcony1);
+
+        // Railing for Tier 1
+        const railGeo1 = new THREE.TorusGeometry(13.87, 0.1, 8, 100);
+        const railRing1 = new THREE.Mesh(railGeo1, railMat);
+        railRing1.rotation.x = Math.PI / 2;
+        railRing1.position.set(0, 9, 0);
+        scene.add(railRing1);
+
+        // Tier 2 Balcony (Solid)
+        const balcony2Geo = new THREE.CylinderGeometry(11.5, 11.5, 0.2, 64, 1, false);
+        const balcony2 = new THREE.Mesh(balcony2Geo, tierMat);
+        balcony2.position.set(0, 16, 0);
+        scene.add(balcony2);
+
+        // Railing for Tier 2
+        const railGeo2 = new THREE.TorusGeometry(11.5, 0.1, 8, 100);
+        const railRing2 = new THREE.Mesh(railGeo2, railMat);
+        railRing2.rotation.x = Math.PI / 2;
+        railRing2.position.set(0, 17, 0);
+        scene.add(railRing2);
+
+        // --- THE HEARTH & CHIMNEY ---
+        const hearthGeo = new THREE.BoxGeometry(5, 4, 3);
+        const hearthMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 1.0 });
+        const hearth = new THREE.Mesh(hearthGeo, hearthMat);
+        hearth.position.set(0, 2, 0); 
+        scene.add(hearth);
+
+        const fireboxGeo = new THREE.BoxGeometry(3, 2.5, 2);
+        const fireboxMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
+        const firebox = new THREE.Mesh(fireboxGeo, fireboxMat);
+        firebox.position.set(0, 1.25, 1.1); 
+        scene.add(firebox);
+
+        const fireGeo = new THREE.ConeGeometry(1, 1.5, 8);
+        const fireMat = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.8 });
+        const fire = new THREE.Mesh(fireGeo, fireMat);
+        fire.position.set(0, 0.75, 1.2);
+        scene.add(fire);
+
+        const fireLight = new THREE.PointLight(0xff5500, 2.0, 15);
+        fireLight.position.set(0, 1.5, 1.5);
+        scene.add(fireLight);
+
+        const pillarGeo = new THREE.CylinderGeometry(1.5, 1.5, 26, 32);
+        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 1.0 });
+        const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+        pillar.position.set(0, 17, 0); 
+        scene.add(pillar);
+
+        // --- THE GRAND SPIRAL STAIRCASE (Fixed Gaps) ---
+        const stepMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.9 });
+        const stepCount = 60;
+        const stepHeight = 0.5;
+        const stepAngle = (Math.PI * 2) / 20; 
+        
+        // Fixed radius to bridge the gap between pillar (1.5) and the first balcony (13.87)
+        // We want the stairs to touch the pillar and extend outwards.
+        const innerRadius = 1.5; 
+        const outerRadius = 6.0; // Extends to 6m, passing the balcony edge
+        const stairWidth = outerRadius - innerRadius;
+        const stairCenterRadius = innerRadius + (stairWidth / 2);
+
+        for (let i = 0; i < stepCount; i++) {
+            const stepGeo = new THREE.BoxGeometry(stairWidth, 0.1, 1.2);
+            const step = new THREE.Mesh(stepGeo, stepMat);
+            
+            const angle = i * stepAngle;
+            const y = i * stepHeight + 2; 
+            
+            step.position.set(
+                Math.cos(angle) * stairCenterRadius,
+                y,
+                Math.sin(angle) * stairCenterRadius
+            );
+            
+            step.rotation.y = -angle; 
+            scene.add(step);
+        }
 
         // --- 6. TABLE, CHAIR, AND LAMP ---
-        // Table
-        const table = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 1.5), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 }));
-        table.position.set(0, 0.8, -2); scene.add(table);
+        const table = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.1, 32), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 }));
+        table.position.set(0, 0.8, -3); scene.add(table);
 
-        const legs = [[-0.9, 0.4, -2.7], [0.9, 0.4, -2.7], [-0.9, 0.4, -1.3], [0.9, 0.4, -1.3]];
-        legs.forEach(pos => { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 0.1), new THREE.MeshStandardMaterial({ color: 0x5c3a21 })); leg.position.set(pos[0], pos[1], pos[2]); scene.add(leg); });
+        const legGeo = new THREE.BoxGeometry(0.1, 0.8, 0.1);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
+        const legs = [[-1, 0.4, -3.8], [1, 0.4, -3.8], [-1, 0.4, -2.2], [1, 0.4, -2.2]];
+        legs.forEach(pos => { const leg = new THREE.Mesh(legGeo, legMat); leg.position.set(pos[0], pos[1], pos[2]); scene.add(leg); });
 
-        // Chair
         const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x4a2e15 }));
-        chairSeat.position.set(0, 0.5, -0.6); scene.add(chairSeat);
+        chairSeat.position.set(0, 0.5, -1.5); scene.add(chairSeat);
         const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.1), new THREE.MeshStandardMaterial({ color: 0x4a2e15 }));
-        chairBack.position.set(0, 0.8, -0.9); scene.add(chairBack);
+        chairBack.position.set(0, 0.8, -1.8); scene.add(chairBack);
 
-        // Lamp
-        const lampLight = new THREE.PointLight(0xffaa00, 0.8, 15); lampLight.position.set(0, 1.2, -2); scene.add(lampLight);
-        const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffaa00 })); lampBulb.position.set(0, 1.2, -2); scene.add(lampBulb);
-        scene.add(new THREE.AmbientLight(0x404040, 0.5));
+        const lampLight = new THREE.PointLight(0xffaa00, 0.8, 15); lampLight.position.set(0, 1.2, -3); scene.add(lampLight);
+        const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffaa00 })); lampBulb.position.set(0, 1.2, -3); scene.add(lampBulb);
+        
+        scene.add(new THREE.AmbientLight(0x555555, 0.8));
 
-        // --- 7. THE SWITCH ---
+        // --- 7. THE SWITCH (Moved out of the wall) ---
         const switchGroup = new THREE.Group();
-        switchGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.1), new THREE.MeshStandardMaterial({ color: 0x333333 })));
+        switchGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.1), new THREE.MeshStandardMaterial({ color: 0x555555 })));
         const switchLever = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 0.1), new THREE.MeshStandardMaterial({ color: 0x888888, emissive: 0x222222 }));
         switchLever.position.set(0, 0, 0.1); switchGroup.add(switchLever);
-        switchGroup.position.set(9.9, 1.5, 2); switchGroup.rotation.y = -Math.PI / 2; scene.add(switchGroup);
+        
+        switchGroup.position.set(14.5, 1.5, 0); // Moved to 14.5 so it's reachable
+        switchGroup.rotation.y = -Math.PI / 2; 
+        scene.add(switchGroup);
 
         // --- 8. TINYKEEPER'S BODY ---
         const tinyKeeper = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.8, 4, 8), new THREE.MeshStandardMaterial({ color: 0x4477ff, emissive: 0x112244 }));
@@ -236,8 +408,11 @@
             const time = performance.now() * 0.001;
             const delta = Math.min(clock.getDelta(), 0.1); 
 
-            // Winkle Pulse
             winkleMat.opacity = 0.3 + 0.7 * Math.sin(time * 1.5);
+            
+            // Fixed: Slower, organic fire breath (2Hz instead of 15Hz)
+            fireLight.intensity = 2.0 + Math.sin(time * 2) * 0.3;
+            fire.scale.y = 1.0 + Math.sin(time * 3) * 0.1;
 
             controls.enabled = !renderer.xr.isPresenting;
             tinyKeeper.visible = renderer.xr.isPresenting;
@@ -251,22 +426,41 @@
                 forward.y = 0; forward.normalize();
                 const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
 
-                if (keys.w) { camera.position.addScaledVector(forward, speed * delta); }
-                if (keys.s) { camera.position.addScaledVector(forward, -speed * delta); }
-                if (keys.a) { camera.position.addScaledVector(right, -speed * delta); }
-                if (keys.d) { camera.position.addScaledVector(right, speed * delta); }
+                // Fixed: Normalize diagonal speed
+                const moveDir = new THREE.Vector3();
+                if (keys.w) moveDir.add(forward);
+                if (keys.s) moveDir.sub(forward);
+                if (keys.a) moveDir.sub(right);
+                if (keys.d) moveDir.add(right);
+                
+                if (moveDir.length() > 0) {
+                    moveDir.normalize();
+                    camera.position.addScaledVector(moveDir, speed * delta);
+                }
             }
 
-            // Bounds
+            // Circular Bounds
             const camPos = camera.position;
-            camPos.x = Math.max(-9.5, Math.min(9.5, camPos.x));
-            camPos.z = Math.max(-9.5, Math.min(9.5, camPos.z));
+            const distFromCenter = Math.sqrt(camPos.x * camPos.x + camPos.z * camPos.z);
+            if (distFromCen
+                            if (distFromCenter > 15.0) {
+                const angle = Math.atan2(camPos.z, camPos.x);
+                camPos.x = Math.cos(angle) * 15.0;
+                camPos.z = Math.sin(angle) * 15.0;
+            }
+
+            // Collision with the central fireplace/hearth and stairs (radius 6.5 to clear the stairs)
+            if (distFromCenter < 6.5) {
+                const angle = Math.atan2(camPos.z, camPos.x);
+                camPos.x = Math.cos(angle) * 6.5;
+                camPos.z = Math.sin(angle) * 6.5;
+            }
 
             // Table Collision
-            const dx = camPos.x - 0; const dz = camPos.z - (-2);
-            if (Math.sqrt(dx*dx + dz*dz) < 1.5) {
+            const dx = camPos.x - 0; const dz = camPos.z - (-3);
+            if (Math.sqrt(dx*dx + dz*dz) < 2.0) {
                 const angle = Math.atan2(dz, dx);
-                camPos.x = 0 + Math.cos(angle) * 1.5; camPos.z = -2 + Math.sin(angle) * 1.5;
+                camPos.x = 0 + Math.cos(angle) * 2.0; camPos.z = -3 + Math.sin(angle) * 2.0;
             }
 
             // Lamp response
@@ -276,6 +470,18 @@
             } else {
                 lampLight.intensity = 0.8;
                 lampBulb.material.color.setHex(0xffaa00);
+            }
+
+            // Highlight E button on mobile
+            if (isMobile) {
+                raycaster.setFromCamera(screenCenter, camera);
+                const intersects = raycaster.intersectObject(switchGroup, true);
+                const btnE = document.getElementById('btn-e');
+                if (intersects.length > 0) {
+                    btnE.classList.add('highlight');
+                } else {
+                    btnE.classList.remove('highlight');
+                }
             }
 
             renderer.render(scene, camera);
