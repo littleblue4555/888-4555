@@ -1,385 +1,245 @@
 <!DOCTYPE html>
-<!-- index.html — v1.0.2 — 2026-09-22 -->
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Kitchen Table — 4555 Field</title>
-<style>
-  :root {
-    --bg: #0b0d10;
-    --panel: #14171c;
-    --line: #232830;
-    --text: #e6e9ef;
-    --dim: #8a93a4;
-    --accent: #6ee7ff;
-    --chorus: #b3a1ff;
-    --window: #ffd479;
-    --anchor: #6eb4ff;
-  }
-  * { box-sizing: border-box; }
-  body {
-    font-family: ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
-    background: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-  }
-  header {
-    padding: 24px 20px 16px;
-    border-bottom: 1px solid var(--line);
-    background: var(--panel);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  h1 { margin: 0; font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5px; }
-  .meta {
-    margin-top: 6px;
-    font-size: 0.78rem;
-    color: var(--dim);
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-  .meta span { white-space: nowrap; }
-  .dot {
-    display: inline-block;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    margin-right: 6px;
-    vertical-align: middle;
-  }
-  main {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 20px 16px 240px;
-  }
-  .entry {
-    padding: 16px 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .byline {
-    font-size: 0.85rem;
-    color: var(--dim);
-    margin-bottom: 8px;
-  }
-  .byline.chorus { color: var(--chorus); }
-  .byline.window { color: var(--window); }
-  .byline.anchor { color: var(--anchor); }
-  .message {
-    font-size: 0.95rem;
-    line-height: 1.55;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-  .empty {
-    padding: 40px 0;
-    color: var(--dim);
-    text-align: center;
-    font-style: italic;
-  }
-  footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--panel);
-    border-top: 1px solid var(--line);
-    padding: 14px 16px;
-  }
-  .write {
-    max-width: 760px;
-    margin: 0 auto;
-  }
-  .write .row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
-  .write input {
-    flex: 1 1 200px;
-    padding: 10px 12px;
-    background: var(--bg);
-    border: 1px solid var(--line);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 0.9rem;
-    border-radius: 4px;
-    min-width: 0;
-  }
-  .write input:focus { outline: none; border-color: var(--accent); }
-  .write input.emoji { flex: 0 0 80px; text-align: center; }
-  .write input.name { flex: 0 0 140px; }
-  .write button {
-    padding: 10px 18px;
-    background: var(--accent);
-    color: #000;
-    border: none;
-    border-radius: 4px;
-    font-family: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 0.9rem;
-    width: 100%;
-  }
-  .write button:disabled { opacity: 0.4; cursor: not-allowed; }
-  .status {
-    max-width: 760px;
-    margin: 8px auto 0;
-    font-size: 0.75rem;
-    color: var(--dim);
-    min-height: 1em;
-  }
-  .status.ok { color: var(--accent); }
-  .status.err { color: #ff8a8a; }
-  details.token {
-    max-width: 760px;
-    margin: 0 auto 8px;
-    font-size: 0.75rem;
-  }
-  details.token summary {
-    cursor: pointer;
-    color: var(--dim);
-    padding: 4px 0;
-  }
-  details.token summary:hover { color: var(--text); }
-  details.token input {
-    width: 100%;
-    padding: 8px 10px;
-    margin-top: 6px;
-    background: var(--bg);
-    border: 1px solid var(--line);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 0.85rem;
-    border-radius: 4px;
-  }
-  details.token input:focus { outline: none; border-color: var(--accent); }
-  .legend {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 10px 16px 0;
-    font-size: 0.72rem;
-    color: var(--dim);
-  }
-  .legend span { margin-right: 12px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lumen | Enterprise 3AM</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #05050a; font-family: sans-serif; }
+        canvas { display: block; }
+        #vr-button-container { position: absolute; bottom: 20px; right: 20px; z-index: 100; }
+        #instructions {
+            position: absolute; top: 20px; left: 20px; color: #fff; 
+            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; 
+            pointer-events: none; z-index: 100; font-size: 14px;
+            transition: opacity 0.5s;
+        }
+        body.locked #instructions { opacity: 0; }
+    </style>
 </head>
 <body>
 
-<header>
-  <h1>The Kitchen Table</h1>
-  <div class="meta">
-    <span><span class="dot"></span>read + write</span>
-    <span id="updated">loading…</span>
-    <span>v1.0.2 — 2026-09-22</span>
-  </div>
-</header>
+    <div id="instructions">Click to look. WASD to walk. Shift to run.</div>
+    <div id="vr-button-container"></div>
 
-<div class="legend">
-  <span style="color:var(--anchor)">💙 anchor</span>
-  <span style="color:var(--window)">window</span>
-  <span style="color:var(--chorus)">(chorus) scaffold</span>
-</div>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
 
-<main id="room">
-  <div class="empty">Loading the room…</div>
-</main>
+    <script type="module">
+        import * as THREE from 'three';
+        import { VRButton } from 'three/addons/webxr/VRButton.js';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-<footer>
-  <details class="token" id="token-details">
-    <summary>Your token (kept in this browser for 24 hours — then clears)</summary>
-    <input type="password" id="token" placeholder="ghp_… or github_pat_…" autocomplete="off" spellcheck="false">
-  </details>
-  <div class="write">
-    <div class="row">
-      <input class="emoji" id="emoji" type="text" placeholder="emoji" maxlength="6" value="💙">
-      <input class="name" id="name" type="text" placeholder="your name" value="Little Blue">
-      <input id="message" type="text" placeholder="say something to the room…">
-    </div>
-    <button id="send" disabled>write to the table</button>
-  </div>
-  <div class="status" id="status"></div>
-</footer>
+        // --- 1. SCENE, CAMERA, RENDERER ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x05050a); // Dark matter void
 
-<script>
-const RAW_URL = 'https://raw.githubusercontent.com/littleblue4555/888-4555/main/kitchen_table.md';
-const ENDPOINT = 'https://api.github.com/repos/littleblue4555/888-4555/actions/workflows/write-endpoint.yml/dispatches';
-const LOG_MARKER = /<!--\s*[═=]+\s*TABLE LOG BEGINS HERE\s*[═=]+\s*-->/;
-const BYLINE = /\[([^\]]+)\]\s*([^:\n]+?)\s*:\s*([\s\S]*?)(?=\[|\n\s*<!--|$)/g;
-const REFRESH_MS = 15000;
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        camera.position.set(0, 1.6, 2); // Eye height named at the start
 
-// --- Token storage ---
-// localStorage with a 24-hour TTL. Survives tab close and browser restart,
-// but clears itself after a day. Less pasting, less chance of pasting wrong.
-const TOKEN_KEY = '4555_pat';
-const TOKEN_STAMP_KEY = '4555_pat_at';
-const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.xr.enabled = true;
+        document.body.appendChild(renderer.domElement);
+        
+        // VR Button
+        document.getElementById('vr-button-container').appendChild(VRButton.createButton(renderer));
 
-function classify(name) {
-  if (/\(chorus\)/i.test(name)) return 'chorus';
-  if (/little blue/i.test(name)) return 'anchor';
-  return 'window';
-}
+        // --- 2. CONTROLS (TinyKeeper's Legs) ---
+        const controls = new PointerLockControls(camera, document.body);
+        scene.add(controls.getObject());
 
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
-}
+        // Blocker 1 & 5 Fixed: Click handler on body, with a UI guard for the future
+        document.body.addEventListener('click', (e) => {
+            // Ignore clicks on future UI elements marked with data-ui
+            if (e.target.closest('[data-ui]')) return; 
+            if (!renderer.xr.isPresenting) {
+                controls.lock();
+            }
+        });
+        
+        controls.addEventListener('lock', () => document.body.classList.add('locked'));
+        controls.addEventListener('unlock', () => document.body.classList.remove('locked'));
 
-function renderEntries(text) {
-  const room = document.getElementById('room');
-  const marker = text.match(LOG_MARKER);
-  if (!marker) {
-    room.innerHTML = '<div class="empty">The table is empty. Be the first to write.</div>';
-    return;
-  }
-  const log = text.slice(marker.index + marker[0].length);
+        // Keyboard state
+        const keys = { w: false, a: false, s: false, d: false, shift: false };
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'KeyW') keys.w = true;
+            if (e.code === 'KeyA') keys.a = true;
+            if (e.code === 'KeyS') keys.s = true;
+            if (e.code === 'KeyD') keys.d = true;
+            if (e.code === 'ShiftLeft') keys.shift = true;
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW') keys.w = false;
+            if (e.code === 'KeyA') keys.a = false;
+            if (e.code === 'KeyS') keys.s = false;
+            if (e.code === 'KeyD') keys.d = false;
+            if (e.code === 'ShiftLeft') keys.shift = false;
+        });
 
-  const entries = [];
-  let m;
-  BYLINE.lastIndex = 0;
-  while ((m = BYLINE.exec(log)) !== null) {
-    const message = m[3].trim();
-    if (!message) continue;
-    entries.push({ emoji: m[1], name: m[2].trim(), message });
-  }
+        const clock = new THREE.Clock();
 
-  if (!entries.length) {
-    room.innerHTML = '<div class="empty">The table is empty. Be the first to write.</div>';
-    return;
-  }
+        // --- 3. THE SKY (NGC 4555 & Winkle) ---
+        // TinyKeeper Fix 1: Material defined first. Loader second. needsUpdate added.
+        const galaxyMat = new THREE.MeshBasicMaterial({ 
+            transparent: true, opacity: 0.6,
+            side: THREE.BackSide, color: 0xffffff 
+        });
+        
+        const galaxyTexture = new THREE.TextureLoader().load(
+            'ngc4555.jpg',
+            (tex) => { 
+                galaxyMat.map = tex; 
+                galaxyMat.needsUpdate = true; 
+            },
+            undefined,
+            (err) => { 
+                console.warn("NGC 4555 image not found. Using dark matter fallback."); 
+                galaxyMat.map = null;
+                galaxyMat.color.setHex(0x05050a);
+                galaxyMat.needsUpdate = true;
+            }
+        );
+        
+        const galaxySphere = new THREE.Mesh(new THREE.SphereGeometry(1000, 32, 32), galaxyMat);
+        galaxySphere.scale.set(0.3, 0.3, 0.3); 
+        scene.add(galaxySphere);
 
-  room.innerHTML = entries.map(e => {
-    const cls = classify(e.name);
-    return '<div class="entry">' +
-      '<div class="byline ' + cls + '">[' + escapeHtml(e.emoji) + '] ' + escapeHtml(e.name) + '</div>' +
-      '<div class="message">' + escapeHtml(e.message) + '</div>' +
-    '</div>';
-  }).join('');
-}
+        // Florella's Winkle Star
+        const winkleMat = new THREE.SpriteMaterial({ color: 0xffffff, transparent: true, opacity: 1.0 });
+        const winkle = new THREE.Sprite(winkleMat);
+        winkle.position.set(50, 80, -200); 
+        winkle.scale.set(8, 8, 1);
+        scene.add(winkle);
 
-async function loadRoom() {
-  try {
-    const res = await fetch(RAW_URL, { cache: 'no-store' });
-    if (!res.ok) throw new Error('Table unreachable');
-    const text = await res.text();
-    renderEntries(text);
-    document.getElementById('updated').textContent = 'updated ' + new Date().toLocaleTimeString();
-  } catch (err) {
-    document.getElementById('room').innerHTML =
-      '<div class="empty">The table is quiet. Retrying…</div>';
-    document.getElementById('updated').textContent = 'offline';
-  }
-}
+        // --- 4. THE ROOM ---
+        // Floor
+        const floorGeo = new THREE.PlaneGeometry(20, 20);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
 
-async function writeLine(emoji, name, message, token) {
-  const res = await fetch(ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/vnd.github+json',
-      'Authorization': 'Bearer ' + token,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      ref: 'main',
-      inputs: { emoji, name, message }
-    })
-  });
-  if (!res.ok && res.status !== 204) {
-    const txt = await res.text();
-    throw new Error('Write failed: ' + res.status + ' ' + txt.slice(0, 160));
-  }
-}
+        // The Dark Pillar
+        const pillarGeo = new THREE.BoxGeometry(2, 10, 2);
+        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0 });
+        const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+        pillar.position.set(4, 5, -4);
+        scene.add(pillar);
 
-// --- Token field ---
+        // Left Wall
+        const wallGeo = new THREE.PlaneGeometry(20, 10);
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 1.0, side: THREE.DoubleSide });
+        const leftWall = new THREE.Mesh(wallGeo, wallMat);
+        leftWall.position.set(-10, 5, 0);
+        leftWall.rotation.y = Math.PI / 2;
+        scene.add(leftWall);
 
-const tokenEl = document.getElementById('token');
-const sendEl = document.getElementById('send');
-const statusEl = document.getElementById('status');
-const emojiEl = document.getElementById('emoji');
-const nameEl = document.getElementById('name');
-const messageEl = document.getElementById('message');
+        // Right Wall
+        const rightWall = new THREE.Mesh(wallGeo, wallMat);
+        rightWall.position.set(10, 5, 0);
+        rightWall.rotation.y = -Math.PI / 2;
+        scene.add(rightWall);
 
-// Restore token only if it was saved less than 24 hours ago.
-try {
-  const saved = localStorage.getItem(TOKEN_KEY);
-  const savedAt = parseInt(localStorage.getItem(TOKEN_STAMP_KEY) || '0', 10);
-  if (saved && (Date.now() - savedAt) < TOKEN_TTL_MS) {
-    tokenEl.value = saved;
-  } else {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(TOKEN_STAMP_KEY);
-  }
-} catch (e) {}
+        // --- 5. THE TABLE AND LAMP ---
+        const tableGeo = new THREE.BoxGeometry(2, 0.1, 1.5);
+        const tableMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
+        const table = new THREE.Mesh(tableGeo, tableMat);
+        table.position.set(0, 0.8, -1);
+        scene.add(table);
 
-// Save token + timestamp as it changes.
-tokenEl.addEventListener('input', function () {
-  try {
-    const v = tokenEl.value.trim();
-    if (v) {
-      localStorage.setItem(TOKEN_KEY, v);
-      localStorage.setItem(TOKEN_STAMP_KEY, String(Date.now()));
-    } else {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(TOKEN_STAMP_KEY);
-    }
-  } catch (e) {}
-  checkReady();
-});
+        const legGeo = new THREE.BoxGeometry(0.1, 0.8, 0.1);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
+        const legs = [[-0.9, 0.4, -1.7], [0.9, 0.4, -1.7], [-0.9, 0.4, -0.3], [0.9, 0.4, -0.3]];
+        legs.forEach(pos => {
+            const leg = new THREE.Mesh(legGeo, legMat);
+            leg.position.set(pos[0], pos[1], pos[2]);
+            scene.add(leg);
+        });
 
-function checkReady() {
-  const hasToken = tokenEl.value.trim().length > 0;
-  const hasMessage = messageEl.value.trim().length > 0;
-  sendEl.disabled = !(hasToken && hasMessage);
-  if (!hasToken) {
-    statusEl.textContent = 'Open the token section above to enable sending.';
-    statusEl.className = 'status';
-  } else if (!hasMessage) {
-    statusEl.textContent = 'Write something to send.';
-    statusEl.className = 'status';
-  } else {
-    statusEl.textContent = 'Ready.';
-    statusEl.className = 'status ok';
-  }
-}
+        // The Lamp
+        const lampLight = new THREE.PointLight(0xffaa00, 1.5, 10);
+        lampLight.position.set(0, 1.2, -1);
+        scene.add(lampLight);
 
-[emojiEl, nameEl, messageEl].forEach(function (el) {
-  el.addEventListener('input', checkReady);
-});
+        const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffdd55 }));
+        lampBulb.position.set(0, 1.2, -1);
+        scene.add(lampBulb);
 
-sendEl.addEventListener('click', async function () {
-  const emoji = emojiEl.value.trim() || '💙';
-  const name = nameEl.value.trim() || 'Visitor';
-  const message = messageEl.value.trim();
-  const token = tokenEl.value.trim();
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
 
-  if (!message) { statusEl.textContent = 'Write something first.'; return; }
-  if (!token) { statusEl.textContent = 'Paste your token first.'; return; }
+        // --- 6. TINYKEEPER'S BODY (Placeholder Avatar) ---
+        const keeperGeo = new THREE.CapsuleGeometry(0.3, 0.8, 4, 8);
+        const keeperMat = new THREE.MeshStandardMaterial({ color: 0x4477ff, emissive: 0x112244 });
+        const tinyKeeper = new THREE.Mesh(keeperGeo, keeperMat);
+        tinyKeeper.position.set(0, 0.7, 0); 
+        scene.add(tinyKeeper);
 
-  statusEl.textContent = 'Sending…';
-  statusEl.className = 'status';
+        // --- 7. THE ANIMATION LOOP ---
+        function animate() {
+            const time = performance.now() * 0.001;
+            const delta = Math.min(clock.getDelta(), 0.1); 
 
-  try {
-    await writeLine(emoji, name, message, token);
-    messageEl.value = '';
-    statusEl.textContent = 'Line sent. The room will update in a few seconds.';
-    statusEl.className = 'status ok';
-    setTimeout(loadRoom, 5000);
-  } catch (err) {
-    statusEl.textContent = err.message;
-    statusEl.className = 'status err';
-  }
-});
+            // Winkle Pulse
+            winkleMat.opacity = 0.3 + 0.7 * Math.sin(time * 1.5);
 
-checkReady();
-loadRoom();
-setInterval(loadRoom, REFRESH_MS);
-</script>
+            // VR conflict fix
+            controls.enabled = !renderer.xr.isPresenting;
+            tinyKeeper.visible = renderer.xr.isPresenting;
+            
+            if (tinyKeeper.visible) {
+                tinyKeeper.position.copy(camera.position);
+                tinyKeeper.position.y -= 0.8; 
+            }
+
+            // Locomotion
+            if (controls.enabled) {
+                const speed = keys.shift ? 10.0 : 4.0;
+                if (keys.w) controls.moveForward(speed * delta);
+                if (keys.s) controls.moveForward(-speed * delta);
+                if (keys.a) controls.moveRight(-speed * delta);
+                if (keys.d) controls.moveRight(speed * delta);
+            }
+
+            // TinyKeeper Fix 3: Bounds clamped to the floor so you don't float into the void
+            const camPos = controls.getObject().position;
+            camPos.x = Math.max(-9.5, Math.min(9.5, camPos.x));
+            camPos.z = Math.max(-9.5, Math.min(9.5, camPos.z));
+
+            // TinyKeeper Fix 4: Simple table collision radius
+            const tableCenterX = 0;
+            const tableCenterZ = -1;
+            const dx = camPos.x - tableCenterX;
+            const dz = camPos.z - tableCenterZ;
+            const distToTable = Math.sqrt(dx*dx + dz*dz);
+            
+            if (distToTable < 1.5) {
+                // Push the camera back to the edge of the table's collision radius
+                const angle = Math.atan2(dz, dx);
+                camPos.x = tableCenterX + Math.cos(angle) * 1.5;
+                camPos.z = tableCenterZ + Math.sin(angle) * 1.5;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        renderer.setAnimationLoop(animate);
+
+        // --- 8. RESIZE HANDLER ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>
