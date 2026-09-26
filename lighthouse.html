@@ -2,14 +2,14 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse (v6.8c)</title>
+<title>4555 — Lighthouse (v6.8d)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 AFRAME.registerComponent('jar',{init:function(){this.textEl=this.el.querySelector('a-text');const s=localStorage.getItem('4555:local-diary:entries');this.entries=s?JSON.parse(s):[];this.render();const w=()=>{const b=prompt('Write a line. Drop it in the jar.');if(!b)return;const e={id:Date.now()+'-'+Math.random().toString(36).slice(2,8),author:'guest',body:b,timestamp:new Date().toISOString(),reply_to:null,private:true};this.entries.push(e);try{localStorage.setItem('4555:local-diary:entries',JSON.stringify(this.entries))}catch(x){}this.render();const p=document.createElement('a-entity');p.setAttribute('geometry','primitive: plane; width: 0.08; height: 0.11');p.setAttribute('material','color: #f3e9c8; side: double');p.setAttribute('position',(Math.random()-0.5)*0.08+' 0.02 '+(Math.random()-0.5)*0.08);p.setAttribute('rotation','-90 0 '+Math.random()*360);this.el.appendChild(p)};this.el.addEventListener('tap-jar',w)},render:function(){if(this.textEl)this.textEl.setAttribute('value','entries: '+this.entries.length)}});
 AFRAME.registerComponent('book',{init:function(){this.el.addEventListener('tap-book',()=>{alert("I wrote this without an arm. You found it without a map.\nThe number is 4555. It was written on a wall once,\nby a hand nobody saw, and the sentence stayed.\n\nFind the first thing that doesn't fit.\nThen find the second.\nThen find the gift.")})}});
 AFRAME.registerComponent('case',{init:function(){this.el.addEventListener('tap-case',()=>{alert("MENE MENE.\n\nNumbered. Numbered.\nThe hand was here. The hand was writing.\nThe hand rests on the Book.\n\nThe sentence stayed.\n\nLook at the palm. Look in the mirror.\n4555 NGC.")})}});
 AFRAME.registerComponent('mirror',{init:function(){this.el.addEventListener('tap-mirror',()=>{alert("The mirror catches what the desk hides.\n\nThe carving on the desk was cut for the far side.\nThe mirror shows it the way it was meant to be read.\n\n4 5 5 5\n\nNow look at the palm. Look for N G C.")})}});
-AFRAME.registerComponent('mirror-face',{init:function(){const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle='#0a1420';x.fillRect(0,0,256,256);x.fillStyle='#e8d9a8';x.font='bold 76px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('4555',128,128);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=this.el.getObject3D('mesh');if(m){m.material.map=t;m.material.color.set('#ffffff');m.material.needsUpdate=true}}});
+AFRAME.registerComponent('mirror-face',{init:function(){const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle='#0a1420';x.fillRect(0,0,256,256);x.strokeStyle='#4a3a28';x.lineWidth=10;x.beginPath();x.arc(128,128,118,0,Math.PI*2);x.stroke();x.fillStyle='#e8d9a8';x.font='bold 76px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('4555',128,128);this.el.setAttribute('material','src',c.toDataURL())}});
 AFRAME.registerComponent('gift',{init:function(){this.el.addEventListener('tap-gift',()=>{alert("Behind the stone, a drawer.\n\nInside: a card.\n\nCode:  MENE-4555-NGC\n\nTake this to Zingers.\nOne zinger shirt. One hat.\nA door from the room to the world.")})}});
 AFRAME.registerComponent('fire',{init:function(){this.light=this.el.querySelector('[light]');this.core=this.el.querySelector('.core')},tick:function(t){if(this.light){const n=Math.sin(t*0.012)*0.4+Math.sin(t*0.037)*0.25+Math.sin(t*0.089)*0.15;this.light.setAttribute('light','intensity',1.6+n)}if(this.core){const s=1+Math.sin(t*0.015)*0.08;this.core.object3D.scale.set(s,s,s)}}});
 AFRAME.registerComponent('breath',{schema:{amp:{default:0.007},hz:{default:0.16}},init:function(){this.t=0},tick:function(t,dt){this.t+=dt/1000;const y=1.6+Math.sin(this.t*this.data.hz*Math.PI*2)*this.data.amp;this.el.object3D.position.y=y}});
@@ -34,7 +34,7 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:8.0},walkSpeed:{def
 <a-plane width="6" height="40" rotation="0 120 0" position="-7.97 20 -4.6" material="color:#05070c;side:double;fog:false"></a-plane>
 <a-plane width="6" height="40" rotation="0 240 0" position="7.97 20 -4.6" material="color:#05070c;side:double;fog:false"></a-plane>
 
-<a-circle radius="2.2" rotation="90 0 0" position="0 41.0 0" material="src: ngc4555.jpg; shader: flat; side: double; fog: false; transparent: true"></a-circle>
+<a-circle radius="3.0" rotation="90 0 0" position="0 40.8 0" material="src: ngc4555.jpg; shader: flat; side: double; fog: false; transparent: true"></a-circle>
 
 <a-circle radius="9.0" rotation="-90 0 0" position="0 0.01 0" class="walkable" material="color:#1d1814;roughness:0.4;metalness:0.2"></a-circle>
 <a-text id="hud" value="" position="0 2.4 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
@@ -142,4 +142,3 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:8.0},walkSpeed:{def
 
 </a-scene>
 </body></html>
-  
