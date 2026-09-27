@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v7.4e)</title>
+<title>4555 — Lighthouse Library (v7.4g)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 AFRAME.registerComponent('stonewall',{init:function(){if(window.__4555_stone_url){this.apply(window.__4555_stone_url);return}var c=document.createElement('canvas');c.width=1024;c.height=1024;var x=c.getContext('2d');var W=1024,H=1024;x.clearRect(0,0,W,H);var stone=x.createLinearGradient(0,0,0,H);stone.addColorStop(0,'#2a2620');stone.addColorStop(0.5,'#3a322a');stone.addColorStop(1,'#251e18');x.fillStyle=stone;x.fillRect(0,0,W,H);for(var i=0;i<900;i++){var sx=Math.random()*W,sy=Math.random()*H;var r=Math.random()*22+6;var v=Math.random();x.fillStyle='rgba('+(40+v*50|0)+','+(34+v*42|0)+','+(28+v*34|0)+','+(0.15+Math.random()*0.25)+')';x.beginPath();x.arc(sx,sy,r,0,Math.PI*2);x.fill()}x.strokeStyle='rgba(15,10,8,0.55)';x.lineWidth=2;for(var g=0;g<22;g++){x.beginPath();var gx=Math.random()*W,gy=Math.random()*H;x.moveTo(gx,gy);for(var k=0;k<5;k++){gx+=(Math.random()-0.5)*90;gy+=(Math.random()-0.5)*90;x.lineTo(gx,gy)}x.stroke()}window.__4555_stone_url=c.toDataURL();this.apply(window.__4555_stone_url)},apply:function(url){var el=this.el;setTimeout(function(){el.setAttribute('material',{shader:'flat',src:url,side:'double',fog:false})},50)}});
@@ -34,7 +34,7 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity rotation="0 150 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:60" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
 <a-entity rotation="0 270 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:60" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
 
-<a-entity geometry="primitive:plane;width:12;height:10" position="0 5 11.2" material="shader:flat;src:https://littleblue4555.github.io/888-4555/seaview.jpg;side:double;fog:false"></a-entity>
+<a-entity geometry="primitive:plane;width:12;height:8" position="0 2 11.2" material="shader:flat;src:https://littleblue4555.github.io/888-4555/seaview.jpg;side:double;fog:false"></a-entity>
 
 <a-entity arch></a-entity>
 <a-entity arch rotation="0 120 0"></a-entity>
