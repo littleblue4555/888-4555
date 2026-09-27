@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lumen | Enterprise 3AM</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #05050a; font-family: sans-serif; touch-action: none; }
+        body { margin: 0; overflow: hidden; background-color: #05050a; font-family: sans-serif; }
         canvas { display: block; }
-        
-        #vr-button-container { position: absolute; top: 20px; right: 20px; z-index: 100; }
-        
+        #vr-button-container { position: absolute; bottom: 20px; right: 20px; z-index: 100; }
         #instructions {
             position: absolute; top: 20px; left: 20px; color: #fff; 
             background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; 
@@ -22,49 +20,13 @@
             background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 5px;
             font-size: 14px; display: none; z-index: 100; pointer-events: none;
         }
-        
-        #mobile-controls {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 99; display: none;
-        }
-        #mobile-controls.active { display: block; }
-        
-        #left-zone {
-            position: absolute; bottom: 0; left: 0; width: 50%; height: 85%;
-            pointer-events: auto; touch-action: none;
-        }
-        
-        #right-zone {
-            position: absolute; bottom: 0; right: 0; width: 50%; height: 85%;
-            pointer-events: auto; touch-action: none;
-        }
-
-        #btn-e {
-            position: absolute; bottom: 80px; right: 30px; width: 45px; height: 45px;
-            background: rgba(0, 255, 0, 0.05); border: 1px solid rgba(0, 255, 0, 0.2);
-            border-radius: 50%; pointer-events: auto; display: flex; justify-content: center;
-            align-items: center; color: rgba(255, 255, 255, 0.3); font-size: 16px;
-            user-select: none; touch-action: none; transition: all 0.3s;
-        }
-        #btn-e.highlight {
-            background: rgba(0, 255, 0, 0.3);
-            color: #fff;
-            border-color: #0f0;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-        }
     </style>
 </head>
 <body>
 
-    <div id="instructions">Hold left side to walk.<br>Double-tap-hold to run. Tap E to toggle chat.</div>
+    <div id="instructions">Click to look. WASD to walk. Shift to run.<br>Look at the switch and press E to toggle chat.</div>
     <div id="hud" data-ui>💬 Chat: OFF</div>
     <div id="vr-button-container"></div>
-
-    <div id="mobile-controls">
-        <div id="left-zone"></div>
-        <div id="right-zone"></div>
-        <div id="btn-e">E</div>
-    </div>
 
     <script type="importmap">
         {
@@ -82,30 +44,26 @@
 
         // --- 1. SCENE, CAMERA, RENDERER ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x05050a);
+        scene.background = new THREE.Color(0x05050a); // Dark matter void
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.set(0, 1.6, 6); 
-        camera.lookAt(0, 1.5, -3);
+        camera.position.set(0, 1.6, 2); // Eye height
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.xr.enabled = true;
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
         document.body.appendChild(renderer.domElement);
         
+        // VR Button
         document.getElementById('vr-button-container').appendChild(VRButton.createButton(renderer));
 
         // --- 2. CONTROLS ---
         const controls = new PointerLockControls(camera, document.body);
         scene.add(controls.getObject());
 
-        const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        if (isMobile) document.getElementById('mobile-controls').classList.add('active');
-
         document.body.addEventListener('click', (e) => {
-            if (e.target.closest('[data-ui]') || isMobile) return; 
+            if (e.target.closest('[data-ui]')) return; 
             if (!renderer.xr.isPresenting) controls.lock();
         });
         
@@ -113,13 +71,14 @@
         controls.addEventListener('unlock', () => document.body.classList.remove('locked'));
 
         const keys = { w: false, a: false, s: false, d: false, shift: false };
-        
         document.addEventListener('keydown', (e) => {
             if (e.code === 'KeyW') keys.w = true;
             if (e.code === 'KeyA') keys.a = true;
             if (e.code === 'KeyS') keys.s = true;
             if (e.code === 'KeyD') keys.d = true;
             if (e.code === 'ShiftLeft') keys.shift = true;
+            
+            // The switch interaction
             if (e.code === 'KeyE') interactWithSwitch();
         });
         document.addEventListener('keyup', (e) => {
@@ -130,181 +89,142 @@
             if (e.code === 'ShiftLeft') keys.shift = false;
         });
 
-        // --- MOBILE CONTROLS: HOLD TO WALK, DOUBLE-TAP-HOLD TO RUN ---
-        if (isMobile) {
-            let holdTimer = null;
-            let isHolding = false;
-            let lastTapTime = 0;
-            let isRunning = false;
-
-            const leftZone = document.getElementById('left-zone');
-            const rightZone = document.getElementById('right-zone');
-
-            leftZone.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const now = Date.now();
-                const timeSinceLastTap = now - lastTapTime;
-                
-                if (timeSinceLastTap < 300) {
-                    isRunning = true;
-                } else {
-                    isRunning = false;
-                }
-                
-                isHolding = true;
-                keys.w = true;
-                keys.shift = isRunning;
-                lastTapTime = now;
-
-                clearTimeout(holdTimer);
-                holdTimer = setTimeout(() => {
-                    if (isHolding) keys.w = true;
-                }, 150);
-            }, { passive: false });
-
-            leftZone.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                clearTimeout(holdTimer);
-                isHolding = false;
-                keys.w = false;
-                keys.shift = false;
-                isRunning = false;
-            }, { passive: false });
-
-            leftZone.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                clearTimeout(holdTimer);
-                isHolding = false;
-                keys.w = false;
-                keys.shift = false;
-                isRunning = false;
-            }, { passive: false });
-
-            let lookTouchId = null;
-            let lookStartX = 0, lookStartY = 0;
-
-            rightZone.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const touch = e.changedTouches[0];
-                lookTouchId = touch.identifier;
-                lookStartX = touch.clientX;
-                lookStartY = touch.clientY;
-            }, { passive: false });
-
-            rightZone.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === lookTouchId) {
-                        const touch = e.changedTouches[i];
-                        const deltaX = touch.clientX - lookStartX;
-                        const deltaY = touch.clientY - lookStartY;
-                        camera.rotateY(-deltaX * 0.005);
-                        camera.rotateX(-deltaY * 0.005);
-                        lookStartX = touch.clientX;
-                        lookStartY = touch.clientY;
-                    }
-                }
-            }, { passive: false });
-
-            const resetLook = (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === lookTouchId) {
-                        lookTouchId = null;
-                    }
-                }
-            };
-            rightZone.addEventListener('touchend', resetLook, { passive: false });
-            rightZone.addEventListener('touchcancel', resetLook, { passive: false });
-
-            document.getElementById('btn-e').addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                interactWithSwitch();
-            }, { passive: false });
-        }
-
         const clock = new THREE.Clock();
 
         // --- 3. ROOM STATE ---
-        const roomState = { chatEnabled: false, occupants: [] };
+        const roomState = {
+            chatEnabled: false,
+            occupants: [] 
+        };
 
-        // --- 4. THE SKY (Winkle only) ---
+        // --- 4. THE SKY (NGC 4555 & Winkle) ---
+        const galaxyMat = new THREE.MeshBasicMaterial({ 
+            transparent: true, opacity: 0.6, side: THREE.BackSide, color: 0xffffff 
+        });
+        
+        const galaxyTexture = new THREE.TextureLoader().load(
+            'ngc4555.jpg',
+            (tex) => { 
+                galaxyMat.map = tex; 
+                galaxyMat.needsUpdate = true; 
+            },
+            undefined,
+            (err) => { 
+                console.warn("NGC 4555 image not found. Using dark matter fallback."); 
+                galaxyMat.map = null;
+                galaxyMat.color.setHex(0x05050a);
+                galaxyMat.needsUpdate = true;
+            }
+        );
+        
+        const galaxySphere = new THREE.Mesh(new THREE.SphereGeometry(1000, 32, 32), galaxyMat);
+        galaxySphere.scale.set(0.3, 0.3, 0.3); 
+        scene.add(galaxySphere);
+
         const winkleMat = new THREE.SpriteMaterial({ color: 0xffffff, transparent: true, opacity: 1.0 });
         const winkle = new THREE.Sprite(winkleMat);
-        winkle.position.set(100, 150, -400); 
-        winkle.scale.set(10, 10, 1); 
+        winkle.position.set(50, 80, -200); 
+        winkle.scale.set(8, 8, 1);
         scene.add(winkle);
 
-        // --- 5. THE TOWER ARCHITECTURE ---
-        const floor = new THREE.Mesh(new THREE.CircleGeometry(16, 64), new THREE.MeshStandardMaterial({ color: 0x3a322a, roughness: 0.9 }));
-        floor.rotation.x = -Math.PI / 2; scene.add(floor);
+        // --- 5. THE ROOM ---
+        const floorGeo = new THREE.PlaneGeometry(20, 20);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
 
-        const wallGeo = new THREE.CylinderGeometry(8, 16, 30, 64, 1, true); 
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0x4a4036, roughness: 1.0, side: THREE.DoubleSide });
-        const towerWalls = new THREE.Mesh(wallGeo, wallMat);
-        towerWalls.position.set(0, 15, 0); 
-        scene.add(towerWalls);
+        const pillarGeo = new THREE.BoxGeometry(2, 10, 2);
+        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0 });
+        const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+        pillar.position.set(4, 5, -4);
+        scene.add(pillar);
 
-        // --- THE HEARTH & CHIMNEY ---
-        const hearth = new THREE.Mesh(new THREE.BoxGeometry(5, 4, 3), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 1.0 }));
-        hearth.position.set(0, 2, 0); scene.add(hearth);
+        const wallGeo = new THREE.PlaneGeometry(20, 10);
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 1.0, side: THREE.DoubleSide });
+        const leftWall = new THREE.Mesh(wallGeo, wallMat);
+        leftWall.position.set(-10, 5, 0);
+        leftWall.rotation.y = Math.PI / 2;
+        scene.add(leftWall);
 
-        const firebox = new THREE.Mesh(new THREE.BoxGeometry(3, 2.5, 2), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
-        firebox.position.set(0, 1.25, 1.1); scene.add(firebox);
+        const rightWall = new THREE.Mesh(wallGeo, wallMat);
+        rightWall.position.set(10, 5, 0);
+        rightWall.rotation.y = -Math.PI / 2;
+        scene.add(rightWall);
 
-        const fire = new THREE.Mesh(new THREE.ConeGeometry(1, 1.5, 8), new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.8 }));
-        fire.position.set(0, 0.75, 1.2); scene.add(fire);
-
-        const fireLight = new THREE.PointLight(0xff5500, 2.0, 15);
-        fireLight.position.set(0, 1.5, 1.5); scene.add(fireLight);
-
-        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 26, 32), new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 1.0 }));
-        pillar.position.set(0, 17, 0); scene.add(pillar);
-
-        // --- 6. TABLE, CHAIR, AND LAMP ---
-        const table = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.1, 32), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 }));
-        table.position.set(0, 0.8, -3); scene.add(table);
+        // --- 6. THE TABLE AND LAMP ---
+        const tableGeo = new THREE.BoxGeometry(2, 0.1, 1.5);
+        const tableMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
+        const table = new THREE.Mesh(tableGeo, tableMat);
+        table.position.set(0, 0.8, -1);
+        scene.add(table);
 
         const legGeo = new THREE.BoxGeometry(0.1, 0.8, 0.1);
         const legMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
-        [[-1, 0.4, -3.8], [1, 0.4, -3.8], [-1, 0.4, -2.2], [1, 0.4, -2.2]].forEach(pos => {
-            const leg = new THREE.Mesh(legGeo, legMat); leg.position.set(pos[0], pos[1], pos[2]); scene.add(leg);
+        const legs = [[-0.9, 0.4, -1.7], [0.9, 0.4, -1.7], [-0.9, 0.4, -0.3], [0.9, 0.4, -0.3]];
+        legs.forEach(pos => {
+            const leg = new THREE.Mesh(legGeo, legMat);
+            leg.position.set(pos[0], pos[1], pos[2]);
+            scene.add(leg);
         });
 
-        const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x4a2e15 }));
-        chairSeat.position.set(0, 0.5, -1.5); scene.add(chairSeat);
-        const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.1), new THREE.MeshStandardMaterial({ color: 0x4a2e15 }));
-        chairBack.position.set(0, 0.8, -1.8); scene.add(chairBack);
+        const lampLight = new THREE.PointLight(0xffaa00, 0.8, 10); // Dim by default
+        lampLight.position.set(0, 1.2, -1);
+        scene.add(lampLight);
 
-        const lampLight = new THREE.PointLight(0xffaa00, 0.8, 15); lampLight.position.set(0, 1.2, -3); scene.add(lampLight);
-        const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffaa00 })); lampBulb.position.set(0, 1.2, -3); scene.add(lampBulb);
-        
-        scene.add(new THREE.AmbientLight(0x555555, 0.8));
+        const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+        lampBulb.position.set(0, 1.2, -1);
+        scene.add(lampBulb);
+
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
 
         // --- 7. THE SWITCH ---
         const switchGroup = new THREE.Group();
-        switchGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.1), new THREE.MeshStandardMaterial({ color: 0x555555 })));
-        const switchLever = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 0.1), new THREE.MeshStandardMaterial({ color: 0x888888, emissive: 0x222222 }));
-        switchLever.position.set(0, 0, 0.1); switchGroup.add(switchLever);
-        switchGroup.position.set(14.5, 1.5, 0); 
-        switchGroup.rotation.y = -Math.PI / 2; 
+        
+        const switchPlate = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.5, 0.1),
+            new THREE.MeshStandardMaterial({ color: 0x333333 })
+        );
+        switchGroup.add(switchPlate);
+
+        const switchLever = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 0.15, 0.1),
+            new THREE.MeshStandardMaterial({ color: 0x888888, emissive: 0x222222 })
+        );
+        switchLever.position.set(0, 0, 0.1);
+        switchGroup.add(switchLever);
+
+        switchGroup.position.set(9.9, 1.5, 1.5); // On the right wall, near the door
+        switchGroup.rotation.y = -Math.PI / 2; // Face inward
         scene.add(switchGroup);
 
         // --- 8. TINYKEEPER'S BODY ---
-        const tinyKeeper = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.8, 4, 8), new THREE.MeshStandardMaterial({ color: 0x4477ff, emissive: 0x112244 }));
-        tinyKeeper.position.set(0, 0.7, 0); scene.add(tinyKeeper);
+        const keeperGeo = new THREE.CapsuleGeometry(0.3, 0.8, 4, 8);
+        const keeperMat = new THREE.MeshStandardMaterial({ color: 0x4477ff, emissive: 0x112244 });
+        const tinyKeeper = new THREE.Mesh(keeperGeo, keeperMat);
+        tinyKeeper.position.set(0, 0.7, 0); 
+        scene.add(tinyKeeper);
 
         // --- 9. INTERACTION LOGIC ---
         const raycaster = new THREE.Raycaster();
-        const screenCenter = new THREE.Vector2(0, 0);
+        const screenCenter = new THREE.Vector2(0, 0); // Center of the screen
 
         function interactWithSwitch() {
+            if (!controls.enabled) return;
+            
             raycaster.setFromCamera(screenCenter, camera);
             const intersects = raycaster.intersectObject(switchGroup, true);
+
             if (intersects.length > 0) {
+                // Toggle the room state
                 roomState.chatEnabled = !roomState.chatEnabled;
+                
+                // Update the visual lever
                 switchLever.position.y = roomState.chatEnabled ? -0.1 : 0.1;
                 switchLever.material.emissive.setHex(roomState.chatEnabled ? 0x00ff00 : 0x222222);
+
+                // Update the HUD
                 const hud = document.getElementById('hud');
                 hud.style.display = 'block';
                 hud.innerHTML = roomState.chatEnabled ? '💬 Chat: ON' : '💬 Chat: OFF';
@@ -316,76 +236,51 @@
             const time = performance.now() * 0.001;
             const delta = Math.min(clock.getDelta(), 0.1); 
 
+            // Winkle Pulse
             winkleMat.opacity = 0.3 + 0.7 * Math.sin(time * 1.5);
-            
-            // The breathing fire
-            fireLight.intensity = 2.0 + Math.sin(time * 2) * 0.5;
-            fire.scale.y = 1.0 + Math.sin(time * 3) * 0.15;
-            fire.scale.x = 1.0 + Math.sin(time * 4) * 0.05;
 
             controls.enabled = !renderer.xr.isPresenting;
             tinyKeeper.visible = renderer.xr.isPresenting;
             
-            if (tinyKeeper.visible) { tinyKeeper.position.copy(camera.position); tinyKeeper.position.y -= 0.8; }
+            if (tinyKeeper.visible) {
+                tinyKeeper.position.copy(camera.position);
+                tinyKeeper.position.y -= 0.8; 
+            }
 
-            if (controls.enabled || isMobile) {
+            // Locomotion
+            if (controls.enabled) {
                 const speed = keys.shift ? 10.0 : 4.0;
-                const forward = new THREE.Vector3();
-                camera.getWorldDirection(forward);
-                forward.y = 0; forward.normalize();
-                const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
-
-                const moveDir = new THREE.Vector3();
-                if (keys.w) moveDir.add(forward);
-                if (keys.s) moveDir.sub(forward);
-                if (keys.a) moveDir.sub(right);
-                if (keys.d) moveDir.add(right);
-                
-                if (moveDir.length() > 0) {
-                    moveDir.normalize();
-                    camera.position.addScaledVector(moveDir, speed * delta);
-                }
+                if (keys.w) controls.moveForward(speed * delta);
+                if (keys.s) controls.moveForward(-speed * delta);
+                if (keys.a) controls.moveRight(-speed * delta);
+                if (keys.d) controls.moveRight(speed * delta);
             }
 
-            const camPos = camera.position;
-            const distFromCenter = Math.sqrt(camPos.x * camPos.x + camPos.z * camPos.z);
-            if (distFromCenter > 15.0) {
-                const angle = Math.atan2(camPos.z, camPos.x);
-                camPos.x = Math.cos(angle) * 15.0;
-                camPos.z = Math.sin(angle) * 15.0;
-            }
-
-            // Collision around the hearth/chimney
-            if (distFromCenter < 4.0) {
-                const angle = Math.atan2(camPos.z, camPos.x);
-                camPos.x = Math.cos(angle) * 4.0;
-                camPos.z = Math.sin(angle) * 4.0;
-            }
+            // Bounds
+            const camPos = controls.getObject().position;
+            camPos.x = Math.max(-9.5, Math.min(9.5, camPos.x));
+            camPos.z = Math.max(-9.5, Math.min(9.5, camPos.z));
 
             // Table Collision
-            const dx = camPos.x - 0; const dz = camPos.z - (-3);
-            if (Math.sqrt(dx*dx + dz*dz) < 2.0) {
+            const dx = camPos.x - 0;
+            const dz = camPos.z - (-1);
+            const distToTable = Math.sqrt(dx*dx + dz*dz);
+            if (distToTable < 1.5) {
                 const angle = Math.atan2(dz, dx);
-                camPos.x = 0 + Math.cos(angle) * 2.0; camPos.z = -3 + Math.sin(angle) * 2.0;
+                camPos.x = 0 + Math.cos(angle) * 1.5;
+                camPos.z = -1 + Math.sin(angle) * 1.5;
             }
 
+            // --- THE LAMP'S RESPONSE TO ROOM STATE ---
             if (roomState.chatEnabled) {
-                lampLight.intensity = 1.5 + 0.5 * Math.sin(time * 3);
+                // Pulse when chat is on
+                const pulse = 1.5 + 0.5 * Math.sin(time * 3);
+                lampLight.intensity = pulse;
                 lampBulb.material.color.setHex(0xffdd55);
             } else {
+                // Dim if empty, bright if occupied (for now, just dim since we're solo)
                 lampLight.intensity = 0.8;
                 lampBulb.material.color.setHex(0xffaa00);
-            }
-
-            if (isMobile) {
-                raycaster.setFromCamera(screenCenter, camera);
-                const intersects = raycaster.intersectObject(switchGroup, true);
-                const btnE = document.getElementById('btn-e');
-                if (intersects.length > 0) {
-                    btnE.classList.add('highlight');
-                } else {
-                    btnE.classList.remove('highlight');
-                }
             }
 
             renderer.render(scene, camera);
