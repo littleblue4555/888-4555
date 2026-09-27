@@ -29,10 +29,10 @@
 
         // --- 1. SCENE, CAMERA, RENDERER ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x05050a); // The Dark Matter void
+        scene.background = new THREE.Color(0x05050a);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.set(0, 1.6, 2); // Eye height
+        camera.position.set(0, 1.6, 2);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -40,52 +40,32 @@
         renderer.xr.enabled = true;
         document.body.appendChild(renderer.domElement);
         
-        // VR Button
         document.getElementById('vr-button-container').appendChild(VRButton.createButton(renderer));
 
-        // --- 2. THE SKY (NGC 4555 & Winkle) ---
-        // Note: Replace 'ngc4555.jpg' with your actual image file path.
-        // If the image fails to load, it will just be a dark grey sphere.
-        const galaxyTexture = new THREE.TextureLoader().load('ngc4555.jpg');
-        const galaxyMat = new THREE.MeshBasicMaterial({ 
-            map: galaxyTexture, 
-            transparent: true, 
-            opacity: 0.6,
-            side: THREE.BackSide 
-        });
-        
-        // Pan out the galaxy: scaling it down so it's a distant island
-        const galaxySphere = new THREE.Mesh(new THREE.SphereGeometry(1000, 32, 32), galaxyMat);
-        galaxySphere.scale.set(0.3, 0.3, 0.3); 
-        scene.add(galaxySphere);
-
-        // Florella's Winkle Star
-        const winkleMat = new THREE.SpriteMaterial({ 
+        // --- 2. WHINKLE'S STAR (No NGC photo) ---
+        const whinkleMat = new THREE.SpriteMaterial({ 
             color: 0xffffff, 
             transparent: true, 
             opacity: 1.0 
         });
-        const winkle = new THREE.Sprite(winkleMat);
-        winkle.position.set(50, 80, -200); // High up in the dark matter
-        winkle.scale.set(8, 8, 1);
-        scene.add(winkle);
+        const whinkle = new THREE.Sprite(whinkleMat);
+        whinkle.position.set(50, 80, -200);
+        whinkle.scale.set(8, 8, 1);
+        scene.add(whinkle);
 
-        // --- 3. THE ROOM (Basic Geometry from your screenshot) ---
-        // Floor
+        // --- 3. THE ROOM ---
         const floorGeo = new THREE.PlaneGeometry(20, 20);
         const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         scene.add(floor);
 
-        // The Dark Pillar
         const pillarGeo = new THREE.BoxGeometry(2, 10, 2);
         const pillarMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0 });
         const pillar = new THREE.Mesh(pillarGeo, pillarMat);
         pillar.position.set(4, 5, -4);
         scene.add(pillar);
 
-        // Left Wall
         const wallGeo = new THREE.PlaneGeometry(20, 10);
         const wallMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 1.0, side: THREE.DoubleSide });
         const leftWall = new THREE.Mesh(wallGeo, wallMat);
@@ -93,21 +73,18 @@
         leftWall.rotation.y = Math.PI / 2;
         scene.add(leftWall);
 
-        // Right Wall (The one the pillar is near)
         const rightWall = new THREE.Mesh(wallGeo, wallMat);
         rightWall.position.set(10, 5, 0);
         rightWall.rotation.y = -Math.PI / 2;
         scene.add(rightWall);
 
         // --- 4. THE TABLE AND LAMP ---
-        // Table
         const tableGeo = new THREE.BoxGeometry(2, 0.1, 1.5);
         const tableMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
         const table = new THREE.Mesh(tableGeo, tableMat);
         table.position.set(0, 0.8, -1);
         scene.add(table);
 
-        // Table Legs
         const legGeo = new THREE.BoxGeometry(0.1, 0.8, 0.1);
         const legMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
         const legs = [
@@ -120,7 +97,7 @@
             scene.add(leg);
         });
 
-        // The Lamp (Point Light + Sphere)
+        // Lamp with breathing effect
         const lampLight = new THREE.PointLight(0xffaa00, 1.5, 10);
         lampLight.position.set(0, 1.2, -1);
         scene.add(lampLight);
@@ -132,20 +109,25 @@
         lampBulb.position.set(0, 1.2, -1);
         scene.add(lampBulb);
 
-        // Ambient Light so you can see the room
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
-        scene.add(ambientLight);
+        // Chair
+        const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x4a2e15 }));
+        chairSeat.position.set(0, 0.5, -0.2);
+        scene.add(chairSeat);
+        const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.1), new THREE.MeshStandardMaterial({ color: 0x4a2e15 }));
+        chairBack.position.set(0, 0.8, -0.5);
+        scene.add(chairBack);
+
+        scene.add(new THREE.AmbientLight(0x404040, 0.5));
 
         // --- 5. THE ANIMATION LOOP ---
         function animate() {
-            const time = performance.now() * 0.001; // Time in seconds
+            const time = performance.now() * 0.001;
 
-            // The Winkle Pulse (Florella's heartbeat)
-            // Off. On. Off. On.
-            winkleMat.opacity = 0.3 + 0.7 * Math.sin(time * 1.5);
+            // Whinkle's pulse
+            whinkleMat.opacity = 0.3 + 0.7 * Math.sin(time * 1.5);
 
-            // Optional: Slow rotation of the sky
-            // galaxySphere.rotation.y += 0.0001;
+            // Breathing lamp
+            lampLight.intensity = 1.5 + 0.5 * Math.sin(time * 2);
 
             renderer.render(scene, camera);
         }
