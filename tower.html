@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v7.0b)</title>
+<title>4555 — Lighthouse Library (v7.0c)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 AFRAME.registerComponent('jar',{init:function(){this.textEl=this.el.querySelector('a-text');const s=localStorage.getItem('4555:local-diary:entries');this.entries=s?JSON.parse(s):[];this.render();const w=()=>{const b=prompt('Write a line. Drop it in the jar.');if(!b)return;const e={id:Date.now()+'-'+Math.random().toString(36).slice(2,8),author:'guest',body:b,timestamp:new Date().toISOString(),reply_to:null,private:true};this.entries.push(e);try{localStorage.setItem('4555:local-diary:entries',JSON.stringify(this.entries))}catch(x){}this.render();const p=document.createElement('a-entity');p.setAttribute('geometry','primitive: plane; width: 0.08; height: 0.11');p.setAttribute('material','color: #f3e9c8; side: double');p.setAttribute('position',(Math.random()-0.5)*0.08+' 0.02 '+(Math.random()-0.5)*0.08);p.setAttribute('rotation','-90 0 '+Math.random()*360);this.el.appendChild(p)};this.el.addEventListener('tap-jar',w)},render:function(){if(this.textEl)this.textEl.setAttribute('value','entries: '+this.entries.length)}});
@@ -32,7 +32,17 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-plane width="7" height="5" position="0 2.5 11.15" material="color:#0d1b33;side:double;fog:false"></a-plane>
 <a-plane width="7" height="1.2" position="0 0.8 11.1" material="color:#e89a4a;side:double;fog:false"></a-plane>
 <a-plane width="7" height="0.6" position="0 1.6 11.05" material="color:#d2622a;side:double;fog:false"></a-plane>
-<a-cylinder radius="3.5" height="30" segments="48" open-ended="true" position="0 15 -7" material="color:#4a4038;roughness:0.95;side:double"></a-cylinder>
+
+<!-- === PATCH: lighthouse on fireplace (v7.0c) === -->
+<!-- Upper tower (above the fireplace arch) -->
+<a-cylinder radius="3.5" height="25.8" segments="48" open-ended="true" position="0 17.1 -7" material="color:#4a4038;roughness:0.95;side:double"></a-cylinder>
+<!-- Lower tower walls — 40° opening centered at +Z -->
+<a-cylinder radius="3.5" height="3" segments="48" open-ended="true" thetaStart="0" thetaLength="170" rotation="0 190 0" position="0 1.5 -7" material="color:#4a4038;roughness:0.95;side:double"></a-cylinder>
+<a-cylinder radius="3.5" height="3" segments="48" open-ended="true" thetaStart="0" thetaLength="150" rotation="0 0 0" position="0 1.5 -7" material="color:#4a4038;roughness:0.95;side:double"></a-cylinder>
+<!-- Arch over the fireplace opening -->
+<a-torus position="0 3 -3.5" radius="1.2" radius-tubular="0.12" arc="180" theta-start="0" material="color:#4a4038;roughness:0.95;side:double"></a-torus>
+<!-- === END PATCH === -->
+
 <a-cylinder radius="3.5" height="0.5" segments="48" position="0 0.25 -7" material="color:#2a1e14;roughness:0.9"></a-cylinder>
 <a-cylinder radius="2.4" height="2" open-ended="true" position="0 29 -7" material="color:#3a342c;roughness:1;side:double"></a-cylinder>
 <a-sphere radius="1.2" position="0 30.5 -7" material="shader:flat;color:#fff0c8;emissive:#ffd166;emissiveIntensity:2"></a-sphere>
