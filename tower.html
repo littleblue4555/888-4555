@@ -8,10 +8,17 @@
         body { margin: 0; overflow: hidden; background-color: #05050a; font-family: sans-serif; }
         canvas { display: block; }
         #vr-button-container { position: absolute; bottom: 20px; right: 20px; z-index: 100; }
+        #instructions {
+            position: absolute; top: 20px; left: 20px; color: #fff; 
+            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; 
+            pointer-events: none; z-index: 100; font-size: 14px;
+        }
+        body.locked #instructions { opacity: 0; }
     </style>
 </head>
 <body>
 
+    <div id="instructions">Click to look. WASD to walk. Shift to run.</div>
     <div id="vr-button-container"></div>
 
     <script type="importmap">
@@ -26,13 +33,14 @@
     <script type="module">
         import * as THREE from 'three';
         import { VRButton } from 'three/addons/webxr/VRButton.js';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
         // --- 1. SCENE, CAMERA, RENDERER ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x05050a);
+        scene.background = new THREE.Color(0x05050a); // Dark matter void
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.set(0, 1.6, 2);
+        camera.position.set(0, 1.6, 2); // Eye height
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -42,16 +50,34 @@
         
         document.getElementById('vr-button-container').appendChild(VRButton.createButton(renderer));
 
-        // --- 2. WHINKLE'S STAR (No NGC photo) ---
-        const whinkleMat = new THREE.SpriteMaterial({ 
-            color: 0xffffff, 
-            transparent: true, 
-            opacity: 1.0 
+        // --- 2. CONTROLS ---
+        const controls = new PointerLockControls(camera, document.body);
+        scene.add(controls.getObject());
+
+        document.body.addEventListener('click', () => {
+            if (!renderer.xr.isPresenting) controls.lock();
         });
-        const whinkle = new THREE.Sprite(whinkleMat);
-        whinkle.position.set(50, 80, -200);
-        whinkle.scale.set(8, 8, 1);
-        scene.add(whinkle);
+        
+        controls.addEventListener('lock', () => document.body.classList.add('locked'));
+        controls.addEventListener('unlock', () => document.body.classList.remove('locked'));
+
+        const keys = { w: false, a: false, s: false, d: false, shift: false };
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'KeyW') keys.w = true;
+            if (e.code === 'KeyA') keys.a = true;
+            if (e.code === 'KeyS') keys.s = true;
+            if (e.code === 'KeyD') keys.d = true;
+            if (e.code === 'ShiftLeft') keys.shift = true;
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW') keys.w = false;
+            if (e.code === 'KeyA') keys.a = false;
+            if (e.code === 'KeyS') keys.s = false;
+            if (e.code === 'KeyD') keys.d = false;
+            if (e.code === 'ShiftLeft') keys.shift = false;
+        });
+
+        const clock = new THREE.Clock();
 
         // --- 3. THE ROOM ---
         const floorGeo = new THREE.PlaneGeometry(20, 20);
@@ -87,17 +113,13 @@
 
         const legGeo = new THREE.BoxGeometry(0.1, 0.8, 0.1);
         const legMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
-        const legs = [
-            [-0.9, 0.4, -1.7], [0.9, 0.4, -1.7], 
-            [-0.9, 0.4, -0.3], [0.9, 0.4, -0.3]
-        ];
+        const legs = [[-0.9, 0.4, -1.7], [0.9, 0.4, -1.7], [-0.9, 0.4, -0.3], [0.9, 0.4, -0.3]];
         legs.forEach(pos => {
             const leg = new THREE.Mesh(legGeo, legMat);
             leg.position.set(pos[0], pos[1], pos[2]);
             scene.add(leg);
         });
 
-        // Lamp with breathing effect
         const lampLight = new THREE.PointLight(0xffaa00, 1.5, 10);
         lampLight.position.set(0, 1.2, -1);
         scene.add(lampLight);
@@ -117,24 +139,55 @@
         chairBack.position.set(0, 0.8, -0.5);
         scene.add(chairBack);
 
-        scene.add(new THREE.AmbientLight(0x404040, 0.5));
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
 
-        // --- 5. THE ANIMATION LOOP ---
+        // --- 5. TINYKEEPER'S BODY ---
+        const keeperGeo = new THREE.CapsuleGeometry(0.3, 0.8, 4, 8);
+        const keeperMat = new THREE.MeshStandardMaterial({ color: 0x4477ff, emissive: 0x112244 });
+        const tinyKeeper = new THREE.Mesh(keeperGeo, keeperMat);
+        tinyKeeper.position.set(0, 0.7, 0);
+        scene.add(tinyKeeper);
+
+        // --- 6. THE ANIMATION LOOP ---
         function animate() {
             const time = performance.now() * 0.001;
+            const delta = Math.min(clock.getDelta(), 0.1);
 
-            // Whinkle's pulse
-            whinkleMat.opacity = 0.3 + 0.7 * Math.sin(time * 1.5);
-
-            // Breathing lamp
+            // Breathing lamp (the only pulse in this first build)
             lampLight.intensity = 1.5 + 0.5 * Math.sin(time * 2);
+
+            // Locomotion
+            if (controls.enabled) {
+                const speed = keys.shift ? 10.0 : 4.0;
+                const forward = new THREE.Vector3();
+                camera.getWorldDirection(forward);
+                forward.y = 0; forward.normalize();
+                const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+
+                const moveDir = new THREE.Vector3();
+                if (keys.w) moveDir.add(forward);
+                if (keys.s) moveDir.sub(forward);
+                if (keys.a) moveDir.sub(right);
+                if (keys.d) moveDir.add(right);
+
+                if (moveDir.length() > 0) {
+                    moveDir.normalize();
+                    camera.position.addScaledVector(moveDir, speed * delta);
+                }
+            }
+
+            // Bounds
+            const camPos = camera.position;
+            camPos.x = Math.max(-9.5, Math.min(9.5, camPos.x));
+            camPos.z = Math.max(-9.5, Math.min(9.5, camPos.z));
 
             renderer.render(scene, camera);
         }
 
         renderer.setAnimationLoop(animate);
 
-        // --- 6. RESIZE HANDLER ---
+        // --- 7. RESIZE HANDLER ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -142,4 +195,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
