@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v7.0i)</title>
+<title>4555 — Lighthouse Library (v7.0j)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 AFRAME.registerComponent('seaview',{init:function(){var c=document.createElement('canvas');c.width=512;c.height=512;var x=c.getContext('2d');var g=x.createLinearGradient(0,0,0,512);g.addColorStop(0,'#0a1830');g.addColorStop(0.5,'#3a5a8a');g.addColorStop(0.6,'#c07850');g.addColorStop(0.64,'#ffd090');g.addColorStop(0.68,'#8a6040');g.addColorStop(1,'#0a1830');x.fillStyle=g;x.fillRect(0,0,512,512);x.fillStyle='#ffe8b0';x.beginPath();x.arc(200,318,12,0,Math.PI*2);x.fill();var url=c.toDataURL();var el=this.el;setTimeout(function(){el.setAttribute('material',{shader:'flat',src:url,side:'double',fog:false})},50)}});
@@ -26,18 +26,18 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity light="type:point;color:#ffb066;intensity:1.4;distance:20" position="0 3 -7"></a-entity>
 <a-entity light="type:directional;color:#cfe4ff;intensity:0.3" position="1 30 2"></a-entity>
 
-<a-entity rotation="0 10 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
-<a-entity rotation="0 130 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
-<a-entity rotation="0 250 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
+<a-entity rotation="0 15 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:90" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
+<a-entity rotation="0 135 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:90" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
+<a-entity rotation="0 255 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:90" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
 
 <a-entity seaview geometry="primitive:plane;width:4;height:16" position="0 8 11.2"></a-entity>
 
 <a-plane width="4" height="16" rotation="0 120 0" position="-9.7 8 -5.6" material="color:#05070c;side:double;fog:false"></a-plane>
 <a-plane width="4" height="16" rotation="0 240 0" position="9.7 8 -5.6" material="color:#05070c;side:double;fog:false"></a-plane>
 
-<a-entity bookshelf="repeatX:9;repeatY:8" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 10 0" position="0 8 0"></a-entity>
-<a-entity bookshelf="repeatX:9;repeatY:8" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 130 0" position="0 8 0"></a-entity>
-<a-entity bookshelf="repeatX:9;repeatY:8" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 250 0" position="0 8 0"></a-entity>
+<a-entity bookshelf="repeatX:9;repeatY:8" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:90" material="color:#ffffff;roughness:0.9;side:double" rotation="0 15 0" position="0 8 0"></a-entity>
+<a-entity bookshelf="repeatX:9;repeatY:8" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:90" material="color:#ffffff;roughness:0.9;side:double" rotation="0 135 0" position="0 8 0"></a-entity>
+<a-entity bookshelf="repeatX:9;repeatY:8" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:90" material="color:#ffffff;roughness:0.9;side:double" rotation="0 255 0" position="0 8 0"></a-entity>
 <a-entity bookshelf="repeatX:11;repeatY:12" geometry="primitive:cylinder;radius:3.6;height:24;segments:48;openEnded:true" material="color:#ffffff;roughness:0.9;side:double" position="0 17 -7"></a-entity>
 
 <a-cylinder radius="3.5" height="25.8" segments="48" open-ended="true" position="0 17.1 -7" material="color:#4a4038;roughness:0.95;side:double"></a-cylinder>
