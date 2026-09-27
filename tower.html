@@ -2,10 +2,9 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v7.4c)</title>
+<title>4555 — Lighthouse Library (v7.4d)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
-AFRAME.registerComponent('seaview',{init:function(){var el=this.el;var url='https://littleblue4555.github.io/888-4555/seaview.jpg?v=1';var img=new Image();img.crossOrigin='anonymous';img.onload=function(){el.setAttribute('material',{shader:'flat',src:url,side:'double',fog:false})};img.onerror=function(){console.log('seaview failed to load')};img.src=url}});
 AFRAME.registerComponent('stonewall',{init:function(){if(window.__4555_stone_url){this.apply(window.__4555_stone_url);return}var c=document.createElement('canvas');c.width=1024;c.height=1024;var x=c.getContext('2d');var W=1024,H=1024;x.clearRect(0,0,W,H);var stone=x.createLinearGradient(0,0,0,H);stone.addColorStop(0,'#2a2620');stone.addColorStop(0.5,'#3a322a');stone.addColorStop(1,'#251e18');x.fillStyle=stone;x.fillRect(0,0,W,H);for(var i=0;i<900;i++){var sx=Math.random()*W,sy=Math.random()*H;var r=Math.random()*22+6;var v=Math.random();x.fillStyle='rgba('+(40+v*50|0)+','+(34+v*42|0)+','+(28+v*34|0)+','+(0.15+Math.random()*0.25)+')';x.beginPath();x.arc(sx,sy,r,0,Math.PI*2);x.fill()}x.strokeStyle='rgba(15,10,8,0.55)';x.lineWidth=2;for(var g=0;g<22;g++){x.beginPath();var gx=Math.random()*W,gy=Math.random()*H;x.moveTo(gx,gy);for(var k=0;k<5;k++){gx+=(Math.random()-0.5)*90;gy+=(Math.random()-0.5)*90;x.lineTo(gx,gy)}x.stroke()}window.__4555_stone_url=c.toDataURL();this.apply(window.__4555_stone_url)},apply:function(url){var el=this.el;setTimeout(function(){el.setAttribute('material',{shader:'flat',src:url,side:'double',fog:false})},50)}});
 AFRAME.registerComponent('brick',{schema:{rx:{default:1},ry:{default:1}},init:function(){var el=this.el;var rx=this.data.rx;var ry=this.data.ry;var D='https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mixed_brick_wall/mixed_brick_wall_diff_1k.jpg';var N='https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mixed_brick_wall/mixed_brick_wall_nor_gl_1k.jpg';var R='https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mixed_brick_wall/mixed_brick_wall_rough_1k.jpg';var apply=function(){var mc=el.components.material;if(!mc||!mc.material)return;var m=mc.material;var maps=['map','normalMap','roughnessMap'];maps.forEach(function(k){if(m[k]){m[k].wrapS=m[k].wrapT=1000;m[k].repeat.set(rx,ry);m[k].needsUpdate=true}});m.needsUpdate=true};setTimeout(function(){el.setAttribute('material',{shader:'standard',src:D,normalMap:N,roughnessMap:R,roughness:1,metalness:0,side:'double'});apply();setTimeout(apply,200);setTimeout(apply,600);setTimeout(apply,1500)},50)}});
 AFRAME.registerComponent('arch',{schema:{radius:{default:5.5},springY:{default:4.5},wallZ:{default:10.7},nStones:{default:11}},init:function(){var self=this;var R=this.data.radius;var Y0=this.data.springY;var ZW=this.data.wallZ;var N=this.data.nStones;var stoneW=(R*Math.PI)/N*1.15;for(var i=0;i<N;i++){var thetaDeg=i*(180/(N-1));var thetaRad=thetaDeg*Math.PI/180;var px=R*Math.cos(thetaRad);var py=Y0+R*Math.sin(thetaRad);var rot=thetaDeg-90;var hh=0.85+Math.random()*0.20;var ww=stoneW*(0.88+Math.random()*0.22);var dd=0.75+Math.random()*0.08;var e=document.createElement('a-box');e.setAttribute('brick','rx:0.73;ry:0.82');e.setAttribute('position',px.toFixed(3)+' '+py.toFixed(3)+' '+ZW);e.setAttribute('width',ww.toFixed(2));e.setAttribute('height',hh.toFixed(2));e.setAttribute('depth',dd.toFixed(2));e.setAttribute('rotation','0 0 '+rot.toFixed(1));self.el.appendChild(e)}var pillarH=Y0-0.1;[-R,R].forEach(function(px){var e=document.createElement('a-box');e.setAttribute('brick','rx:0.42;ry:4.2');e.setAttribute('position',px.toFixed(3)+' '+(pillarH/2).toFixed(3)+' '+ZW);e.setAttribute('width','0.9');e.setAttribute('height',pillarH.toFixed(2));e.setAttribute('depth','0.75');self.el.appendChild(e)})}});
@@ -35,7 +34,7 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity rotation="0 150 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:60" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
 <a-entity rotation="0 270 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:60" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
 
-<a-entity seaview geometry="primitive:plane;width:12;height:16" position="0 8 11.2"></a-entity>
+<a-entity geometry="primitive:plane;width:12;height:16" position="0 8 11.2" material="shader:flat;src:https://littleblue4555.github.io/888-4555/seaview.jpg;side:double;fog:false"></a-entity>
 
 <a-entity arch></a-entity>
 <a-entity arch rotation="0 120 0"></a-entity>
@@ -145,4 +144,4 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity id="camera" camera="fov:55" look="sensitivity:0.008;limit:1.48;dragThreshold:18" breath="amp:0.007;hz:0.16" position="0 1.6 0"></a-entity>
 </a-entity>
 </a-scene>
-</body></html>
+</body></html> 
