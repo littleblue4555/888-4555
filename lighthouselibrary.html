@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v9.7)</title>
+<title>4555 — Lighthouse Library (v9.8)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 window.__4555_stone_url = 'https://littleblue4555.github.io/888-4555/cobblestone.jpg';
@@ -70,8 +70,8 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-cone position="-0.18 0.5 -3.42" radius-bottom="0.18" radius-top="0" height="0.45" segments="8" material="shader:flat;color:#ffcf80;emissive:#ffcf80;emissiveIntensity:1.8;opacity:0.8;transparent:true"></a-cone>
 <a-cone position="0.18 0.5 -3.42" radius-bottom="0.18" radius-top="0" height="0.5" segments="8" material="shader:flat;color:#ffcf80;emissive:#ffcf80;emissiveIntensity:1.8;opacity:0.8;transparent:true"></a-cone>
 
-<!-- Porthole — circle geometry so the corners are cut -->
-<a-circle position="0 12 -2.5" rotation="90 0 0" radius="11.5" segments="64" material="shader:flat;src:https://littleblue4555.github.io/888-4555/ngc4555.png;side:double;fog:false"></a-circle>
+<!-- Porthole — circle geometry, larger -->
+<a-circle position="0 12 -2.5" rotation="90 0 0" radius="15" segments="96" material="shader:flat;src:https://littleblue4555.github.io/888-4555/ngc4555.png;side:double;fog:false"></a-circle>
 
 <a-circle radius="11.0" rotation="-90 0 0" position="0 0.01 0" class="walkable" material="color:#1d1814;roughness:0.4;metalness:0.2"></a-circle>
 <a-text id="hud" value="" position="0 2.6 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
