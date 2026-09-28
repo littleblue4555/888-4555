@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v8.3)</title>
+<title>4555 — Lighthouse Library (v8.4)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 window.__4555_stone_url = 'https://littleblue4555.github.io/888-4555/cobblestone.jpg';
@@ -64,6 +64,20 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-sphere radius="1.2" position="0 30.5 -7" material="shader:flat;color:#fff0c8;emissive:#ffd166;emissiveIntensity:2"></a-sphere>
 <a-entity light="type:point;color:#ffd8a0;intensity:2.4;distance:60" position="0 30 -7"></a-entity>
 <a-cone radius-bottom="2.6" radius-top="0.3" height="30" position="0 15 -7" material="color:#e8eeff;opacity:0.09;transparent:true;blending:additive;side:double;depthWrite:false"></a-cone>
+
+<!-- Skylight ring at the tower's open top — frames the galaxy above -->
+<a-ring position="0 29 -7" rotation="-90 0 0" radius-inner="2.3" radius-outer="2.8" material="color:#3a2a1a;roughness:0.9;side:double"></a-ring>
+
+<!-- Fireplace at the tower's foot -->
+<a-box stonewall position="-0.95 1.0 -3.4" width="0.5" height="2.0" depth="0.7"></a-box>
+<a-box stonewall position="0.95 1.0 -3.4" width="0.5" height="2.0" depth="0.7"></a-box>
+<a-box stonewall position="0 2.2 -3.4" width="2.4" height="0.4" depth="0.7"></a-box>
+<a-box position="0 0.8 -3.7" width="1.4" height="1.6" depth="0.1" material="shader:flat;color:#0a0604;side:double"></a-box>
+<a-box stonewall position="0 0.05 -2.9" width="2.6" height="0.1" depth="1.0"></a-box>
+<a-entity light="type:point;color:#ff9040;intensity:2.0;distance:22" position="0 1.0 -2.4"></a-entity>
+<a-cone position="0 0.7 -3.4" radius-bottom="0.35" radius-top="0" height="0.7" segments="10" material="shader:flat;color:#ffcf80;emissive:#ffcf80;emissiveIntensity:1.5;opacity:0.85;transparent:true"></a-cone>
+<a-cone position="-0.18 0.65 -3.45" radius-bottom="0.18" radius-top="0" height="0.45" segments="8" material="shader:flat;color:#ffcf80;emissive:#ffcf80;emissiveIntensity:1.5;opacity:0.75;transparent:true"></a-cone>
+<a-cone position="0.18 0.65 -3.45" radius-bottom="0.18" radius-top="0" height="0.5" segments="8" material="shader:flat;color:#ffcf80;emissive:#ffcf80;emissiveIntensity:1.5;opacity:0.75;transparent:true"></a-cone>
 
 <a-circle radius="11.0" rotation="-90 0 0" position="0 0.01 0" class="walkable" material="color:#1d1814;roughness:0.4;metalness:0.2"></a-circle>
 <a-text id="hud" value="" position="0 2.6 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
