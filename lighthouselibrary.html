@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v10.7)</title>
+<title>4555 — Lighthouse Library (v10.8)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 window.__4555_stone_url = 'https://littleblue4555.github.io/888-4555/cobblestone.jpg';
@@ -65,7 +65,7 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity light="type:point;color:#ffd8a0;intensity:2.4;distance:60" position="0 30 -7"></a-entity>
 <a-cone radius-bottom="2.6" radius-top="0.3" height="30" position="0 15 -7" material="color:#e8eeff;opacity:0.09;transparent:true;blending:additive;side:double;depthWrite:false"></a-cone>
 
-<!-- Fireplace — mahogany frame, dark recess, fire inside -->
+<!-- Fireplace -->
 <a-box wood position="-0.95 0.6 -3.35" width="0.14" height="1.55" depth="0.24"></a-box>
 <a-box wood position="0.95 0.6 -3.35" width="0.14" height="1.55" depth="0.24"></a-box>
 <a-box wood position="0 1.30 -3.35" width="1.8" height="0.14" depth="0.24"></a-box>
@@ -75,9 +75,18 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 
 <a-plane position="0 0.45 -3.42" width="1.5" height="0.75" material="shader:flat;color:#ff5020;opacity:0.25;transparent:true;blending:additive"></a-plane>
 
+<!-- Logs — two dark cylinders crossed at the fire base, glowing at the ends -->
+<a-cylinder position="-0.05 0.10 -3.38" rotation="0 0 78" radius="0.06" height="0.85" segments="8" material="color:#1a0a04;roughness:0.95"></a-cylinder>
+<a-cylinder position="0.05 0.14 -3.38" rotation="0 0 -72" radius="0.055" height="0.80" segments="8" material="color:#220c05;roughness:0.95"></a-cylinder>
+<a-cylinder position="0 0.18 -3.34" rotation="0 0 90" radius="0.04" height="0.55" segments="6" material="color:#2a1008;roughness:0.95"></a-cylinder>
+
+<!-- Ember glow at the ends of the logs -->
+<a-sphere position="-0.35 0.11 -3.36" radius="0.06" material="shader:flat;color:#ff6010;emissive:#ff8030;emissiveIntensity:1.6"></a-sphere>
+<a-sphere position="0.35 0.14 -3.36" radius="0.05" material="shader:flat;color:#ff6010;emissive:#ff8030;emissiveIntensity:1.5"></a-sphere>
+
 <a-entity light="type:point;color:#ff8030;intensity:3.0;distance:14" position="0 0.35 -3.15" firelight="base:3.0;amp:1.2;hz:3.2"></a-entity>
 
-<a-entity position="0 0.02 -3.35" fire-particles="count:50;width:1.35;height:1.3"></a-entity>
+<a-entity position="0 0.18 -3.35" fire-particles="count:50;width:1.35;height:1.15"></a-entity>
 
 <a-circle position="0 12 -2.5" rotation="90 0 0" radius="22" segments="96" material="shader:flat;src:https://littleblue4555.github.io/888-4555/ngc4555.png;side:double;fog:false"></a-circle>
 
