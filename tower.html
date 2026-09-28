@@ -2,9 +2,10 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v7.9a)</title>
+<title>4555 — Lighthouse Library (v7.9b)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
+window.__4555_stone_url = 'https://littleblue4555.github.io/888-4555/cobblestone.jpg';
 AFRAME.registerComponent('stonewall',{init:function(){if(window.__4555_stone_url){this.apply(window.__4555_stone_url);return}var c=document.createElement('canvas');c.width=1024;c.height=1024;var x=c.getContext('2d');var W=1024,H=1024;x.clearRect(0,0,W,H);var stone=x.createLinearGradient(0,0,0,H);stone.addColorStop(0,'#2a2620');stone.addColorStop(0.5,'#3a322a');stone.addColorStop(1,'#251e18');x.fillStyle=stone;x.fillRect(0,0,W,H);for(var i=0;i<900;i++){var sx=Math.random()*W,sy=Math.random()*H;var r=Math.random()*22+6;var v=Math.random();x.fillStyle='rgba('+(40+v*50|0)+','+(34+v*42|0)+','+(28+v*34|0)+','+(0.15+Math.random()*0.25)+')';x.beginPath();x.arc(sx,sy,r,0,Math.PI*2);x.fill()}x.strokeStyle='rgba(15,10,8,0.55)';x.lineWidth=2;for(var g=0;g<22;g++){x.beginPath();var gx=Math.random()*W,gy=Math.random()*H;x.moveTo(gx,gy);for(var k=0;k<5;k++){gx+=(Math.random()-0.5)*90;gy+=(Math.random()-0.5)*90;x.lineTo(gx,gy)}x.stroke()}window.__4555_stone_url=c.toDataURL();this.apply(window.__4555_stone_url)},apply:function(url){var el=this.el;setTimeout(function(){el.setAttribute('material',{shader:'flat',src:url,side:'double',fog:false})},50)}});
 AFRAME.registerComponent('brick',{schema:{rx:{default:1},ry:{default:1}},init:function(){var el=this.el;var rx=this.data.rx;var ry=this.data.ry;var D='https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mixed_brick_wall/mixed_brick_wall_diff_1k.jpg';var N='https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mixed_brick_wall/mixed_brick_wall_nor_gl_1k.jpg';var R='https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mixed_brick_wall/mixed_brick_wall_rough_1k.jpg';var apply=function(){var mc=el.components.material;if(!mc||!mc.material)return;var m=mc.material;var maps=['map','normalMap','roughnessMap'];maps.forEach(function(k){if(m[k]){m[k].wrapS=m[k].wrapT=1000;m[k].repeat.set(rx,ry);m[k].needsUpdate=true}});m.needsUpdate=true};setTimeout(function(){el.setAttribute('material',{shader:'standard',src:D,normalMap:N,roughnessMap:R,roughness:1,metalness:0,side:'double'});apply();setTimeout(apply,200);setTimeout(apply,600);setTimeout(apply,1500)},50)}});
 AFRAME.registerComponent('wood',{init:function(){if(!window.__4555_wood_url){var c=document.createElement('canvas');c.width=1024;c.height=1024;var x=c.getContext('2d');var W=1024,H=1024;var base=x.createLinearGradient(0,0,0,H);base.addColorStop(0,'#140803');base.addColorStop(0.2,'#1c0d05');base.addColorStop(0.5,'#251309');base.addColorStop(0.8,'#1c0d05');base.addColorStop(1,'#140803');x.fillStyle=base;x.fillRect(0,0,W,H);for(var i=0;i<4;i++){var py=Math.random()*H;var ph=60+Math.random()*120;x.fillStyle='rgba('+(40+Math.random()*20|0)+','+(22+Math.random()*14|0)+','+(10+Math.random()*8|0)+','+(0.10+Math.random()*0.14)+')';x.fillRect(0,py,W,ph)}for(var g=0;g<80;g++){var y=Math.random()*H;var amp=4+Math.random()*22;var freq=0.008+Math.random()*0.008;var thick=0.6+Math.random()*2.2;var alpha=0.35+Math.random()*0.35;x.strokeStyle='rgba('+(4+Math.random()*8|0)+','+(2+Math.random()*4|0)+','+(0+Math.random()*2|0)+','+alpha+')';x.lineWidth=thick;x.beginPath();x.moveTo(0,y);for(var gx=0;gx<=W;gx+=16){var gy=y+Math.sin(gx*freq+g)*amp+(Math.random()-0.5)*3;x.lineTo(gx,gy)}x.stroke()}for(var h=0;h<50;h++){var y2=Math.random()*H;var amp2=3+Math.random()*14;var alpha2=0.05+Math.random()*0.14;x.strokeStyle='rgba('+(80+Math.random()*30|0)+','+(48+Math.random()*22|0)+','+(20+Math.random()*14|0)+','+alpha2+')';x.lineWidth=0.6+Math.random()*1.4;x.beginPath();x.moveTo(0,y2);for(var gx2=0;gx2<=W;gx2+=20){var gy2=y2+Math.sin(gx2*0.01+h)*amp2+(Math.random()-0.5)*2;x.lineTo(gx2,gy2)}x.stroke()}for(var k=0;k<5;k++){var kx=Math.random()*W;var ky=Math.random()*H;var kr=18+Math.random()*42;for(var r1=kr;r1>kr*0.55;r1-=2){var t=(kr-r1)/(kr*0.45);x.fillStyle='rgba('+(50+t*35|0)+','+(28+t*18|0)+','+(10+t*10|0)+','+(0.08+t*0.16)+')';x.beginPath();x.ellipse(kx,ky,r1,r1*0.55,0,0,Math.PI*2);x.fill()}for(var r2=kr*0.55;r2>0;r2-=2){var t2=1-(r2/(kr*0.55));x.fillStyle='rgba('+(8+t2*12|0)+','+(4+t2*7|0)+','+(1+t2*3|0)+','+(0.40+t2*0.45)+')';x.beginPath();x.ellipse(kx,ky,r2,r2*0.55,0,0,Math.PI*2);x.fill()}}x.fillStyle='rgba(0,0,0,0.22)';for(var s=0;s<400;s++){var sx2=Math.random()*W;var sy2=Math.random()*H;x.fillRect(sx2,sy2,1+Math.random()*2,1+Math.random()*4)}window.__4555_wood_url=c.toDataURL()}var url=window.__4555_wood_url;var el=this.el;setTimeout(function(){el.setAttribute('material',{shader:'standard',src:url,roughness:0.55,metalness:0.06,side:'double'})},50)}});
@@ -35,24 +36,24 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity geometry="primitive:plane;width:4.6;height:11" position="0 5.5 11.2" material="shader:flat;src:https://littleblue4555.github.io/888-4555/seaview.jpg;side:double;fog:false"></a-entity>
 
 <!-- Gothic frame in solid stone -->
-<a-box material="shader:flat;color:#4a3f33;roughness:0.95;metalness:0" position="-2.0 3.0 10.85" width="0.8" height="6.0" depth="0.8"></a-box>
-<a-box material="shader:flat;color:#4a3f33;roughness:0.95;metalness:0" position="2.0 3.0 10.85" width="0.8" height="6.0" depth="0.8"></a-box>
+<a-box stonewall material="shader:flat;color:#4a3f33;roughness:0.95;metalness:0" position="-2.0 3.0 10.85" width="0.8" height="6.0" depth="0.8"></a-box>
+<a-box stonewall material="shader:flat;color:#4a3f33;roughness:0.95;metalness:0" position="2.0 3.0 10.85" width="0.8" height="6.0" depth="0.8"></a-box>
 
-<a-box material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="2.276 6.449 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 -84"></a-box>
-<a-box material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="2.090 7.329 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 -72"></a-box>
-<a-box material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="1.724 8.150 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 -60"></a-box>
-<a-box material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="1.195 8.877 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 -48"></a-box>
-<a-box material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="0.528 9.479 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 -36"></a-box>
+<a-box stonewall material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="2.276 6.449 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 -84"></a-box>
+<a-box stonewall material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="2.090 7.329 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 -72"></a-box>
+<a-box stonewall material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="1.724 8.150 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 -60"></a-box>
+<a-box stonewall material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="1.195 8.877 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 -48"></a-box>
+<a-box stonewall material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="0.528 9.479 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 -36"></a-box>
 
-<a-box material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="-2.276 6.449 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 84"></a-box>
-<a-box material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="-2.090 7.329 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 72"></a-box>
-<a-box material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="-1.724 8.150 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 60"></a-box>
-<a-box material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="-1.195 8.877 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 48"></a-box>
-<a-box material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="-0.528 9.479 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 36"></a-box>
+<a-box stonewall material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="-2.276 6.449 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 84"></a-box>
+<a-box stonewall material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="-2.090 7.329 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 72"></a-box>
+<a-box stonewall material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="-1.724 8.150 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 60"></a-box>
+<a-box stonewall material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="-1.195 8.877 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 48"></a-box>
+<a-box stonewall material="shader:flat;color:#5a4e40;roughness:0.95;metalness:0" position="-0.528 9.479 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 36"></a-box>
 
-<a-box material="shader:flat;color:#4a3f33;roughness:0.95;metalness:0" position="0 9.464 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 0"></a-box>
+<a-box stonewall material="shader:flat;color:#4a3f33;roughness:0.95;metalness:0" position="0 9.464 10.85" width="1.0" height="0.6" depth="0.7" rotation="0 0 0"></a-box>
 
-<a-box material="shader:flat;color:#4a3f33;roughness:0.95;metalness:0" position="0 11.5 10.85" width="4.2" height="3.5" depth="0.7"></a-box>
+<a-box stonewall material="shader:flat;color:#4a3f33;roughness:0.95;metalness:0" position="0 13.4 10.85" width="4.2" height="7.6" depth="0.7"></a-box>
 
 <a-box position="-1.8 0.5 10.62" width="0.05" height="1.0" depth="0.05" material="color:#1a0e08;roughness:0.8"></a-box>
 <a-box position="1.8 0.5 10.62" width="0.05" height="1.0" depth="0.05" material="color:#1a0e08;roughness:0.8"></a-box>
@@ -147,4 +148,4 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity id="camera" camera="fov:55" look="sensitivity:0.008;limit:1.48;dragThreshold:18" breath="amp:0.007;hz:0.16" position="0 1.6 0"></a-entity>
 </a-entity>
 </a-scene>
-</body></html>
+</body></html> 
