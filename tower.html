@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v7.5c)</title>
+<title>4555 — Lighthouse Library (v7.5d)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 AFRAME.registerComponent('stonewall',{init:function(){if(window.__4555_stone_url){this.apply(window.__4555_stone_url);return}var c=document.createElement('canvas');c.width=1024;c.height=1024;var x=c.getContext('2d');var W=1024,H=1024;x.clearRect(0,0,W,H);var stone=x.createLinearGradient(0,0,0,H);stone.addColorStop(0,'#2a2620');stone.addColorStop(0.5,'#3a322a');stone.addColorStop(1,'#251e18');x.fillStyle=stone;x.fillRect(0,0,W,H);for(var i=0;i<900;i++){var sx=Math.random()*W,sy=Math.random()*H;var r=Math.random()*22+6;var v=Math.random();x.fillStyle='rgba('+(40+v*50|0)+','+(34+v*42|0)+','+(28+v*34|0)+','+(0.15+Math.random()*0.25)+')';x.beginPath();x.arc(sx,sy,r,0,Math.PI*2);x.fill()}x.strokeStyle='rgba(15,10,8,0.55)';x.lineWidth=2;for(var g=0;g<22;g++){x.beginPath();var gx=Math.random()*W,gy=Math.random()*H;x.moveTo(gx,gy);for(var k=0;k<5;k++){gx+=(Math.random()-0.5)*90;gy+=(Math.random()-0.5)*90;x.lineTo(gx,gy)}x.stroke()}window.__4555_stone_url=c.toDataURL();this.apply(window.__4555_stone_url)},apply:function(url){var el=this.el;setTimeout(function(){el.setAttribute('material',{shader:'flat',src:url,side:'double',fog:false})},50)}});
@@ -59,15 +59,14 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity light="type:point;color:#ffd8a0;intensity:2.4;distance:60" position="0 30 -7"></a-entity>
 <a-cone radius-bottom="2.6" radius-top="0.3" height="30" position="0 15 -7" material="color:#e8eeff;opacity:0.09;transparent:true;blending:additive;side:double;depthWrite:false"></a-cone>
 
-<a-box position="0 0.3 -4.2" width="2.6" height="0.3" depth="0.4" material="color:#1a0e08;roughness:0.9"></a-box>
-<a-box position="0 0.32 -4.15" width="2.8" height="0.06" depth="0.5" material="color:#0a0604;roughness:1"></a-box>
-<a-box position="-0.35 0.55 -4.15" width="0.5" height="0.5" depth="0.35" rotation="30 0 90" material="color:#2a1a10;roughness:0.95"></a-box>
-<a-box position="0.35 0.55 -4.15" width="0.5" height="0.5" depth="0.35" rotation="30 0 -90" material="color:#2a1a10;roughness:0.95"></a-box>
-<a-box position="0 0.75 -4.15" width="0.5" height="0.5" depth="0.35" rotation="0 20 0" material="color:#1a0e08;roughness:0.95"></a-box>
-<a-entity id="fire" fire position="0 0.9 -4.15">
-<a-cone radius-bottom="0.7" radius-top="0" height="1.4" segments="12" material="shader:flat;color:#ff7a1a;opacity:0.9;transparent:true"></a-cone>
-<a-cone class="core" radius-bottom="0.35" radius-top="0" height="0.9" position="0 0.02 0" segments="10" material="shader:flat;color:#ffd166"></a-cone>
-<a-entity light="type:point;color:#ff8833;intensity:2.2;distance:14" position="0 0.6 0.5"></a-entity>
+<a-box position="0 0.15 -2.8" width="2.4" height="0.3" depth="0.6" material="color:#1a0e08;roughness:0.9"></a-box>
+<a-box position="0 0.3 -2.8" width="2.6" height="0.05" depth="0.7" material="color:#0a0604;roughness:1"></a-box>
+<a-box position="-0.3 0.5 -2.8" width="0.5" height="0.5" depth="0.4" rotation="30 0 90" material="color:#2a1a10;roughness:0.95"></a-box>
+<a-box position="0.3 0.5 -2.8" width="0.5" height="0.5" depth="0.4" rotation="30 0 -90" material="color:#2a1a10;roughness:0.95"></a-box>
+<a-entity id="fire" fire position="0 0.7 -2.8">
+<a-cone radius-bottom="0.5" radius-top="0" height="1.0" segments="12" material="shader:flat;color:#ff7a1a;opacity:0.95;transparent:true"></a-cone>
+<a-cone class="core" radius-bottom="0.25" radius-top="0" height="0.7" position="0 0.02 0" segments="10" material="shader:flat;color:#ffd166"></a-cone>
+<a-entity light="type:point;color:#ff8833;intensity:2.5;distance:8" position="0 0.5 0.3"></a-entity>
 </a-entity>
 <a-circle radius="11.0" rotation="-90 0 0" position="0 0.01 0" class="walkable" material="color:#1d1814;roughness:0.4;metalness:0.2"></a-circle>
 <a-text id="hud" value="" position="0 2.6 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
@@ -130,4 +129,4 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity id="camera" camera="fov:55" look="sensitivity:0.008;limit:1.48;dragThreshold:18" breath="amp:0.007;hz:0.16" position="0 1.6 0"></a-entity>
 </a-entity>
 </a-scene>
-</body></html> 
+</body></html>
