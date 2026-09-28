@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v11.3)</title>
+<title>4555 — Lighthouse Library (v11.4)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 window.__4555_stone_url = 'https://littleblue4555.github.io/888-4555/cobblestone.jpg';
@@ -36,7 +36,8 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity rotation="0 130 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
 <a-entity rotation="0 250 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
 
-<a-entity geometry="primitive:plane;width:4.6;height:11" position="0 5.5 11.2" material="shader:flat;src:https://littleblue4555.github.io/888-4555/seaview.jpg;side:double;fog:false"></a-entity>
+<!-- View through the arch — boatdock.jpg -->
+<a-entity geometry="primitive:plane;width:4.6;height:11" position="0 5.5 11.2" material="shader:flat;src:https://littleblue4555.github.io/888-4555/boatdock.jpg;side:double;fog:false"></a-entity>
 
 <a-entity gothicwall="width:5.0;height:17.2;opening:3.0;springing:6.5;depth:1.0;repeatX:2;repeatY:7;stoneColor:#5a4e40" position="0 0 10.85"></a-entity>
 
@@ -75,14 +76,12 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 
 <a-plane position="0 0.45 -3.42" width="1.5" height="0.75" material="shader:flat;color:#ff5020;opacity:0.25;transparent:true;blending:additive"></a-plane>
 
-<!-- Logs -->
 <a-cylinder position="-0.05 0.10 -3.38" rotation="0 0 78" radius="0.06" height="0.85" segments="8" material="color:#1a0a04;roughness:0.95"></a-cylinder>
 <a-cylinder position="0.05 0.14 -3.38" rotation="0 0 -72" radius="0.055" height="0.80" segments="8" material="color:#220c05;roughness:0.95"></a-cylinder>
 <a-cylinder position="0 0.18 -3.34" rotation="0 0 90" radius="0.04" height="0.55" segments="6" material="color:#2a1008;roughness:0.95"></a-cylinder>
 
 <a-entity light="type:point;color:#ff8030;intensity:3.0;distance:14" position="0 0.35 -3.15" firelight="base:3.0;amp:1.2;hz:3.2"></a-entity>
 
-<!-- Fire — orange, purple, and blue layered -->
 <a-entity position="0 0.18 -3.35" fire-particles="count:50;width:1.35;height:1.15"></a-entity>
 <a-entity position="0 0.10 -3.35" fire-particles="count:20;width:1.0;height:0.6;hue:purple;speedMin:0.18;speedMax:0.36;scaleMin:0.22;scaleMax:0.38"></a-entity>
 <a-entity position="0 0.04 -3.35" fire-particles="count:45;width:1.25;height:0.65;hue:blue;speedMin:0.12;speedMax:0.30;scaleMin:0.20;scaleMax:0.42"></a-entity>
