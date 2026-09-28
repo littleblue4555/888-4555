@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v7.8d)</title>
+<title>4555 — Lighthouse Library (v7.8e)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 AFRAME.registerComponent('stonewall',{init:function(){if(window.__4555_stone_url){this.apply(window.__4555_stone_url);return}var c=document.createElement('canvas');c.width=1024;c.height=1024;var x=c.getContext('2d');var W=1024,H=1024;x.clearRect(0,0,W,H);var stone=x.createLinearGradient(0,0,0,H);stone.addColorStop(0,'#2a2620');stone.addColorStop(0.5,'#3a322a');stone.addColorStop(1,'#251e18');x.fillStyle=stone;x.fillRect(0,0,W,H);for(var i=0;i<900;i++){var sx=Math.random()*W,sy=Math.random()*H;var r=Math.random()*22+6;var v=Math.random();x.fillStyle='rgba('+(40+v*50|0)+','+(34+v*42|0)+','+(28+v*34|0)+','+(0.15+Math.random()*0.25)+')';x.beginPath();x.arc(sx,sy,r,0,Math.PI*2);x.fill()}x.strokeStyle='rgba(15,10,8,0.55)';x.lineWidth=2;for(var g=0;g<22;g++){x.beginPath();var gx=Math.random()*W,gy=Math.random()*H;x.moveTo(gx,gy);for(var k=0;k<5;k++){gx+=(Math.random()-0.5)*90;gy+=(Math.random()-0.5)*90;x.lineTo(gx,gy)}x.stroke()}window.__4555_stone_url=c.toDataURL();this.apply(window.__4555_stone_url)},apply:function(url){var el=this.el;setTimeout(function(){el.setAttribute('material',{shader:'flat',src:url,side:'double',fog:false})},50)}});
@@ -34,20 +34,24 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 
 <a-entity geometry="primitive:plane;width:4.6;height:11" position="0 5.5 11.2" material="shader:flat;src:https://littleblue4555.github.io/888-4555/seaview.jpg;side:double;fog:false"></a-entity>
 
-<a-box brick="rx:0.4;ry:6" position="-2.0 3.0 10.85" width="0.8" height="6.0" depth="0.8"></a-box>
-<a-box brick="rx:0.4;ry:6" position="2.0 3.0 10.85" width="0.8" height="6.0" depth="0.8"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="2.30 6.00 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 0"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="2.15 7.11 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 -15"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="1.72 8.15 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 -30"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="1.04 9.04 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 -45"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="0.15 9.72 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 -60"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="-2.30 6.00 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 0"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="-2.15 7.11 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 15"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="-1.72 8.15 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 30"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="-1.04 9.04 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 45"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="-0.15 9.72 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 60"></a-box>
-<a-box brick="rx:0.35;ry:0.35" position="0 10.05 10.85" width="0.7" height="0.7" depth="0.7" rotation="0 0 0"></a-box>
-<a-box brick="rx:2.5;ry:2.4" position="0 12.5 10.85" width="5.0" height="4.0" depth="0.8"></a-box>
+<a-box brick="rx:0.5;ry:4" position="-2.0 3.0 10.85" width="0.8" height="6.0" depth="0.8"></a-box>
+<a-box brick="rx:0.5;ry:4" position="2.0 3.0 10.85" width="0.8" height="6.0" depth="0.8"></a-box>
+
+<a-box brick="rx:0.4;ry:0.5" position="2.35 6.00 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 0"></a-box>
+<a-box brick="rx:0.4;ry:0.5" position="2.20 7.13 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 -15"></a-box>
+<a-box brick="rx:0.4;ry:0.5" position="1.77 8.18 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 -30"></a-box>
+<a-box brick="rx:0.4;ry:0.5" position="1.08 9.08 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 -45"></a-box>
+<a-box brick="rx:0.4;ry:0.5" position="0.18 9.77 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 -60"></a-box>
+
+<a-box brick="rx:0.4;ry:0.5" position="-2.35 6.00 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 0"></a-box>
+<a-box brick="rx:0.4;ry:0.5" position="-2.20 7.13 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 15"></a-box>
+<a-box brick="rx:0.4;ry:0.5" position="-1.77 8.18 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 30"></a-box>
+<a-box brick="rx:0.4;ry:0.5" position="-1.08 9.08 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 45"></a-box>
+<a-box brick="rx:0.4;ry:0.5" position="-0.18 9.77 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 60"></a-box>
+
+<a-box brick="rx:0.4;ry:0.5" position="0 9.81 10.85" width="1.2" height="0.7" depth="0.7" rotation="0 0 0"></a-box>
+
+<a-box brick="rx:2;ry:2" position="0 12.16 10.85" width="5.0" height="4.0" depth="0.8"></a-box>
 
 <a-box position="-1.8 0.5 10.62" width="0.05" height="1.0" depth="0.05" material="color:#1a0e08;roughness:0.8"></a-box>
 <a-box position="1.8 0.5 10.62" width="0.05" height="1.0" depth="0.05" material="color:#1a0e08;roughness:0.8"></a-box>
