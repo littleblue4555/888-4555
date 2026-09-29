@@ -50,24 +50,19 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-box position="0 0.6 10.62" width="3.6" height="0.04" depth="0.04" material="color:#1a0e08;roughness:0.8"></a-box>
 <a-box position="0 0.9 10.62" width="3.6" height="0.04" depth="0.04" material="color:#1a0e08;roughness:0.8"></a-box>
 
-<!-- Short arc over the arch — stays cobblestone, moved near top -->
 <a-entity stonewall geometry="primitive:cylinder;radius:11;height:5.5;segments:48;openEnded:true;thetaStart:0;thetaLength:60" rotation="0 330 0" position="0 29.25 0"></a-entity>
 
-<!-- Tall walls — old wood planks, doubled height -->
 <a-entity stonewall="texUrl:https://littleblue4555.github.io/888-4555/oldwoodplanks.jpg" geometry="primitive:cylinder;radius:12;height:32;segments:48;openEnded:true;thetaStart:0;thetaLength:60" rotation="0 90 0" position="0 16 0"></a-entity>
 <a-entity stonewall="texUrl:https://littleblue4555.github.io/888-4555/oldwoodplanks.jpg" geometry="primitive:cylinder;radius:12;height:32;segments:48;openEnded:true;thetaStart:0;thetaLength:60" rotation="0 210 0" position="0 16 0"></a-entity>
 
-<!-- Level 1 shelves — ground to 16 -->
 <a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 10 0" position="0 8 0"></a-entity>
 <a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 130 0" position="0 8 0"></a-entity>
 <a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 250 0" position="0 8 0"></a-entity>
 
-<!-- Level 2 shelves — 16 to 32, NEW -->
 <a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 10 0" position="0 24 0"></a-entity>
 <a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 130 0" position="0 24 0"></a-entity>
 <a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 250 0" position="0 24 0"></a-entity>
 
-<!-- Rail between levels — NEW -->
 <a-torus radius="10.85" radius-tubular="0.05" rotation="-90 0 0" position="0 16 0" material="color:#1a0f08;roughness:0.9;side:double"></a-torus>
 <a-torus radius="10.85" radius-tubular="0.04" rotation="-90 0 0" position="0 16.9 0" material="color:#1a0f08;roughness:0.9;side:double"></a-torus>
 
@@ -83,7 +78,6 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity light="type:point;color:#ffd8a0;intensity:2.4;distance:60" position="0 30 -7"></a-entity>
 <a-cone radius-bottom="2.6" radius-top="0.3" height="30" position="0 15 -7" material="color:#e8eeff;opacity:0.09;transparent:true;blending:additive;side:double;depthWrite:false"></a-cone>
 
-<!-- Fireplace -->
 <a-box wood position="-0.95 0.6 -3.35" width="0.14" height="1.55" depth="0.24"></a-box>
 <a-box wood position="0.95 0.6 -3.35" width="0.14" height="1.55" depth="0.24"></a-box>
 <a-box wood position="0 1.30 -3.35" width="1.8" height="0.14" depth="0.24"></a-box>
@@ -105,7 +99,6 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 
 <a-circle position="0 20 -2.5" rotation="90 0 0" radius="22" segments="96" material="shader:flat;src:https://littleblue4555.github.io/888-4555/ngc4555.png;side:double;fog:false"></a-circle>
 
-<!-- FLOOR — textile marble, v12.7 -->
 <a-entity imagefloor="rx:8;ry:8;texUrl:https://littleblue4555.github.io/888-4555/textilemarblefloor.jpg" position="0 0.01 0" class="walkable"></a-entity>
 
 <a-text id="hud" value="" position="0 2.6 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
