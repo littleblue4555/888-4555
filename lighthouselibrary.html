@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v13.7 — seaview removed)</title>
+<title>4555 — Lighthouse Library (v13.8 — seaview reframed to image aspect)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 window.__4555_stone_url = 'https://littleblue4555.github.io/888-4555/cobblestone.jpg';
@@ -39,7 +39,7 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity rotation="0 130 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
 <a-entity rotation="0 250 0" geometry="primitive:cylinder;radius:11;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#3a342c;roughness:0.95;side:double" position="0 8 0"></a-entity>
 
-<!-- Seaview plane REMOVED this walk — v13.7 -->
+<a-entity geometry="primitive:plane;width:14;height:25" position="0 10 25" material="shader:flat;src:https://littleblue4555.github.io/888-4555/boatdock.jpg;side:double;fog:false"></a-entity>
 
 <a-entity gothicwall="width:5.0;height:17.2;opening:3.0;springing:6.5;depth:0.15;repeatX:0.4;repeatY:0.4;stoneColor:#5a4e40;texUrl:https://littleblue4555.github.io/888-4555/woodpanels.jpg" position="0 0 10.85"></a-entity>
 
@@ -159,4 +159,4 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity id="camera" camera="fov:55" look="sensitivity:0.008;limit:1.48;dragThreshold:18" breath="amp:0.007;hz:0.16" position="0 1.6 0"></a-entity>
 </a-entity>
 </a-scene>
-</body></html>
+</body></html> 
