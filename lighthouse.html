@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v14.3 — book scale)</title>
+<title>4555 — Lighthouse Library (v14.5 — first walkway)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 window.__4555_stone_url = 'https://littleblue4555.github.io/888-4555/cobblestone.jpg';
@@ -56,17 +56,22 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity stonewall="texUrl:https://littleblue4555.github.io/888-4555/oldwoodplanks.jpg" geometry="primitive:cylinder;radius:12;height:32;segments:48;openEnded:true;thetaStart:0;thetaLength:60" rotation="0 210 0" position="0 16 0"></a-entity>
 
 <!-- Level 1 shelves -->
-<a-entity bookshelf="repeatX:8;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 10 0" position="0 8 0"></a-entity>
-<a-entity bookshelf="repeatX:8;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 130 0" position="0 8 0"></a-entity>
-<a-entity bookshelf="repeatX:8;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 250 0" position="0 8 0"></a-entity>
+<a-entity bookshelf="repeatX:6;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 10 0" position="0 8 0"></a-entity>
+<a-entity bookshelf="repeatX:6;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 130 0" position="0 8 0"></a-entity>
+<a-entity bookshelf="repeatX:6;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 250 0" position="0 8 0"></a-entity>
 
 <!-- Level 2 shelves -->
-<a-entity bookshelf="repeatX:8;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 10 0" position="0 24 0"></a-entity>
-<a-entity bookshelf="repeatX:8;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 130 0" position="0 24 0"></a-entity>
-<a-entity bookshelf="repeatX:8;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 250 0" position="0 24 0"></a-entity>
+<a-entity bookshelf="repeatX:6;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 10 0" position="0 24 0"></a-entity>
+<a-entity bookshelf="repeatX:6;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 130 0" position="0 24 0"></a-entity>
+<a-entity bookshelf="repeatX:6;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 250 0" position="0 24 0"></a-entity>
 
+<!-- WALKWAY — Level 1 floor (NEW) -->
+<a-ring radius-inner="7" radius-outer="10.85" rotation="-90 0 0" position="0 16 0" material="color:#3a2a1c;roughness:0.9;side:double"></a-ring>
+<!-- WALKWAY — Level 1 inner rail (NEW) -->
+<a-torus radius="7" radius-tubular="0.04" rotation="-90 0 0" position="0 16.9 0" material="color:#1a0f08;roughness:0.9;side:double"></a-torus>
+
+<!-- Shelf-edge trim -->
 <a-torus radius="10.85" radius-tubular="0.05" rotation="-90 0 0" position="0 16 0" material="color:#1a0f08;roughness:0.9;side:double"></a-torus>
-<a-torus radius="10.85" radius-tubular="0.04" rotation="-90 0 0" position="0 16.9 0" material="color:#1a0f08;roughness:0.9;side:double"></a-torus>
 
 <a-entity bookshelf="repeatX:11;repeatY:11" geometry="primitive:cylinder;radius:3.6;height:24;segments:48;openEnded:true" material="color:#ffffff;roughness:0.9;side:double" position="0 17 -7"></a-entity>
 
