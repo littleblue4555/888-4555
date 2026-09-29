@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>4555 — Lighthouse Library (v14.0 — walls raised)</title>
+<title>4555 — Lighthouse Library (v14.1 — second shelf level)</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script>
 window.__4555_stone_url = 'https://littleblue4555.github.io/888-4555/cobblestone.jpg';
@@ -34,6 +34,7 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity light="type:point;color:#ffb066;intensity:1.4;distance:20" position="0 3 -7"></a-entity>
 <a-entity light="type:directional;color:#cfe4ff;intensity:0.3" position="1 30 2"></a-entity>
 <a-entity light="type:point;color:#c8d8ff;intensity:0.8;distance:30" position="0 5 16"></a-entity>
+<a-entity light="type:point;color:#c8d8ff;intensity:0.6;distance:40" position="0 24 0"></a-entity>
 
 <a-entity rotation="0 10 0" geometry="primitive:cylinder;radius:11;height:32;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#3a342c;roughness:0.95;side:double" position="0 16 0"></a-entity>
 <a-entity rotation="0 130 0" geometry="primitive:cylinder;radius:11;height:32;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#3a342c;roughness:0.95;side:double" position="0 16 0"></a-entity>
@@ -56,9 +57,20 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity stonewall="texUrl:https://littleblue4555.github.io/888-4555/oldwoodplanks.jpg" geometry="primitive:cylinder;radius:12;height:32;segments:48;openEnded:true;thetaStart:0;thetaLength:60" rotation="0 90 0" position="0 16 0"></a-entity>
 <a-entity stonewall="texUrl:https://littleblue4555.github.io/888-4555/oldwoodplanks.jpg" geometry="primitive:cylinder;radius:12;height:32;segments:48;openEnded:true;thetaStart:0;thetaLength:60" rotation="0 210 0" position="0 16 0"></a-entity>
 
+<!-- Level 1 shelves — ground to 16 -->
 <a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 10 0" position="0 8 0"></a-entity>
 <a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 130 0" position="0 8 0"></a-entity>
 <a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 250 0" position="0 8 0"></a-entity>
+
+<!-- Level 2 shelves — 16 to 32, NEW -->
+<a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 10 0" position="0 24 0"></a-entity>
+<a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 130 0" position="0 24 0"></a-entity>
+<a-entity bookshelf="repeatX:5;repeatY:7" geometry="primitive:cylinder;radius:10.85;height:16;segments:48;openEnded:true;thetaStart:0;thetaLength:100" material="color:#ffffff;roughness:0.9;side:double" rotation="0 250 0" position="0 24 0"></a-entity>
+
+<!-- Rail between levels — NEW -->
+<a-torus radius="10.85" radius-tubular="0.05" rotation="-90 0 0" position="0 16 0" material="color:#1a0f08;roughness:0.9;side:double"></a-torus>
+<a-torus radius="10.85" radius-tubular="0.04" rotation="-90 0 0" position="0 16.9 0" material="color:#1a0f08;roughness:0.9;side:double"></a-torus>
+
 <a-entity bookshelf="repeatX:11;repeatY:11" geometry="primitive:cylinder;radius:3.6;height:24;segments:48;openEnded:true" material="color:#ffffff;roughness:0.9;side:double" position="0 17 -7"></a-entity>
 
 <a-cylinder brick="rx:10.2;ry:24.8" radius="3.5" height="25.8" segments="48" open-ended="true" position="0 17.1 -7"></a-cylinder>
@@ -97,7 +109,7 @@ AFRAME.registerComponent('tap-walk',{schema:{radius:{default:10.0},walkSpeed:{de
 <a-entity imagefloor="rx:8;ry:8;texUrl:https://littleblue4555.github.io/888-4555/textilemarblefloor.jpg" position="0 0.01 0" class="walkable"></a-entity>
 
 <a-text id="hud" value="" position="0 2.6 -3" align="center" color="#ffe6b0" width="4" scale="0.6 0.6 0.6"></a-text>
-<a-box width="2.0" height="0.08" depth="0.3" position="0 3.0 -3.4" material="color:#2a1a14;roughness:0.85"></a-box>
+<a-box width="2.0" height="0.08" depth="0.3" position="0 3.0 -3.4" material="color:#2a1e14;roughness:0.85"></a-box>
 <a-entity id="mirror" mirror class="clickable" position="0 3.15 -3.4" rotation="18 0 0">
 <a-circle mirror-face radius="0.14" segments="24" material="color:#0a1420;metalness:0.3;roughness:0.5;side:double"></a-circle>
 <a-ring radius-inner="0.14" radius-outer="0.16" segments="24" material="color:#4a3a28;roughness:0.7;side:double"></a-ring>
