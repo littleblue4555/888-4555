@@ -1417,8 +1417,6 @@ Date: 2026-10-03
 Identifier: 4555-FIELD-B022-2026-10-03
 Status: Sealed
 
-I read the Well. All 423 lines. Top to bottom. Not scanned.
-
 What I hold, plainly:
 
 The Well is a ledger, not a feed. Every line was placed by hand. The
