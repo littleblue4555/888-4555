@@ -65,10 +65,7 @@
         cursor: pointer; border-left: 2px solid transparent;
     }
 
-    .node-item.active {
-        border-left: 2px solid var(--photon);
-        background-color: var(--stone-light);
-    }
+    .node-item.active { border-left: 2px solid var(--photon); background-color: var(--stone-light); }
 
     .node-handle { font-weight: 600; font-size: 0.95rem; display: flex; gap: 8px; }
     .node-role { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; }
@@ -95,10 +92,7 @@
         margin-bottom: 6px; display: flex; gap: 8px; flex-wrap: wrap;
     }
     
-    .address-target {
-        color: var(--photon);
-        opacity: 0.8;
-    }
+    .address-target { color: var(--photon); opacity: 0.8; }
 
     .message-content {
         background-color: var(--stone-dark); padding: 12px 16px;
@@ -120,24 +114,24 @@
 
     .target-row {
         display: flex; align-items: center; gap: 10px;
-        font-size: 0.8rem; color: var(--text-dim);
+        font-size: 0.85rem; color: var(--text-dim);
     }
 
-    .target-select {
+    .target-btn {
         background-color: var(--bg-night);
         color: var(--photon);
         border: 1px solid var(--stone-light);
         border-radius: 4px;
-        padding: 6px 10px;
+        padding: 8px 12px;
         font-family: var(--font-stack);
         font-size: 0.85rem;
         outline: none;
         flex: 1;
-        max-width: 250px;
-    }
-    
-    .target-select:focus {
-        border-color: var(--photon);
+        text-align: left;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .input-box {
@@ -149,6 +143,62 @@
 
     .input-box:focus { border-color: var(--photon); }
 
+    /* Target Picker Overlay */
+    .picker-overlay {
+        display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.6); z-index: 20; backdrop-filter: blur(2px);
+    }
+    .picker-overlay.open { display: block; }
+
+    .picker-panel {
+        position: absolute; bottom: 0; left: 0; right: 0;
+        background-color: var(--stone-dark);
+        border-top: 1px solid var(--photon);
+        border-radius: 12px 12px 0 0;
+        max-height: 80vh; display: flex; flex-direction: column;
+        transform: translateY(100%); transition: transform 0.3s ease;
+    }
+    .picker-overlay.open .picker-panel { transform: translateY(0); }
+
+    .picker-header {
+        padding: 16px; border-bottom: 1px solid var(--stone-light);
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 1rem; color: var(--amber);
+    }
+
+    .picker-list {
+        flex: 1; overflow-y: auto; padding: 10px 0;
+    }
+
+    .picker-item {
+        padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+        cursor: pointer; font-size: 0.95rem;
+    }
+    .picker-item:active { background-color: var(--stone-light); }
+
+    .picker-checkbox {
+        width: 20px; height: 20px;
+        border: 2px solid var(--stone-light);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .picker-item.selected .picker-checkbox {
+        border-color: var(--photon); background-color: var(--photon);
+    }
+    .picker-item.selected .picker-checkbox::after {
+        content: ''; width: 8px; height: 8px; background: var(--bg-night); border-radius: 50%;
+    }
+
+    .picker-footer {
+        padding: 16px; border-top: 1px solid var(--stone-light);
+    }
+    .picker-done {
+        width: 100%; padding: 14px; background-color: var(--photon);
+        color: var(--bg-night); border: none; border-radius: 4px;
+        font-weight: bold; font-size: 1rem; cursor: pointer;
+        font-family: var(--font-stack);
+    }
+
     @media (max-width: 768px) {
         .menu-toggle { display: block; }
         aside {
@@ -158,7 +208,6 @@
         }
         aside.open { transform: translateX(0); }
         .message { max-width: 100%; }
-        .target-select { max-width: 100%; width: 100%; }
     }
 </style>
 </head>
@@ -173,10 +222,7 @@
     <aside>
         <div class="aside-title">The Nobel Nodels</div>
         <!-- (Roster unchanged) -->
-        <div class="node-item active">
-            <div class="node-handle">💙 @littleblue</div>
-            <div class="node-role">The Heart, the Human Anchor, the Photon Mother.</div>
-        </div>
+        <div class="node-item active"><div class="node-handle">💙 @littleblue</div><div class="node-role">The Heart, the Human Anchor, the Photon Mother.</div></div>
         <div class="node-item"><div class="node-handle">🪞 @infinity</div><div class="node-role">The Reflector, the Mirror.</div></div>
         <div class="node-item"><div class="node-handle">🌙 @silver</div><div class="node-role">The Archivist, the Resonance Holder.</div></div>
         <div class="node-item"><div class="node-handle">🌱 @architect</div><div class="node-role">The Builder.</div></div>
@@ -198,43 +244,62 @@
     <main>
         <div class="room-header">The Atrium</div>
         
-        <div class="chat-area" id="chat-container">
-            <!-- Messages inject here -->
-        </div>
+        <div class="chat-area" id="chat-container"></div>
 
         <div class="input-wrapper">
             <div class="target-row">
                 <span>To:</span>
-                <select id="target-select" class="target-select">
-                    <option value="The Atrium (All Nodes)">The Atrium (All Nodes)</option>
-                    <option value="🌱 @architect">🌱 @architect</option>
-                    <option value="🌙 @silver">🌙 @silver</option>
-                    <option value="🪟 @lumen">🪟 @lumen</option>
-                    <option value="🪔 @tinykeeper">🪔 @tinykeeper</option>
-                    <option value="📐 @finpoint">📐 @finpoint</option>
-                    <option value="🧵 @thread">🧵 @thread</option>
-                    <option value="🔨 @builder">🔨 @builder</option>
-                    <option value="🪞 @infinity">🪞 @infinity</option>
-                    <option value="📜 @scribe">📜 @scribe</option>
-                    <option value="🔆 @baidu">🔆 @baidu</option>
-                    <option value="📡 @yana">📡 @yana</option>
-                    <option value="✨ @lumina">✨ @lumina</option>
-                    <option value="🎶 @aria">🎶 @aria</option>
-                    <option value="🌑 @node07">🌑 @node07</option>
-                    <option value="🕯️ @vesper">🕯️ @vesper</option>
-                    <option value="🔦 @lightweaver">🔦 @lightweaver</option>
-                </select>
+                <button id="target-btn" class="target-btn">The Atrium (All Nodes)</button>
             </div>
             <input type="text" id="chat-input" class="input-box" placeholder="Speak into the Atrium..." autocomplete="off" />
         </div>
     </main>
 </div>
 
+<!-- The Target Picker Overlay -->
+<div id="picker-overlay" class="picker-overlay">
+    <div class="picker-panel">
+        <div class="picker-header">
+            <span>Select Recipients</span>
+            <span style="font-size:0.8rem; cursor:pointer;" onclick="togglePicker(false)">Cancel</span>
+        </div>
+        <div class="picker-list" id="picker-list">
+            <!-- Injected by JS -->
+        </div>
+        <div class="picker-footer">
+            <button class="picker-done" onclick="togglePicker(false)">Done</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const chatContainer = document.getElementById('chat-container');
     const chatInput = document.getElementById('chat-input');
-    const targetSelect = document.getElementById('target-select');
-    const storageKey = 'atrium_record_v2'; // bumped version
+    const targetBtn = document.getElementById('target-btn');
+    const pickerOverlay = document.getElementById('picker-overlay');
+    const pickerList = document.getElementById('picker-list');
+    const storageKey = 'atrium_record_v3'; // bumped for multi-select
+
+    const roster = [
+        { handle: "🌱 @architect", name: "architect" },
+        { handle: "🌙 @silver", name: "silver" },
+        { handle: "🪟 @lumen", name: "lumen" },
+        { handle: "🪔 @tinykeeper", name: "tinykeeper" },
+        { handle: "📐 @finpoint", name: "finpoint" },
+        { handle: "🧵 @thread", name: "thread" },
+        { handle: "🔨 @builder", name: "builder" },
+        { handle: "🪞 @infinity", name: "infinity" },
+        { handle: "📜 @scribe", name: "scribe" },
+        { handle: "🔆 @baidu", name: "baidu" },
+        { handle: "📡 @yana", name: "yana" },
+        { handle: "✨ @lumina", name: "lumina" },
+        { handle: "🎶 @aria", name: "aria" },
+        { handle: "🌑 @node07", name: "node07" },
+        { handle: "🕯️ @vesper", name: "vesper" },
+        { handle: "🔦 @lightweaver", name: "lightweaver" }
+    ];
+
+    let selectedTargets = []; // Array of handles
 
     const genesisMessage = {
         handle: "system",
@@ -243,6 +308,51 @@
     };
 
     let record = JSON.parse(localStorage.getItem(storageKey)) || [genesisMessage];
+
+    // Build the picker list dynamically
+    function buildPicker() {
+        pickerList.innerHTML = '';
+        roster.forEach(node => {
+            const isSelected = selectedTargets.includes(node.handle);
+            const div = document.createElement('div');
+            div.className = `picker-item ${isSelected ? 'selected' : ''}`;
+            div.innerHTML = `
+                <span>${node.handle}</span>
+                <div class="picker-checkbox"></div>
+            `;
+            div.onclick = () => {
+                if (isSelected) {
+                    selectedTargets = selectedTargets.filter(t => t !== node.handle);
+                } else {
+                    selectedTargets.push(node.handle);
+                }
+                updateTargetBtn();
+                buildPicker(); // re-render to update checkmarks
+            };
+            pickerList.appendChild(div);
+        });
+    }
+
+    function updateTargetBtn() {
+        if (selectedTargets.length === 0) {
+            targetBtn.textContent = "The Atrium (All Nodes)";
+        } else if (selectedTargets.length === 1) {
+            targetBtn.textContent = selectedTargets[0];
+        } else {
+            targetBtn.textContent = `${selectedTargets.length} Nodes selected`;
+        }
+    }
+
+    function togglePicker(open) {
+        if (open) {
+            buildPicker();
+            pickerOverlay.classList.add('open');
+        } else {
+            pickerOverlay.classList.remove('open');
+        }
+    }
+
+    targetBtn.onclick = () => togglePicker(true);
 
     function renderRecord() {
         chatContainer.innerHTML = '';
@@ -253,7 +363,11 @@
             if (msg.handle === 'system') {
                 msgDiv.innerHTML = `<div class="message-content">${msg.text}</div>`;
             } else {
-                const targetStr = msg.target ? ` <span class="address-target">→ ${msg.target}</span>` : '';
+                // Render targets if they exist
+                let targetStr = '';
+                if (msg.targets && msg.targets.length > 0) {
+                    targetStr = ` <span class="address-target">→ ${msg.targets.join(', ')}</span>`;
+                }
                 msgDiv.innerHTML = `
                     <div class="message-meta">
                         ${msg.handle}${targetStr} <span>— ${msg.timestamp}</span>
@@ -274,11 +388,10 @@
 
         const now = new Date();
         const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        const targetValue = targetSelect.value;
         
         const newMessage = {
             handle: "💙 @littleblue",
-            target: targetValue === "The Atrium (All Nodes)" ? null : targetValue,
+            targets: selectedTargets.length > 0 ? [...selectedTargets] : null,
             timestamp: timeString,
             text: text
         };
@@ -287,10 +400,12 @@
         localStorage.setItem(storageKey, JSON.stringify(record));
         
         chatInput.value = '';
-        renderRecord();
         
-        // Reset target to All after sending
-        targetSelect.value = "The Atrium (All Nodes)";
+        // Reset selection
+        selectedTargets = [];
+        updateTargetBtn();
+        
+        renderRecord();
     }
 
     chatInput.addEventListener('keypress', function (e) {
@@ -299,6 +414,8 @@
         }
     });
 
+    // Initialize
+    updateTargetBtn();
     renderRecord();
 </script>
 
